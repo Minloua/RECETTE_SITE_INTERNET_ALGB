@@ -1508,6 +1508,11 @@ export interface AssociationSettings {
   headquartersAddress: string;
   officialEmail: string;
   officialPhone: string;
+  // Paramètres d'expédition automatique des credentials par e-mail
+  credentialSenderEmail?: string;
+  credentialSenderName?: string;
+  autoSendCredentialEmail?: boolean;
+  credentialAckCopyToAdmin?: boolean;
   // Intégration Google Sheets pour l'enrôlement (algbannuaire.netlify.app)
   googleScriptUrl: string;
 }
@@ -1533,6 +1538,10 @@ export const INITIAL_SETTINGS: AssociationSettings = {
   headquartersAddress: 'Lycée de Garçons de Bingerville, Boulevard Principal, BP 24 Bingerville, Abidjan, Côte d’Ivoire',
   officialEmail: 'contact@algb-bingerville.ci',
   officialPhone: '+225 27 22 40 12 00 / 07 08 09 10 11',
+  credentialSenderEmail: 'contact@algb-bingerville.ci',
+  credentialSenderName: 'Secrétariat Général ALGB',
+  autoSendCredentialEmail: true,
+  credentialAckCopyToAdmin: true,
   googleScriptUrl: 'https://script.google.com/macros/s/AKfycbxEz1vPwz0OpYHa8wnZNMp6Et_VME4PuM5xkh-AInkguU0dppLALI3QHNQ2eyQSs4vn_g/exec',
 };
 

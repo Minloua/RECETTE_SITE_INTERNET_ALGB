@@ -63,6 +63,7 @@ export const QrPaymentSyncModal: React.FC = () => {
     settings,
     currentUser,
     currentRole,
+    activeCredential,
     setCurrentUser,
     setActiveTab,
     setViewingCardMember,
@@ -132,7 +133,9 @@ export const QrPaymentSyncModal: React.FC = () => {
     setAuthCode('');
     setAuthRole(currentRole !== 'VISITEUR' ? currentRole : 'MEMBRE');
     setAuthIdentifier(
-      currentRole !== 'VISITEUR' && currentUser ? currentUser.membershipCardId : ''
+      currentRole !== 'VISITEUR'
+        ? activeCredential?.identifier || currentUser?.membershipCardId || ''
+        : ''
     );
     setSelectedMember(qrTargetMember);
   }, [qrSyncModalOpen, qrTargetMember]);

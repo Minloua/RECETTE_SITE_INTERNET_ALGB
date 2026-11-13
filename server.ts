@@ -5,6 +5,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer as createViteServer } from 'vite';
 import { handleAssistantChat, type AssistantRequestBody } from './server/assistantService.ts';
+import {
+  handleSendCredentialEmail,
+  type CredentialEmailRequestBody,
+} from './server/credentialEmailService.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +21,11 @@ async function startServer() {
 
   app.post('/api/assistant/chat', async (req: Request, res: Response) => {
     const result = await handleAssistantChat((req.body || {}) as AssistantRequestBody);
+    res.status(result.status).json(result.payload);
+  });
+
+  app.post('/api/credentials/send-email', async (req: Request, res: Response) => {
+    const result = await handleSendCredentialEmail((req.body || {}) as CredentialEmailRequestBody);
     res.status(result.status).json(result.payload);
   });
 

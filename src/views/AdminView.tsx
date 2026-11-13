@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp, AiKnowledgeCategory } from '../context/AppContext';
 import {
   Shield,
@@ -27,7 +27,9 @@ import {
   Eye,
   EyeOff,
   MessageSquareText,
+  KeyRound,
 } from 'lucide-react';
+import { AdminAccessManager } from '../components/AdminAccessManager';
 
 type AdminTab =
   | 'TRESORERIE'
@@ -37,6 +39,7 @@ type AdminTab =
   | 'PROJETS'
   | 'COMMUNICATION'
   | 'PARAMETRES_GENERAUX'
+  | 'ACCES'
   | 'EXPORTS';
 
 export const AdminView: React.FC = () => {
@@ -67,6 +70,8 @@ export const AdminView: React.FC = () => {
     deleteAiKnowledgeEntry,
     enrichAiFromCurrentProfile,
     setAiChatOpen,
+    openAuthModal,
+    accessCredentials,
     addToast,
   } = useApp();
 
@@ -120,8 +125,28 @@ export const AdminView: React.FC = () => {
     headquartersAddress: settings.headquartersAddress,
     officialEmail: settings.officialEmail,
     officialPhone: settings.officialPhone,
+    credentialSenderEmail: settings.credentialSenderEmail || settings.officialEmail,
+    credentialSenderName: settings.credentialSenderName || 'Secrétariat Général ALGB',
+    autoSendCredentialEmail: settings.autoSendCredentialEmail !== false,
+    credentialAckCopyToAdmin: settings.credentialAckCopyToAdmin !== false,
     googleScriptUrl: settings.googleScriptUrl || '',
   });
+
+  useEffect(() => {
+    setGeneralForm((prev) => ({
+      ...prev,
+      credentialSenderEmail: settings.credentialSenderEmail || settings.officialEmail,
+      credentialSenderName: settings.credentialSenderName || 'Secrétariat Général ALGB',
+      autoSendCredentialEmail: settings.autoSendCredentialEmail !== false,
+      credentialAckCopyToAdmin: settings.credentialAckCopyToAdmin !== false,
+    }));
+  }, [
+    settings.credentialSenderEmail,
+    settings.credentialSenderName,
+    settings.autoSendCredentialEmail,
+    settings.credentialAckCopyToAdmin,
+    settings.officialEmail,
+  ]);
 
   const [selectedPromoYear, setSelectedPromoYear] = useState<number>(promotions[0]?.year || 2002);
   const selectedPromo = promotions.find((p) => p.year === selectedPromoYear) || promotions[0];
@@ -162,14 +187,22 @@ export const AdminView: React.FC = () => {
   if (!isAuthorized) {
     return (
       <div className="bg-white dark:bg-zinc-950 min-h-screen transition-colors">
-        <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
+        <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-5">
           <Lock className="w-12 h-12 text-[#B8860B] dark:text-[#E5B824] mx-auto" />
           <h2 className="text-xl font-bold font-heading text-black dark:text-white">
             Accès Réservé à l'Administration de l'ALGB
           </h2>
-          <p className="text-xs text-gray-600 dark:text-zinc-400">
-            Cette console est accessible aux profils habilités : Responsable Finance, Administrateurs, Super Administrateur et Responsable Communication. Utilisez le simulateur de rôles (en bas à droite) pour basculer sur un profil autorisé.
+          <p className="text-xs text-gray-600 dark:text-zinc-400 leading-relaxed">
+            Cette console est accessible uniquement via un credential habilité : Responsable Finance, Administrateurs, Super Administrateur ou Responsable Communication.
           </p>
+          <button
+            type="button"
+            onClick={() => openAuthModal('admin')}
+            className="px-6 py-2.5 bg-[#E5B824] text-black font-bold text-xs rounded-xl hover:bg-[#dcae1f] inline-flex items-center gap-2 cursor-pointer"
+          >
+            <KeyRound className="w-4 h-4" />
+            <span>Se connecter avec un Credential habilité</span>
+          </button>
         </div>
       </div>
     );
@@ -237,6 +270,10 @@ export const AdminView: React.FC = () => {
       headquartersAddress: generalForm.headquartersAddress,
       officialEmail: generalForm.officialEmail,
       officialPhone: generalForm.officialPhone,
+      credentialSenderEmail: generalForm.credentialSenderEmail.trim(),
+      credentialSenderName: generalForm.credentialSenderName.trim(),
+      autoSendCredentialEmail: generalForm.autoSendCredentialEmail,
+      credentialAckCopyToAdmin: generalForm.credentialAckCopyToAdmin,
       googleScriptUrl: generalForm.googleScriptUrl,
     });
   };
@@ -474,6 +511,20 @@ export const AdminView: React.FC = () => {
             >
               <Settings className="w-3.5 h-3.5" />
               <span>Gouvernance & Textes</span>
+            </button>
+          )}
+
+          {isAdminOrSuper && (
+            <button
+              onClick={() => setAdminTab('ACCES')}
+              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                adminTab === 'ACCES'
+                  ? 'bg-[#E5B824] text-black shadow-xs'
+                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>Profils & Credentials ({accessCredentials.length})</span>
             </button>
           )}
 
@@ -1654,6 +1705,68 @@ export const AdminView: React.FC = () => {
                   />
                 </div>
 
+                <div className="sm:col-span-2 pt-3 border-t border-gray-200 dark:border-zinc-800 space-y-3">
+                  <div className="text-[#B8860B] dark:text-[#E5B824] font-bold">
+                    Expédition Automatique des Credentials par E-mail & Accusé de Réception
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                        Adresse E-mail d’expédition & de réception des accusés
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={generalForm.credentialSenderEmail}
+                        onChange={(e) =>
+                          setGeneralForm({ ...generalForm, credentialSenderEmail: e.target.value })
+                        }
+                        placeholder="ex: secretariat@algb-bingerville.ci"
+                        className={`${inputClass} font-mono`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                        Nom d’expéditeur affiché
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={generalForm.credentialSenderName}
+                        onChange={(e) =>
+                          setGeneralForm({ ...generalForm, credentialSenderName: e.target.value })
+                        }
+                        placeholder="Secrétariat Général ALGB"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-4 pt-1">
+                    <label className="inline-flex items-center gap-2 text-gray-800 dark:text-zinc-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={generalForm.autoSendCredentialEmail}
+                        onChange={(e) =>
+                          setGeneralForm({ ...generalForm, autoSendCredentialEmail: e.target.checked })
+                        }
+                        className="accent-[#E5B824] w-4 h-4"
+                      />
+                      <span>Envoyer automatiquement l’e-mail dès création du credential</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-gray-800 dark:text-zinc-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={generalForm.credentialAckCopyToAdmin}
+                        onChange={(e) =>
+                          setGeneralForm({ ...generalForm, credentialAckCopyToAdmin: e.target.checked })
+                        }
+                        className="accent-[#E5B824] w-4 h-4"
+                      />
+                      <span>Envoyer une copie BCC + demande d’accusé à l’adresse administrateur</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div className="sm:col-span-2 pt-2 border-t border-gray-200 dark:border-zinc-800">
                   <label className="block text-[#B8860B] dark:text-[#E5B824] font-bold mb-1 flex items-center justify-between">
                     <span>Passerelle Webhook Google Apps Script / Google Sheets (Stratégie Enrôlement)</span>
@@ -1685,7 +1798,10 @@ export const AdminView: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 8: EXPORTS CSV & GRAND LIVRE */}
+        {/* TAB 8: GESTION DES PROFILS, MENUS VISITEURS & CREDENTIALS */}
+        {adminTab === 'ACCES' && isAdminOrSuper && <AdminAccessManager />}
+
+        {/* TAB 9: EXPORTS CSV & GRAND LIVRE */}
         {adminTab === 'EXPORTS' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
             <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">

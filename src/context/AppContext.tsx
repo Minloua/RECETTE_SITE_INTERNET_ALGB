@@ -30,9 +30,19 @@ import {
 import { DEFAULT_GOOGLE_SCRIPT_URL } from '../data/enrollmentData';
 import { parseMemberQrPayload } from '../utils/qrPayload';
 import {
+  AccessCredential,
+  authenticateUserCredential,
   authorizeQrPaymentAccess,
   canActiveSessionAccessMemberQr,
+  CredentialAuthResult,
+  DEFAULT_ROLE_MENU_PERMISSIONS,
+  DEFAULT_VISITOR_ALLOWED_MENUS,
+  generateAckToken,
+  INITIAL_ACCESS_CREDENTIALS,
+  MENU_DEFINITIONS,
+  PROFILE_ACCESS_MATRIX,
   QrAccessAuthResult,
+  resolveCredentialRecipientEmail,
 } from '../utils/accessMatrix';
 
 export interface EnrollmentPayload {
@@ -266,6 +276,39 @@ interface AppContextType {
   toggleAiKnowledgeEntry: (id: string) => void;
   deleteAiKnowledgeEntry: (id: string) => void;
   enrichAiFromCurrentProfile: (extraNote?: string) => AiKnowledgeEntry | null;
+  // Profils, Credentials & Permissions d'accès
+  accessCredentials: AccessCredential[];
+  activeCredential: AccessCredential | null;
+  sendingCredentialIds: string[];
+  visitorAllowedMenus: NavigationTab[];
+  roleMenuPermissions: Record<Exclude<UserRole, 'VISITEUR'>, NavigationTab[]>;
+  authModalOpen: boolean;
+  authRedirectTab: NavigationTab | null;
+  openAuthModal: (redirectTab?: NavigationTab | null) => void;
+  closeAuthModal: () => void;
+  loginWithCredential: (identifier: string, secretCode: string) => CredentialAuthResult;
+  logoutSession: () => void;
+  createAccessCredential: (params: {
+    identifier: string;
+    secretCode: string;
+    displayName: string;
+    role: Exclude<UserRole, 'VISITEUR'>;
+    linkedMemberId?: string;
+    recipientEmail?: string;
+    allowedTabs?: NavigationTab[];
+    notes?: string;
+    skipAutoEmail?: boolean;
+  }) => AccessCredential | null;
+  sendCredentialEmail: (
+    credentialId: string,
+    sourceTrigger?: 'MANUAL' | 'APPROVE_MEMBER' | 'ENROLLMENT' | 'RESEND',
+    overrideCred?: AccessCredential
+  ) => Promise<{ ok: boolean; error?: string }>;
+  updateAccessCredential: (id: string, updates: Partial<AccessCredential>) => void;
+  deleteAccessCredential: (id: string) => void;
+  updateVisitorAllowedMenus: (menus: NavigationTab[]) => void;
+  updateRoleMenuPermissions: (role: Exclude<UserRole, 'VISITEUR'>, menus: NavigationTab[]) => void;
+  canAccessTab: (tab: NavigationTab) => boolean;
   // General Actions
   submitMembership: (data: Partial<AlumniMember>) => AlumniMember;
   approveMember: (memberId: string) => void;
@@ -305,6 +348,10 @@ const STORAGE_KEYS = {
   NEWS_ALERTS: 'algb_news_alerts_v1',
   AI_KNOWLEDGE: 'algb_ai_knowledge_v1',
   THEME: 'algb_theme_v1',
+  CREDENTIALS: 'algb_access_credentials_v1',
+  ACTIVE_CREDENTIAL_ID: 'algb_active_credential_id_v1',
+  VISITOR_MENUS: 'algb_visitor_menus_v1',
+  ROLE_MENUS: 'algb_role_menus_v1',
 };
 
 const INITIAL_AI_KNOWLEDGE: AiKnowledgeEntry[] = [
@@ -339,14 +386,71 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedPromotionYear, setSelectedPromotionYear] = useState<number | null>(null);
 
   const [settings, setSettings] = useState<AssociationSettings>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      return saved ? { ...INITIAL_SETTINGS, ...JSON.parse(saved) } : INITIAL_SETTINGS;
+    } catch {
+      return INITIAL_SETTINGS;
+    }
   });
 
-  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE);
-    return (saved as UserRole) || 'MEMBRE';
+  const [accessCredentials, setAccessCredentials] = useState<AccessCredential[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.CREDENTIALS);
+      return saved ? JSON.parse(saved) : INITIAL_ACCESS_CREDENTIALS;
+    } catch {
+      return INITIAL_ACCESS_CREDENTIALS;
+    }
   });
+
+  const [sendingCredentialIds, setSendingCredentialIds] = useState<string[]>([]);
+
+  const [visitorAllowedMenus, setVisitorAllowedMenus] = useState<NavigationTab[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.VISITOR_MENUS);
+      if (saved) {
+        const parsed = JSON.parse(saved) as NavigationTab[];
+        if (Array.isArray(parsed)) {
+          return parsed.includes('accueil') ? parsed : ['accueil', ...parsed];
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_VISITOR_ALLOWED_MENUS;
+  });
+
+  const [roleMenuPermissions, setRoleMenuPermissions] = useState<
+    Record<Exclude<UserRole, 'VISITEUR'>, NavigationTab[]>
+  >(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.ROLE_MENUS);
+      return saved ? { ...DEFAULT_ROLE_MENU_PERMISSIONS, ...JSON.parse(saved) } : DEFAULT_ROLE_MENU_PERMISSIONS;
+    } catch {
+      return DEFAULT_ROLE_MENU_PERMISSIONS;
+    }
+  });
+
+  const [activeCredentialId, setActiveCredentialId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.ACTIVE_CREDENTIAL_ID) || null;
+    } catch {
+      return null;
+    }
+  });
+
+  const activeCredential =
+    activeCredentialId
+      ? accessCredentials.find((c) => c.id === activeCredentialId && c.isActive) || null
+      : null;
+
+  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
+    if (activeCredential) return activeCredential.role;
+    return 'VISITEUR';
+  });
+
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authRedirectTab, setAuthRedirectTab] = useState<NavigationTab | null>(null);
 
   const [members, setMembers] = useState<AlumniMember[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.MEMBERS);
@@ -393,14 +497,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
   });
 
-  // Current logged in user (defaults to Amadou Touré for realistic interactive demonstration)
+  // Current logged in user (null in public Visitor mode until authenticated by credential)
   const [currentUser, setCurrentUser] = useState<AlumniMember | null>(() => {
+    if (!activeCredential) return null;
+    if (activeCredential.linkedMemberId) {
+      const linked = members.find((m) => m.id === activeCredential.linkedMemberId);
+      if (linked) return linked;
+    }
     const savedId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
     if (savedId) {
       const found = members.find((m) => m.id === savedId);
       if (found) return found;
     }
-    return members[0] || null;
+    return null;
   });
 
   const [contributionModalProject, setContributionModalProject] = useState<Project | null>(null);
@@ -567,6 +676,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     try {
+      localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(accessCredentials));
+    } catch {
+      // ignore
+    }
+  }, [accessCredentials]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.VISITOR_MENUS, JSON.stringify(visitorAllowedMenus));
+    } catch {
+      // ignore
+    }
+  }, [visitorAllowedMenus]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.ROLE_MENUS, JSON.stringify(roleMenuPermissions));
+    } catch {
+      // ignore
+    }
+  }, [roleMenuPermissions]);
+
+  useEffect(() => {
+    try {
+      if (activeCredentialId) {
+        localStorage.setItem(STORAGE_KEYS.ACTIVE_CREDENTIAL_ID, activeCredentialId);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.ACTIVE_CREDENTIAL_ID);
+      }
+    } catch {
+      // ignore
+    }
+  }, [activeCredentialId]);
+
+  useEffect(() => {
+    try {
       if (currentUser) {
         localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
       } else {
@@ -576,6 +721,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // ignore
     }
   }, [currentUser]);
+
+  // Keep session synchronized if active credential is suspended or modified
+  useEffect(() => {
+    if (activeCredentialId && !activeCredential) {
+      setActiveCredentialId(null);
+      setCurrentRole('VISITEUR');
+      setCurrentUser(null);
+    } else if (activeCredential && currentRole !== activeCredential.role) {
+      setCurrentRole(activeCredential.role);
+    }
+  }, [activeCredentialId, activeCredential]);
 
   const addToast = (
     type: ToastMessage['type'],
@@ -738,10 +894,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [newsAlertsEnabled]);
 
-  // Deep-link handler when a member card QR code is flashed externally
+  // Deep-link handlers: QR card scan & Credential email acknowledgment (?ackCred=...&token=...)
   useEffect(() => {
     if (typeof window === 'undefined' || !window.location.search) return;
     const params = new URLSearchParams(window.location.search);
+
+    const ackCredId = params.get('ackCred');
+    if (ackCredId) {
+      const ackToken = params.get('token') || '';
+      const targetCred = accessCredentials.find((c) => c.id === ackCredId);
+      if (targetCred && (!targetCred.ackToken || !ackToken || targetCred.ackToken === ackToken)) {
+        const nowStamp = new Date().toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        setAccessCredentials((prev) =>
+          prev.map((c) =>
+            c.id === targetCred.id
+              ? { ...c, acknowledgedAt: c.acknowledgedAt || nowStamp }
+              : c
+          )
+        );
+        addToast(
+          'success',
+          'Accusé de réception confirmé',
+          `Réception des accès confirmée pour ${targetCred.displayName} (${targetCred.identifier}). Vous pouvez désormais vous connecter.`,
+          { badge: 'Confirmation ALGB', durationMs: 8000 }
+        );
+      } else {
+        addToast(
+          'warning',
+          'Lien de confirmation expiré ou introuvable',
+          'Ce lien d’accusé de réception ne correspond à aucun credential actif sur cet appareil.'
+        );
+      }
+      try {
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch {
+        // ignore history error
+      }
+      return;
+    }
+
     if (params.get('qrPay') === '1' || params.get('qrAction') === 'member-pay') {
       const matched = parseMemberQrPayload(window.location.search, members);
       setQrAuthVerified(false);
@@ -810,21 +1007,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast(
       'success',
       'Adhésion enregistrée avec succès !',
-      `Votre matricule provisoire est ${matricule}. Votre dossier est en cours de validation par le Secrétariat.`
+      `Votre matricule provisoire est ${matricule}. Votre dossier est en cours de validation par l’Administration qui activera votre credential d’accès.`
     );
 
-    // Auto set as current user and open member card
-    setCurrentUser(newMember);
-    setCurrentRole('MEMBRE');
     return newMember;
   };
 
   // Administrator approval
   const approveMember = (memberId: string) => {
+    const targetMember = members.find((m) => m.id === memberId);
     setMembers((prev) =>
       prev.map((m) => (m.id === memberId ? { ...m, membershipStatus: 'A_JOUR' } : m))
     );
-    addToast('success', 'Adhésion validée', 'Le membre a été validé et sa carte officielle est active.');
+
+    let createdAutoCred: AccessCredential | null = null;
+    const shouldAutoSend = settings.autoSendCredentialEmail !== false;
+
+    if (targetMember) {
+      const alreadyHasCred = accessCredentials.some(
+        (c) =>
+          c.linkedMemberId === targetMember.id ||
+          c.identifier.toLowerCase() === targetMember.email.toLowerCase()
+      );
+      if (!alreadyHasCred) {
+        const autoCred: AccessCredential = {
+          id: `cred-${Date.now().toString().slice(-6)}`,
+          identifier: targetMember.email || targetMember.membershipCardId,
+          secretCode: targetMember.membershipCardId,
+          displayName: `${targetMember.firstName} ${targetMember.lastName}`,
+          role: 'MEMBRE',
+          linkedMemberId: targetMember.id,
+          recipientEmail: targetMember.email || undefined,
+          allowedTabs: roleMenuPermissions.MEMBRE,
+          isActive: true,
+          createdAt: new Date().toISOString().split('T')[0],
+          createdBy: activeCredential?.displayName || 'Administration ALGB',
+          ackToken: generateAckToken(),
+          emailStatus: shouldAutoSend && targetMember.email ? 'EN_COURS' : 'NON_ENVOYE',
+          notes: 'Credential généré automatiquement lors de la validation d’adhésion.',
+        };
+        createdAutoCred = autoCred;
+        setAccessCredentials((prev) => [autoCred, ...prev]);
+      }
+    }
+
+    addToast(
+      'success',
+      'Adhésion validée',
+      'Le membre a été validé, sa carte officielle est active et son credential d’accès est prêt.'
+    );
+
+    if (createdAutoCred && shouldAutoSend) {
+      void sendCredentialEmail(createdAutoCred.id, 'APPROVE_MEMBER', createdAutoCred);
+    }
   };
 
   const rejectMember = (memberId: string) => {
@@ -941,16 +1176,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // safe fallback
     }
 
+    const shouldAutoSend = settings.autoSendCredentialEmail !== false;
+    const autoCred: AccessCredential = {
+      id: `cred-${Date.now().toString().slice(-6)}`,
+      identifier: newMember.email || matricule,
+      secretCode: matricule,
+      displayName: `${newMember.firstName} ${newMember.lastName}`,
+      role: 'MEMBRE',
+      linkedMemberId: newMember.id,
+      recipientEmail: newMember.email || undefined,
+      allowedTabs: roleMenuPermissions.MEMBRE,
+      isActive: true,
+      createdAt: new Date().toISOString().split('T')[0],
+      createdBy: 'Enrôlement en ligne ALGB',
+      ackToken: generateAckToken(),
+      emailStatus: shouldAutoSend && newMember.email ? 'EN_COURS' : 'NON_ENVOYE',
+      notes: `Identifiant : ${newMember.email || matricule} | Code initial : ${matricule}`,
+    };
+    setAccessCredentials((prev) => [autoCred, ...prev]);
+    setActiveCredentialId(autoCred.id);
+    setCurrentRole('MEMBRE');
+    setCurrentUser(newMember);
+    setViewingCardMember(newMember);
+
     addToast(
       'success',
-      'Enrôlement enregistré avec succès !',
-      `Félicitations ! Votre profil et matricule officiel (${matricule}) ont été intégrés à l'Annuaire & Base de Données des Compétences de l'ALGB.`
+      'Enrôlement & Credential activés !',
+      `Matricule ${matricule} intégré à l'annuaire. Vos accès : ${autoCred.identifier} / Code : ${matricule}.`
     );
 
-    // Set as current user & open card
-    setCurrentUser(newMember);
-    setCurrentRole('MEMBRE');
-    setViewingCardMember(newMember);
+    if (shouldAutoSend) {
+      void sendCredentialEmail(autoCred.id, 'ENROLLMENT', autoCred);
+    }
 
     return newMember;
   };
@@ -1309,6 +1566,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const result = authorizeQrPaymentAccess({
       ...params,
       members,
+      credentials: accessCredentials,
     });
 
     if (result.allowed) {
@@ -1317,7 +1575,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (authMember && (params.role === 'MEMBRE' || params.role === 'DELEGUE' || params.role === 'RESPONSABLE_COMM')) {
         setCurrentUser(authMember);
       } else if (params.targetMember && result.rule.scopeType === 'ALL_MEMBERS') {
-        // For Finance / Admin / Super Admin, keep or set authenticated user context without impersonating unless viewing member space
         if (!currentUser && authMember) setCurrentUser(authMember);
       }
       const displayName = authMember
@@ -1774,6 +2031,445 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return entry;
   };
 
+  // Credential Authentication & Access Control
+  const openAuthModal = (redirectTab?: NavigationTab | null) => {
+    setAuthRedirectTab(redirectTab ?? null);
+    setAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setAuthModalOpen(false);
+    setAuthRedirectTab(null);
+  };
+
+  const loginWithCredential = (identifier: string, secretCode: string): CredentialAuthResult => {
+    const result = authenticateUserCredential({
+      identifier,
+      secretCode,
+      credentials: accessCredentials,
+      members,
+    });
+
+    if (!result.allowed || !result.credential) {
+      return result;
+    }
+
+    const cred = result.credential;
+    const nowStamp = new Date().toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    setAccessCredentials((prev) =>
+      prev.map((c) =>
+        c.id === cred.id
+          ? {
+              ...c,
+              lastLoginAt: nowStamp,
+              firstLoginAt: c.firstLoginAt || nowStamp,
+            }
+          : c
+      )
+    );
+
+    setActiveCredentialId(cred.id);
+    setCurrentRole(cred.role);
+    setCurrentUser(result.linkedMember ?? null);
+
+    addToast(
+      'success',
+      `Bienvenue, ${cred.displayName}`,
+      `Profil actif : ${PROFILE_ACCESS_MATRIX[cred.role].label}.`
+    );
+
+    const targetTab = authRedirectTab;
+    setAuthModalOpen(false);
+    setAuthRedirectTab(null);
+
+    if (targetTab) {
+      const normalized = targetTab === 'galerie' ? 'mediatheque' : targetTab;
+      if (cred.allowedTabs.includes(targetTab) || cred.allowedTabs.includes(normalized)) {
+        setActiveTab(targetTab);
+      } else {
+        addToast(
+          'warning',
+          'Menu non attribué à ce profil',
+          `Votre credential (${PROFILE_ACCESS_MATRIX[cred.role].label}) n’inclut pas l’accès à cette section.`
+        );
+      }
+    }
+
+    return result;
+  };
+
+  const logoutSession = () => {
+    setActiveCredentialId(null);
+    setCurrentRole('VISITEUR');
+    setCurrentUser(null);
+
+    const normalizedActive = activeTab === 'galerie' ? 'mediatheque' : activeTab;
+    if (!visitorAllowedMenus.includes(activeTab) && !visitorAllowedMenus.includes(normalizedActive)) {
+      setActiveTab('accueil');
+    }
+
+    addToast(
+      'info',
+      'Session déconnectée',
+      'Vous naviguez désormais en mode Visiteur public (menus visiteurs sans credential).'
+    );
+  };
+
+  const canManageCredentials = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
+
+  const sendCredentialEmail = async (
+    credentialId: string,
+    sourceTrigger: 'MANUAL' | 'APPROVE_MEMBER' | 'ENROLLMENT' | 'RESEND' = 'RESEND',
+    overrideCred?: AccessCredential
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const targetCred =
+      overrideCred || accessCredentials.find((c) => c.id === credentialId);
+
+    if (!targetCred) {
+      return { ok: false, error: 'Credential introuvable dans le registre.' };
+    }
+
+    const recipientEmail = resolveCredentialRecipientEmail(targetCred, members);
+    if (!recipientEmail) {
+      const missingErr =
+        "Aucune adresse e-mail valide pour ce credential. Renseignez une adresse e-mail destinataire dans la fiche.";
+      setAccessCredentials((prev) =>
+        prev.map((c) =>
+          c.id === targetCred.id
+            ? { ...c, emailStatus: 'ECHEC', emailError: missingErr }
+            : c
+        )
+      );
+      if (sourceTrigger === 'RESEND') {
+        addToast('warning', 'Envoi impossible', missingErr);
+      }
+      return { ok: false, error: missingErr };
+    }
+
+    const ackToken = targetCred.ackToken || generateAckToken();
+    const senderEmail = (
+      settings.credentialSenderEmail ||
+      settings.officialEmail ||
+      'contact@algb-bingerville.ci'
+    ).trim();
+    const senderName = (
+      settings.credentialSenderName ||
+      'Secrétariat Général ALGB'
+    ).trim();
+
+    const portalUrl =
+      typeof window !== 'undefined' ? window.location.origin : 'https://algb.netlify.app';
+    const ackUrl = `${portalUrl}/?ackCred=${encodeURIComponent(
+      targetCred.id
+    )}&token=${encodeURIComponent(ackToken)}`;
+
+    const allowedMenusLabels = targetCred.allowedTabs
+      .filter((t) => t !== 'galerie')
+      .map((t) => MENU_DEFINITIONS.find((m) => m.tab === t)?.label || t);
+
+    setSendingCredentialIds((prev) =>
+      prev.includes(targetCred.id) ? prev : [...prev, targetCred.id]
+    );
+    setAccessCredentials((prev) =>
+      prev.map((c) =>
+        c.id === targetCred.id
+          ? {
+              ...c,
+              ackToken,
+              recipientEmail: c.recipientEmail || recipientEmail,
+              emailStatus: 'EN_COURS',
+              emailError: undefined,
+            }
+          : c
+      )
+    );
+
+    try {
+      const response = await fetch('/api/credentials/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          credentialId: targetCred.id,
+          recipientEmail,
+          recipientName: targetCred.displayName,
+          identifier: targetCred.identifier,
+          secretCode: targetCred.secretCode,
+          roleLabel: PROFILE_ACCESS_MATRIX[targetCred.role].label,
+          allowedMenusLabels,
+          senderEmail,
+          senderName,
+          associationName: settings.associationName,
+          portalUrl,
+          ackUrl,
+          copyToAdmin: settings.credentialAckCopyToAdmin !== false,
+          sourceTrigger,
+        }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        provider?: string;
+        messageId?: string;
+        sentAt?: string;
+        senderUsed?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !data.ok) {
+        const errorMsg =
+          data.error || `Échec serveur lors de l’envoi e-mail (HTTP ${response.status}).`;
+        setAccessCredentials((prev) =>
+          prev.map((c) =>
+            c.id === targetCred.id
+              ? {
+                  ...c,
+                  emailStatus: 'ECHEC',
+                  emailError: errorMsg,
+                }
+              : c
+          )
+        );
+        addToast('warning', 'Envoi e-mail non abouti', errorMsg, { durationMs: 7000 });
+        return { ok: false, error: errorMsg };
+      }
+
+      const sentAt =
+        data.sentAt ||
+        new Date().toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+      setAccessCredentials((prev) =>
+        prev.map((c) =>
+          c.id === targetCred.id
+            ? {
+                ...c,
+                ackToken,
+                recipientEmail: c.recipientEmail || recipientEmail,
+                emailStatus: 'ENVOYE',
+                emailSentAt: sentAt,
+                emailSenderUsed: data.senderUsed || senderEmail,
+                emailProvider: data.provider || 'Serveur Mail',
+                emailMessageId: data.messageId,
+                emailError: undefined,
+              }
+            : c
+        )
+      );
+
+      addToast(
+        'success',
+        'Credential envoyé par e-mail',
+        `Transmis à ${recipientEmail} depuis ${data.senderUsed || senderEmail} avec demande d’accusé de réception.`,
+        { badge: data.provider || 'E-mail ALGB', durationMs: 6500 }
+      );
+      return { ok: true };
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : 'Impossible de joindre la route serveur /api/credentials/send-email.';
+      setAccessCredentials((prev) =>
+        prev.map((c) =>
+          c.id === targetCred.id
+            ? {
+                ...c,
+                emailStatus: 'ECHEC',
+                emailError: errorMsg,
+              }
+            : c
+        )
+      );
+      addToast('warning', 'Erreur réseau envoi e-mail', errorMsg);
+      return { ok: false, error: errorMsg };
+    } finally {
+      setSendingCredentialIds((prev) => prev.filter((id) => id !== targetCred.id));
+    }
+  };
+
+  const createAccessCredential = (params: {
+    identifier: string;
+    secretCode: string;
+    displayName: string;
+    role: Exclude<UserRole, 'VISITEUR'>;
+    linkedMemberId?: string;
+    recipientEmail?: string;
+    allowedTabs?: NavigationTab[];
+    notes?: string;
+    skipAutoEmail?: boolean;
+  }): AccessCredential | null => {
+    if (!canManageCredentials) {
+      addToast(
+        'error',
+        'Action réservée',
+        'Seuls les profils Administrateur et Super Administrateur peuvent créer des credentials.'
+      );
+      return null;
+    }
+
+    const cleanId = params.identifier.trim();
+    const cleanCode = params.secretCode.trim();
+    const cleanName = params.displayName.trim();
+
+    if (!cleanId || !cleanCode || !cleanName) {
+      addToast('error', 'Champs requis', 'Identifiant, nom affiché et code secret sont obligatoires.');
+      return null;
+    }
+
+    const duplicate = accessCredentials.some(
+      (c) => c.identifier.trim().toLowerCase() === cleanId.toLowerCase()
+    );
+    if (duplicate) {
+      addToast(
+        'error',
+        'Identifiant déjà utilisé',
+        `Un credential existe déjà pour « ${cleanId} ». Choisissez un autre identifiant.`
+      );
+      return null;
+    }
+
+    const tabs =
+      params.allowedTabs && params.allowedTabs.length > 0
+        ? params.allowedTabs
+        : roleMenuPermissions[params.role];
+
+    const resolvedRecipient = resolveCredentialRecipientEmail(
+      {
+        recipientEmail: params.recipientEmail,
+        identifier: cleanId,
+        linkedMemberId: params.linkedMemberId,
+      },
+      members
+    );
+
+    const shouldAutoSend =
+      !params.skipAutoEmail && settings.autoSendCredentialEmail !== false;
+
+    const newCred: AccessCredential = {
+      id: `cred-${Date.now().toString().slice(-6)}`,
+      identifier: cleanId,
+      secretCode: cleanCode,
+      displayName: cleanName,
+      role: params.role,
+      linkedMemberId: params.linkedMemberId || undefined,
+      recipientEmail: resolvedRecipient || params.recipientEmail?.trim() || undefined,
+      allowedTabs: Array.from(new Set(['accueil', ...tabs])),
+      isActive: true,
+      createdAt: new Date().toISOString().split('T')[0],
+      createdBy: activeCredential?.displayName || 'Administration ALGB',
+      ackToken: generateAckToken(),
+      emailStatus: shouldAutoSend && resolvedRecipient ? 'EN_COURS' : 'NON_ENVOYE',
+      notes: params.notes?.trim() || undefined,
+    };
+
+    setAccessCredentials((prev) => [newCred, ...prev]);
+    addToast(
+      'success',
+      'Credential créé avec succès',
+      `Accès « ${newCred.identifier} » activé pour le profil ${PROFILE_ACCESS_MATRIX[newCred.role].label}.`
+    );
+
+    if (shouldAutoSend) {
+      void sendCredentialEmail(newCred.id, 'MANUAL', newCred);
+    }
+
+    return newCred;
+  };
+
+  const updateAccessCredential = (id: string, updates: Partial<AccessCredential>) => {
+    if (!canManageCredentials) return;
+    setAccessCredentials((prev) =>
+      prev.map((c) => {
+        if (c.id !== id) return c;
+        const next: AccessCredential = {
+          ...c,
+          ...updates,
+          isSeededDefault:
+            updates.secretCode !== undefined || updates.identifier !== undefined
+              ? false
+              : c.isSeededDefault,
+        };
+        return next;
+      })
+    );
+    addToast('success', 'Credential mis à jour', 'Les droits et paramètres d’accès ont été enregistrés.');
+  };
+
+  const deleteAccessCredential = (id: string) => {
+    if (!canManageCredentials) return;
+    if (id === activeCredentialId) {
+      addToast(
+        'warning',
+        'Action bloquée',
+        'Vous ne pouvez pas supprimer le credential actuellement connecté.'
+      );
+      return;
+    }
+    setAccessCredentials((prev) => prev.filter((c) => c.id !== id));
+    addToast('info', 'Credential supprimé', 'L’accès a été révoqué et retiré du registre.');
+  };
+
+  const updateVisitorAllowedMenus = (menus: NavigationTab[]) => {
+    if (!canManageCredentials) return;
+    const sanitized = Array.from(
+      new Set<NavigationTab>(
+        ['accueil', ...menus.filter((m) => m !== 'admin' && m !== 'espace-membre')]
+      )
+    );
+    if (sanitized.includes('mediatheque') && !sanitized.includes('galerie')) {
+      sanitized.push('galerie');
+    }
+    setVisitorAllowedMenus(sanitized);
+    addToast(
+      'success',
+      'Menus Visiteurs mis à jour',
+      'Les rubriques publiques accessibles sans credential ont été enregistrées.'
+    );
+  };
+
+  const updateRoleMenuPermissions = (
+    role: Exclude<UserRole, 'VISITEUR'>,
+    menus: NavigationTab[]
+  ) => {
+    if (!canManageCredentials) return;
+    const sanitized = Array.from(new Set<NavigationTab>(['accueil', ...menus]));
+    if (sanitized.includes('mediatheque') && !sanitized.includes('galerie')) {
+      sanitized.push('galerie');
+    }
+    setRoleMenuPermissions((prev) => ({
+      ...prev,
+      [role]: sanitized,
+    }));
+    addToast(
+      'success',
+      `Matrice ${PROFILE_ACCESS_MATRIX[role].label} mise à jour`,
+      'Les menus par défaut du profil ont été enregistrés.'
+    );
+  };
+
+  const canAccessTab = (tab: NavigationTab): boolean => {
+    const normalized: NavigationTab = tab === 'galerie' ? 'mediatheque' : tab;
+    if (currentRole === 'VISITEUR' || !activeCredential) {
+      if (normalized === 'admin' || normalized === 'espace-membre') return false;
+      return visitorAllowedMenus.includes(tab) || visitorAllowedMenus.includes(normalized);
+    }
+    return (
+      activeCredential.allowedTabs.includes(tab) ||
+      activeCredential.allowedTabs.includes(normalized)
+    );
+  };
+
   // Reset to initial
   const resetAllData = () => {
     localStorage.clear();
@@ -1788,9 +2484,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPhotos(INITIAL_PHOTOS);
     setVideos(INITIAL_VIDEOS);
     setAiKnowledgeEntries(INITIAL_AI_KNOWLEDGE);
-    setCurrentUser(INITIAL_MEMBERS[0]);
-    setCurrentRole('MEMBRE');
-    addToast('info', 'Réinitialisation terminée', 'Toutes les données ont été réinitialisées.');
+    setAccessCredentials(INITIAL_ACCESS_CREDENTIALS);
+    setVisitorAllowedMenus(DEFAULT_VISITOR_ALLOWED_MENUS);
+    setRoleMenuPermissions(DEFAULT_ROLE_MENU_PERMISSIONS);
+    setActiveCredentialId(null);
+    setCurrentUser(null);
+    setCurrentRole('VISITEUR');
+    setActiveTab('accueil');
+    addToast('info', 'Réinitialisation terminée', 'Données et sessions réinitialisées (mode Visiteur public).');
   };
 
   return (
@@ -1865,6 +2566,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleAiKnowledgeEntry,
         deleteAiKnowledgeEntry,
         enrichAiFromCurrentProfile,
+        accessCredentials,
+        activeCredential,
+        sendingCredentialIds,
+        visitorAllowedMenus,
+        roleMenuPermissions,
+        authModalOpen,
+        authRedirectTab,
+        openAuthModal,
+        closeAuthModal,
+        loginWithCredential,
+        logoutSession,
+        createAccessCredential,
+        sendCredentialEmail,
+        updateAccessCredential,
+        deleteAccessCredential,
+        updateVisitorAllowedMenus,
+        updateRoleMenuPermissions,
+        canAccessTab,
         submitMembership,
         approveMember,
         rejectMember,

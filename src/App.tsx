@@ -16,8 +16,10 @@ import { TransactionReceiptModal } from './components/TransactionReceiptModal';
 import { QuitusModal } from './components/QuitusModal';
 import { EnrollmentModal } from './components/EnrollmentModal';
 import { QrPaymentSyncModal } from './components/QrPaymentSyncModal';
+import { AuthLoginModal } from './components/AuthLoginModal';
 import { FloatingAiAssistant } from './components/FloatingAiAssistant';
 import { ToastContainer } from './components/ToastContainer';
+import { Lock, KeyRound } from 'lucide-react';
 
 // Views
 import { HomeView } from './views/HomeView';
@@ -34,7 +36,42 @@ import { AdminView } from './views/AdminView';
 import { ContactView } from './views/ContactView';
 
 const MainContent: React.FC = () => {
-  const { activeTab } = useApp();
+  const { activeTab, canAccessTab, openAuthModal, setActiveTab } = useApp();
+
+  if (!canAccessTab(activeTab)) {
+    return (
+      <main className="min-h-screen bg-white dark:bg-zinc-950 transition-colors">
+        <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-5">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 flex items-center justify-center text-[#B8860B] dark:text-[#E5B824] mx-auto">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold font-heading text-black dark:text-white">
+            Accès protégé par Credential ALGB
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+            Cette rubrique nécessite une connexion par credential attribué par l’Administration. Les menus publics définis pour les visiteurs restent accessibles librement sans credential.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => openAuthModal(activeTab)}
+              className="px-5 py-2.5 bg-[#E5B824] text-black font-bold text-xs rounded-xl hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>Se connecter avec mes accès</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('accueil')}
+              className="px-5 py-2.5 bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 font-semibold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-zinc-800 cursor-pointer"
+            >
+              Retour à l’Accueil public
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen">
@@ -73,6 +110,7 @@ export default function App() {
         <QuitusModal />
         <EnrollmentModal />
         <QrPaymentSyncModal />
+        <AuthLoginModal />
         <FloatingAiAssistant />
         <RoleSwitcherBar />
         <ToastContainer />

@@ -23,6 +23,9 @@ export const EspaceMembreView: React.FC = () => {
   const {
     currentUser,
     currentRole,
+    activeCredential,
+    openAuthModal,
+    canAccessTab,
     setViewingCardMember,
     updateMemberProfile,
     setActiveTab,
@@ -53,7 +56,7 @@ export const EspaceMembreView: React.FC = () => {
     isMentor: currentUser?.isMentor ?? false,
   });
 
-  if (!currentUser || currentRole === 'VISITEUR') {
+  if (currentRole === 'VISITEUR' || !activeCredential) {
     return (
       <div className="bg-white dark:bg-zinc-950 min-h-screen transition-colors">
         <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-6">
@@ -64,14 +67,60 @@ export const EspaceMembreView: React.FC = () => {
             Connexion à l’Espace Membre
           </h2>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-400">
-            Veuillez vous inscrire ou utiliser le simulateur de rôles (en bas à droite) pour vous connecter sous un profil adhérent officiel.
+            Connectez-vous avec votre identifiant et votre code d’accès (credential) délivrés par l’Administration ALGB, ou déposez votre demande d’adhésion.
           </p>
-          <button
-            onClick={() => setActiveTab('adhesion')}
-            className="px-6 py-2.5 bg-[#E5B824] text-black font-semibold text-xs rounded-xl hover:bg-[#dcae1f] cursor-pointer"
-          >
-            Formulaire d’Adhésion ALGB
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => openAuthModal('espace-membre')}
+              className="px-6 py-2.5 bg-[#E5B824] text-black font-bold text-xs rounded-xl hover:bg-[#dcae1f] cursor-pointer"
+            >
+              Se connecter avec mes accès
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('adhesion')}
+              className="px-6 py-2.5 bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 font-semibold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-zinc-800 cursor-pointer"
+            >
+              Formulaire d’Adhésion ALGB
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="bg-white dark:bg-zinc-950 min-h-screen transition-colors">
+        <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-5">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 flex items-center justify-center text-[#B8860B] dark:text-[#E5B824] mx-auto">
+            <UserCheck className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold font-heading text-black dark:text-white">
+            Compte fonctionnel : {activeCredential.displayName}
+          </h2>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-400">
+            Ce credential ({activeCredential.identifier}) est un compte de gestion sans fiche individuelle rattachée dans l’annuaire des anciens élèves.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {canAccessTab('admin') && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('admin')}
+                className="px-6 py-2.5 bg-[#E5B824] text-black font-bold text-xs rounded-xl hover:bg-[#dcae1f] cursor-pointer"
+              >
+                Ouvrir la Console d’Administration
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setActiveTab('anciens')}
+              className="px-6 py-2.5 bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 font-semibold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-zinc-800 cursor-pointer"
+            >
+              Consulter les Promotions
+            </button>
+          </div>
         </div>
       </div>
     );

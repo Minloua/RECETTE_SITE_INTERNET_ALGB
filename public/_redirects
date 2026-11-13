@@ -1,2 +1,3 @@
-/api/assistant/chat  /.netlify/functions/assistant-chat  200!
-/*                   /index.html                         200
+/api/assistant/chat           /.netlify/functions/assistant-chat           200!
+/api/credentials/send-email   /.netlify/functions/send-credential-email    200!
+/*                            /index.html                                  200

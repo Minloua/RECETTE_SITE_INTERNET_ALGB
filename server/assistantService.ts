@@ -83,7 +83,9 @@ export interface AssistantServiceResult {
 }
 
 export function getGeminiClient(): GoogleGenAI | null {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  const rawKey = process.env.GEMINI_API_KEY;
+  if (!rawKey) return null;
+  const apiKey = rawKey.trim().replace(/^["']+|["']+$/g, '').trim();
   if (!apiKey) return null;
   return new GoogleGenAI({
     apiKey,
@@ -93,6 +95,11 @@ export function getGeminiClient(): GoogleGenAI | null {
       },
     },
   });
+}
+
+function sanitizeErrorMessage(msg: unknown): string {
+  const raw = typeof msg === 'string' ? msg : '';
+  return raw.replace(/AIza[0-9A-Za-z_-]{20,}/g, '[CLE_MASQUEE]').slice(0, 220);
 }
 
 export function buildSystemInstruction(
@@ -233,16 +240,41 @@ export async function handleAssistantChat(
       },
     ];
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-4-hydrogen',
-      contents,
-      config: {
-        systemInstruction,
-        thinkingConfig: {
-          thinkingLevel: ThinkingLevel.LOW,
+    let usedModel = 'gemini-4-hydrogen';
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: usedModel,
+        contents,
+        config: {
+          systemInstruction,
+          thinkingConfig: {
+            thinkingLevel: ThinkingLevel.LOW,
+          },
         },
-      },
-    });
+      });
+    } catch (primaryErr: unknown) {
+      const primaryObj = primaryErr as { status?: number; message?: string };
+      const primaryMsg = (primaryObj?.message || '').toLowerCase();
+      const isKeyOrPermissionError =
+        primaryObj?.status === 403 ||
+        primaryMsg.includes('api key') ||
+        primaryMsg.includes('api_key_invalid') ||
+        primaryMsg.includes('permission');
+
+      if (isKeyOrPermissionError) {
+        throw primaryErr;
+      }
+
+      usedModel = 'gemini-2.5-flash';
+      response = await ai.models.generateContent({
+        model: usedModel,
+        contents,
+        config: {
+          systemInstruction,
+        },
+      });
+    }
 
     const reply = (response.text || '').trim();
     if (!reply) {
@@ -259,19 +291,32 @@ export async function handleAssistantChat(
       status: 200,
       payload: {
         reply,
-        model: 'gemini-4-hydrogen',
+        model: usedModel,
       },
     };
   } catch (err: unknown) {
     const errorObj = err as { status?: number; message?: string };
-    console.error('Erreur assistant chat:', errorObj?.message || err);
+    const safeDetail = sanitizeErrorMessage(errorObj?.message);
+    const lowerDetail = safeDetail.toLowerCase();
+    console.error('Erreur assistant chat:', errorObj?.status, safeDetail || err);
 
-    if (errorObj?.status === 403 || errorObj?.status === 400) {
+    if (errorObj?.status === 403 || lowerDetail.includes('permission') || lowerDetail.includes('referer')) {
+      const isReferer = lowerDetail.includes('referer') || lowerDetail.includes('referrer');
       return {
-        status: errorObj.status,
+        status: 403,
         payload: {
-          error:
-            "Accès à l'API Gemini refusé ou invalide. Veuillez vérifier la variable GEMINI_API_KEY.",
+          error: isReferer
+            ? "Clé Gemini bloquée par une restriction de domaine (HTTP Referrer). Dans Google Cloud Console, retirez la restriction de site web sur votre clé car elle est appelée côté serveur par Netlify."
+            : `Accès refusé par l'API Gemini (403). Vérifiez que l'API Generative Language est active sur votre clé et qu'elle n'est pas restreinte par domaine ou IP. (${safeDetail})`,
+        },
+      };
+    }
+
+    if (errorObj?.status === 400) {
+      return {
+        status: 400,
+        payload: {
+          error: `Requête ou clé API Gemini invalide (400). Vérifiez la valeur de GEMINI_API_KEY dans Netlify (sans guillemets ni espaces) puis redéployez. (${safeDetail})`,
         },
       };
     }

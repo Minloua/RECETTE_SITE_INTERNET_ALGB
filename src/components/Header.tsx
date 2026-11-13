@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp, NavigationTab } from '../context/AppContext';
+import { PROFILE_ACCESS_MATRIX } from '../utils/accessMatrix';
 import {
   Menu,
   X,
@@ -9,10 +10,23 @@ import {
   ChevronDown,
   Sun,
   Moon,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { activeTab, setActiveTab, currentRole, currentUser, theme, toggleTheme } = useApp();
+  const {
+    activeTab,
+    setActiveTab,
+    currentRole,
+    currentUser,
+    activeCredential,
+    canAccessTab,
+    openAuthModal,
+    logoutSession,
+    theme,
+    toggleTheme,
+  } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
 
@@ -22,7 +36,7 @@ export const Header: React.FC = () => {
     setMoreDropdownOpen(false);
   };
 
-  const primaryNavItems: { tab: NavigationTab; label: string }[] = [
+  const allPrimaryNavItems: { tab: NavigationTab; label: string }[] = [
     { tab: 'accueil', label: 'Accueil' },
     { tab: 'amicale', label: 'L’Amicale' },
     { tab: 'histoire', label: 'Histoire' },
@@ -30,24 +44,29 @@ export const Header: React.FC = () => {
     { tab: 'reseau', label: 'Réseau Pro' },
     { tab: 'projets', label: 'Projets' },
   ];
+  const primaryNavItems = allPrimaryNavItems.filter((item) => canAccessTab(item.tab));
 
-  const secondaryNavItems: { tab: NavigationTab; label: string }[] = [
+  const allSecondaryNavItems: { tab: NavigationTab; label: string }[] = [
     { tab: 'actualites', label: 'Actualités & Agenda' },
     { tab: 'mediatheque', label: 'Médiathèque (Photos & Vidéos ALGB TV)' },
     { tab: 'contact', label: 'Contact & Partenariats' },
   ];
+  const secondaryNavItems = allSecondaryNavItems.filter((item) => canAccessTab(item.tab));
 
-  const isAdminRole =
-    currentRole === 'ADMIN' ||
-    currentRole === 'SUPER_ADMIN' ||
-    currentRole === 'RESPONSABLE_FINANCE' ||
-    currentRole === 'RESPONSABLE_COMM';
+  const isAuthenticated = currentRole !== 'VISITEUR' && activeCredential !== null;
+  const canSeeAdmin = isAuthenticated && canAccessTab('admin');
+  const canSeeMemberSpace = isAuthenticated && canAccessTab('espace-membre');
+  const canSeeAdhesion = canAccessTab('adhesion');
+
+  const sessionDisplayName = currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName}`
+    : activeCredential?.displayName || '';
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 transition-colors shadow-xs">
       {/* Top Banner Notice: Signature & Status */}
       <div className="bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 px-4 py-1.5 text-xs text-gray-600 dark:text-zinc-300 transition-colors">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
             <span className="text-[#B8860B] dark:text-[#E5B824] font-bold tracking-wide uppercase text-[10px] md:text-xs">
               Plateforme Officielle ALGB
@@ -58,34 +77,49 @@ export const Header: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0 text-[11px]">
-            {currentUser && currentRole !== 'VISITEUR' ? (
-              <span className="flex items-center gap-1.5 text-gray-700 dark:text-zinc-300">
-                <span className="w-2 h-2 rounded-full bg-[#E5B824]"></span>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {currentUser.firstName} {currentUser.lastName}
+          <div className="flex items-center gap-2.5 shrink-0 text-[11px]">
+            {isAuthenticated ? (
+              <>
+                <span className="flex items-center gap-1.5 text-gray-700 dark:text-zinc-300">
+                  <span className="w-2 h-2 rounded-full bg-[#E5B824]"></span>
+                  <span className="font-semibold text-gray-900 dark:text-white hidden sm:inline">
+                    {sessionDisplayName}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded bg-gray-200/80 dark:bg-zinc-800 text-[10px] font-semibold text-gray-800 dark:text-[#E5B824]">
+                    {PROFILE_ACCESS_MATRIX[currentRole].label}
+                  </span>
                 </span>
-                <span className="text-gray-500 dark:text-zinc-400 font-mono">({currentUser.promotionYear})</span>
-              </span>
-            ) : (
-              <span className="text-gray-500 dark:text-zinc-400">Bingerville, Côte d’Ivoire</span>
-            )}
 
-            {isAdminRole && (
-              <button
-                onClick={() => handleNav('admin')}
-                className="flex items-center gap-1 px-2.5 py-0.5 bg-yellow-50 dark:bg-yellow-500/15 text-yellow-900 dark:text-[#E5B824] border border-yellow-300 dark:border-[#E5B824]/40 rounded text-[11px] font-semibold hover:bg-yellow-100 dark:hover:bg-yellow-500/25 transition-colors cursor-pointer"
-              >
-                <Shield className="w-3 h-3 text-[#B8860B] dark:text-[#E5B824]" />
-                <span>Administration</span>
-              </button>
+                {canSeeAdmin && (
+                  <button
+                    onClick={() => handleNav('admin')}
+                    className="flex items-center gap-1 px-2.5 py-0.5 bg-yellow-50 dark:bg-yellow-500/15 text-yellow-900 dark:text-[#E5B824] border border-yellow-300 dark:border-[#E5B824]/40 rounded text-[11px] font-semibold hover:bg-yellow-100 dark:hover:bg-yellow-500/25 transition-colors cursor-pointer"
+                  >
+                    <Shield className="w-3 h-3 text-[#B8860B] dark:text-[#E5B824]" />
+                    <span>Administration</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={logoutSession}
+                  title="Se déconnecter et repasser en mode Visiteur public"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span className="hidden sm:inline">Déconnexion</span>
+                </button>
+              </>
+            ) : (
+              <span className="text-gray-500 dark:text-zinc-400">
+                Bingerville, Côte d’Ivoire · Accès visiteur libre
+              </span>
             )}
           </div>
         </div>
       </div>
 
       {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
         {/* Zone 1: Brand mark featuring the original logo */}
         <button
           onClick={() => handleNav('accueil')}
@@ -106,7 +140,7 @@ export const Header: React.FC = () => {
           </div>
         </button>
 
-        {/* Zone 2: Navigation links */}
+        {/* Zone 2: Navigation links (automatically aligned with visitorAllowedMenus / credential permissions) */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700 dark:text-zinc-300">
           {primaryNavItems.map((item) => {
             const isActive = activeTab === item.tab;
@@ -128,33 +162,34 @@ export const Header: React.FC = () => {
             );
           })}
 
-          {/* More menu dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-              className="flex items-center gap-1 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white py-1 transition-colors whitespace-nowrap cursor-pointer font-medium"
-            >
-              <span>Plus</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-            {moreDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-52 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-xl py-2 z-50">
-                {secondaryNavItems.map((item) => (
-                  <button
-                    key={item.tab}
-                    onClick={() => handleNav(item.tab)}
-                    className="w-full text-left px-4 py-2.5 text-xs text-gray-700 dark:text-zinc-200 hover:bg-yellow-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-[#E5B824] font-medium transition-colors cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {secondaryNavItems.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
+                className="flex items-center gap-1 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white py-1 transition-colors whitespace-nowrap cursor-pointer font-medium"
+              >
+                <span>Plus</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              {moreDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-xl py-2 z-50">
+                  {secondaryNavItems.map((item) => (
+                    <button
+                      key={item.tab}
+                      onClick={() => handleNav(item.tab)}
+                      className="w-full text-left px-4 py-2.5 text-xs text-gray-700 dark:text-zinc-200 hover:bg-yellow-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-[#E5B824] font-medium transition-colors cursor-pointer"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
-        {/* Zone 3: Theme Toggle & Primary action button */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        {/* Zone 3: Theme Toggle & Auth / Member Actions */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={toggleTheme}
@@ -162,36 +197,51 @@ export const Header: React.FC = () => {
             title={theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre'}
             className="p-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 text-gray-700 dark:text-[#E5B824] hover:border-[#E5B824] hover:text-black dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
           >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4" />
-            ) : (
-              <Moon className="w-4 h-4" />
-            )}
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             <span className="hidden xl:inline text-[11px] font-semibold">
               {theme === 'dark' ? 'Clair' : 'Sombre'}
             </span>
           </button>
 
-          {currentUser && currentRole !== 'VISITEUR' ? (
-            <button
-              onClick={() => handleNav('espace-membre')}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
-                activeTab === 'espace-membre'
-                  ? 'bg-[#E5B824] text-black border-[#E5B824] shadow-sm'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-100 border-gray-300 dark:border-zinc-700 hover:border-[#E5B824] hover:bg-gray-200 dark:hover:bg-zinc-800'
-              }`}
-            >
-              <UserCheck className={`w-3.5 h-3.5 ${activeTab === 'espace-membre' ? 'text-black' : 'text-black dark:text-[#E5B824]'}`} />
-              <span>Espace Membre</span>
-            </button>
+          {isAuthenticated ? (
+            canSeeMemberSpace && (
+              <button
+                onClick={() => handleNav('espace-membre')}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === 'espace-membre'
+                    ? 'bg-[#E5B824] text-black border-[#E5B824] shadow-sm'
+                    : 'bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-100 border-gray-300 dark:border-zinc-700 hover:border-[#E5B824] hover:bg-gray-200 dark:hover:bg-zinc-800'
+                }`}
+              >
+                <UserCheck
+                  className={`w-3.5 h-3.5 ${
+                    activeTab === 'espace-membre' ? 'text-black' : 'text-black dark:text-[#E5B824]'
+                  }`}
+                />
+                <span>Espace Membre</span>
+              </button>
+            )
           ) : (
-            <button
-              onClick={() => handleNav('adhesion')}
-              className="px-4 py-2 text-xs font-bold text-black bg-[#E5B824] hover:bg-[#dcae1f] rounded-lg transition-all shadow-sm cursor-pointer whitespace-nowrap flex items-center gap-1.5"
-            >
-              <CreditCard className="w-3.5 h-3.5" />
-              <span>Rejoindre l’ALGB</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => openAuthModal()}
+                className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 text-gray-800 dark:text-zinc-100 hover:border-[#E5B824] hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+              >
+                <LogIn className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                <span>Connexion</span>
+              </button>
+
+              {canSeeAdhesion && (
+                <button
+                  onClick={() => handleNav('adhesion')}
+                  className="hidden sm:flex px-4 py-2 text-xs font-bold text-black bg-[#E5B824] hover:bg-[#dcae1f] rounded-lg transition-all shadow-sm cursor-pointer whitespace-nowrap items-center gap-1.5"
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Rejoindre l’ALGB</span>
+                </button>
+              )}
+            </>
           )}
 
           {/* Mobile hamburger toggle */}
@@ -209,18 +259,35 @@ export const Header: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 pt-3 pb-6 space-y-2">
           <div className="grid grid-cols-2 gap-2 pb-3 border-b border-gray-200 dark:border-zinc-800">
-            <button
-              onClick={() => handleNav('adhesion')}
-              className="w-full text-center py-2 px-3 text-xs font-bold rounded-lg bg-[#E5B824] text-black"
-            >
-              Adhérer à l’Amicale
-            </button>
-            <button
-              onClick={() => handleNav('espace-membre')}
-              className="w-full text-center py-2 px-3 text-xs font-medium rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-100 bg-gray-50 dark:bg-zinc-900"
-            >
-              Espace Membre
-            </button>
+            {canSeeAdhesion && (
+              <button
+                onClick={() => handleNav('adhesion')}
+                className="w-full text-center py-2 px-3 text-xs font-bold rounded-lg bg-[#E5B824] text-black cursor-pointer"
+              >
+                Adhérer à l’Amicale
+              </button>
+            )}
+
+            {isAuthenticated ? (
+              canSeeMemberSpace && (
+                <button
+                  onClick={() => handleNav('espace-membre')}
+                  className="w-full text-center py-2 px-3 text-xs font-medium rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-100 bg-gray-50 dark:bg-zinc-900 cursor-pointer"
+                >
+                  Espace Membre
+                </button>
+              )
+            ) : (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openAuthModal();
+                }}
+                className="w-full text-center py-2 px-3 text-xs font-semibold rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-100 bg-gray-50 dark:bg-zinc-900 cursor-pointer"
+              >
+                Connexion Credential
+              </button>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -238,13 +305,26 @@ export const Header: React.FC = () => {
               </button>
             ))}
 
-            {isAdminRole && (
+            {canSeeAdmin && (
               <button
                 onClick={() => handleNav('admin')}
-                className="w-full text-left px-3 py-2 text-sm rounded-lg text-yellow-900 dark:text-[#E5B824] bg-yellow-50 dark:bg-yellow-500/15 font-bold flex items-center gap-2 mt-2"
+                className="w-full text-left px-3 py-2 text-sm rounded-lg text-yellow-900 dark:text-[#E5B824] bg-yellow-50 dark:bg-yellow-500/15 font-bold flex items-center gap-2 mt-2 cursor-pointer"
               >
                 <Shield className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
                 <span>Console d’Administration</span>
+              </button>
+            )}
+
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logoutSession();
+                }}
+                className="w-full text-left px-3 py-2 text-sm rounded-lg text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 font-semibold flex items-center gap-2 mt-1 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Se déconnecter</span>
               </button>
             )}
           </div>
