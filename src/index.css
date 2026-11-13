@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-cinzel: 'Cinzel', serif;
+    --font-serif: 'Playfair Display', serif;
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #ffffff;
+    color: #111827;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  html.dark body {
+    background-color: #09090b;
+    color: #f4f4f5;
+  }
+
+  h1, h2, h3, .font-heading {
+    font-family: var(--font-cinzel);
+  }
+
+  .font-editorial {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Custom styling for official seals, cards, and ALGB crest */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #FFF3A8 0%, #E5B824 50%, #C69214 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-border-glow {
+  box-shadow: 0 0 20px rgba(229, 184, 36, 0.22);
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #F3C63F 0%, #E5B824 50%, #B8860B 100%);
+}
+
+.algb-crest-badge {
+  background-color: #ffffff;
+  border: 1.5px solid rgba(229, 184, 36, 0.45);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 0 12px rgba(229, 184, 36, 0.18);
+}
+
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}

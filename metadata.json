@@ -1,0 +1,6 @@
+{
+  "name": "Amicale des Anciens Élèves du Lycée de Garçons de Bingerville",
+  "description": "Plateforme officielle de l'Amicale des Anciens Élèves du Lycée de Garçons de Bingerville (Côte d'Ivoire) - ALGB. Fraternité, histoire, annuaire des promotions, réseau professionnel et contributions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
