@@ -253,35 +253,37 @@ export const AdhesionView: React.FC = () => {
   };
 
   const inputClass =
-    'w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950 rounded-xl p-2.5 text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none transition-colors';
+    'w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#16324F] dark:focus:border-[#F2B705] rounded-lg p-2.5 text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none transition-colors';
 
   return (
-    <div className="bg-white dark:bg-zinc-950 min-h-screen transition-colors">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-        {/* Editorial Header */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 pb-8 text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-3 p-1.5 pr-4 rounded-xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm">
+    <div className="bg-[#F8F8F6] dark:bg-[#141413] min-h-screen text-[#141413] dark:text-[#F8F8F6] transition-colors">
+      {/* Deep Ultramarine Editorial Hero */}
+      <section className="bg-[#16324F] text-white border-b border-white/10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 text-center space-y-3">
+          <div className="inline-flex items-center gap-3 p-1.5 pr-4 rounded-xl bg-white/10 border border-white/15">
             <img
               src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
               alt="Logo officiel ALGB"
-              className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-[#E5B824] shadow-sm"
+              className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-[#F2B705]/70"
             />
-            <span className="text-xs font-bold uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824]">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#F2B705]">
               Enrôlement Officiel & Base des Compétences
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-bold font-heading text-black dark:text-white">
+          <h1 className="text-2xl sm:text-4xl font-bold font-heading text-white">
             S’enrôler dans l’ALGB & Rejoindre l’Annuaire
           </h1>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-400 font-editorial italic max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-zinc-200 font-editorial italic max-w-2xl mx-auto leading-relaxed">
             « En vous enrôlant, vous intégrez officiellement l’Annuaire des Anciens Élèves du Lycée de Garçons de Bingerville, la Base de Données des Compétences (BDR) et obtenez votre carte d’adhérent. »
           </p>
         </div>
+      </section>
 
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         {/* Progress Steps Indicators */}
         {step < 5 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-medium">
             {[
               { num: 1, label: 'Identité & Contact', icon: User },
               { num: 2, label: 'Parcours Pro', icon: Briefcase },
@@ -295,19 +297,19 @@ export const AdhesionView: React.FC = () => {
                   key={t.num}
                   className={`p-3 rounded-xl border text-center transition-all flex items-center justify-center gap-2 ${
                     isActive
-                      ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824] text-black dark:text-white font-bold shadow-sm'
+                      ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-white font-semibold shadow-editorial'
                       : isPast
-                      ? 'bg-gray-100 dark:bg-zinc-900 border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-200'
-                      : 'bg-gray-50 dark:bg-zinc-900/60 border-gray-200 dark:border-zinc-800 text-gray-400 dark:text-zinc-500'
+                      ? 'bg-white dark:bg-[#1e1e1c] border-[#16324F]/30 dark:border-white/20 text-[#141413] dark:text-zinc-200'
+                      : 'bg-white/60 dark:bg-[#1e1e1c]/60 border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-500'
                   }`}
                 >
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 font-mono ${
+                    className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0 font-mono ${
                       isActive
-                        ? 'bg-[#E5B824] text-black font-bold'
+                        ? 'bg-[#F2B705] text-[#141413] font-bold'
                         : isPast
-                        ? 'bg-black dark:bg-[#E5B824] text-[#E5B824] dark:text-black'
-                        : 'bg-gray-200 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
+                        ? 'bg-[#16324F] dark:bg-[#F2B705] text-white dark:text-[#141413] font-bold'
+                        : 'bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-400 border border-[#141413]/10 dark:border-white/10'
                     }`}
                   >
                     {isPast ? '✓' : t.num}
@@ -320,25 +322,25 @@ export const AdhesionView: React.FC = () => {
         )}
 
         {/* Main Registration Container */}
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-sm">
+        <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-10 shadow-editorial">
           {/* Step 1 : Identite & Contact */}
           {step === 1 && (
             <div className="space-y-6">
-              <div className="pb-4 border-b border-gray-200 dark:border-zinc-800">
-                <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold">
+              <div className="pb-4 border-b border-[#141413]/10 dark:border-white/10">
+                <span className="text-[11px] uppercase tracking-[0.14em] text-[#16324F] dark:text-[#F2B705] font-semibold">
                   Étape 1 sur 4
                 </span>
-                <h2 className="text-lg font-heading font-bold text-black dark:text-white mt-0.5">
+                <h2 className="text-xl font-heading font-bold text-[#141413] dark:text-white mt-0.5">
                   Identité Personnelle, Pseudo du Lycée & Contact
                 </h2>
-                <p className="text-xs text-gray-600 dark:text-zinc-400">
+                <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
                   Ces informations authentifient vos années d’internat ou d’externat à Bingerville et alimentent votre fiche d’annuaire.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Nom et prénom *</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Nom et prénom *</label>
                   <input
                     type="text"
                     required
@@ -350,8 +352,8 @@ export const AdhesionView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
-                    Pseudo du lycée <span className="text-[#B8860B] dark:text-[#E5B824] font-normal">(Le surnom à Bingerville)</span>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
+                    Pseudo du lycée <span className="text-[#16324F] dark:text-[#F2B705] font-normal">(Le surnom à Bingerville)</span>
                   </label>
                   <input
                     type="text"
@@ -489,19 +491,19 @@ export const AdhesionView: React.FC = () => {
 
                 {/* Photo Upload */}
                 <div className="sm:col-span-2 pt-2">
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-2">Photo d’identité ou portrait</label>
-                  <div className="border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-2xl p-5 text-center bg-gray-50 dark:bg-zinc-950 hover:border-[#E5B824] transition-colors">
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-2">Photo d’identité ou portrait</label>
+                  <div className="border-2 border-dashed border-[#141413]/20 dark:border-white/20 rounded-xl p-5 text-center bg-[#F8F8F6] dark:bg-[#141413] hover:border-[#F2B705] transition-colors">
                     {photoDataUrl ? (
                       <div className="flex items-center justify-center gap-4">
                         <img
                           src={photoDataUrl}
                           alt="Aperçu"
-                          className="w-16 h-16 rounded-xl object-cover border-2 border-[#E5B824]"
+                          className="w-16 h-16 rounded-xl object-cover border-2 border-[#F2B705]"
                         />
                         <div className="text-left">
-                          <p className="text-xs font-semibold text-black dark:text-white">{photoFilename}</p>
-                          <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">Photo prête pour la carte ALGB</p>
-                          <label className="text-xs text-[#B8860B] dark:text-[#E5B824] font-semibold hover:underline cursor-pointer">
+                          <p className="text-xs font-semibold text-[#141413] dark:text-white">{photoFilename}</p>
+                          <p className="text-[11px] text-[#134E4A] dark:text-emerald-400 font-medium">Photo prête pour la carte ALGB</p>
+                          <label className="text-xs text-[#16324F] dark:text-[#F2B705] font-semibold hover:underline cursor-pointer">
                             Changer la photo
                             <input
                               type="file"
@@ -514,8 +516,8 @@ export const AdhesionView: React.FC = () => {
                       </div>
                     ) : (
                       <div>
-                        <Camera className="w-8 h-8 text-gray-500 dark:text-zinc-400 mx-auto mb-2" />
-                        <label className="inline-block px-4 py-2 bg-[#E5B824] text-black font-semibold rounded-xl text-xs cursor-pointer hover:bg-[#dcae1f] transition-colors">
+                        <Camera className="w-8 h-8 text-[#4A4A48] dark:text-zinc-400 mx-auto mb-2" />
+                        <label className="inline-block px-4 py-2 bg-[#F2B705] text-[#141413] font-semibold rounded-lg text-xs cursor-pointer hover:bg-[#dfa704] transition-colors">
                           Sélectionner une photo
                           <input
                             type="file"
@@ -524,7 +526,7 @@ export const AdhesionView: React.FC = () => {
                             onChange={handlePhotoUpload}
                           />
                         </label>
-                        <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1.5">
+                        <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 mt-1.5">
                           Format JPG, PNG ou WEBP (Max 2 Mo)
                         </p>
                       </div>
@@ -534,16 +536,16 @@ export const AdhesionView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-zinc-800">
+              <div className="flex justify-end pt-4 border-t border-[#141413]/10 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => {
                     if (validateStep1()) setStep(2);
                   }}
-                  className="px-6 py-2.5 rounded-xl bg-[#E5B824] text-black font-semibold text-xs hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-6 py-2.5 rounded-lg bg-[#F2B705] text-[#141413] font-semibold text-xs hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <span>Continuer vers le parcours professionnel</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 text-[#141413]" />
                 </button>
               </div>
             </div>
@@ -552,15 +554,15 @@ export const AdhesionView: React.FC = () => {
           {/* Step 2 : Parcours Pro */}
           {step === 2 && (
             <div className="space-y-6">
-              <div className="pb-4 border-b border-gray-200 dark:border-zinc-800">
-                <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold">
+              <div className="pb-4 border-b border-[#141413]/10 dark:border-white/10">
+                <span className="text-[11px] uppercase tracking-[0.14em] text-[#16324F] dark:text-[#F2B705] font-semibold">
                   Étape 2 sur 4
                 </span>
-                <h2 className="text-lg font-heading font-bold text-black dark:text-white mt-0.5">
+                <h2 className="text-xl font-heading font-bold text-[#141413] dark:text-white mt-0.5">
                   Parcours Professionnel & Secteur d’Activité
                 </h2>
-                <p className="text-xs text-gray-600 dark:text-zinc-400">
-                  Identifiez votre secteur et votre institution pour valoriser le réseau d'anciens dans le monde du travail.
+                <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
+                  Identifiez votre secteur et votre institution pour valoriser le réseau d’anciens dans le monde du travail.
                 </p>
               </div>
 
@@ -622,11 +624,11 @@ export const AdhesionView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-zinc-800">
+              <div className="flex items-center justify-between pt-4 border-t border-[#141413]/10 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 hover:border-[#141413] text-[#141413] dark:text-zinc-200 font-semibold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Précédent</span>
@@ -637,10 +639,10 @@ export const AdhesionView: React.FC = () => {
                   onClick={() => {
                     if (validateStep2()) setStep(3);
                   }}
-                  className="px-6 py-2.5 rounded-xl bg-[#E5B824] text-black font-semibold text-xs hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-6 py-2.5 rounded-lg bg-[#F2B705] text-[#141413] font-semibold text-xs hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <span>Continuer vers les compétences & certifications</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 text-[#141413]" />
                 </button>
               </div>
             </div>
@@ -649,14 +651,14 @@ export const AdhesionView: React.FC = () => {
           {/* Step 3 : Competences & BDR */}
           {step === 3 && (
             <div className="space-y-6">
-              <div className="pb-4 border-b border-gray-200 dark:border-zinc-800">
-                <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold">
+              <div className="pb-4 border-b border-[#141413]/10 dark:border-white/10">
+                <span className="text-[11px] uppercase tracking-[0.14em] text-[#16324F] dark:text-[#F2B705] font-semibold">
                   Étape 3 sur 4
                 </span>
-                <h2 className="text-lg font-heading font-bold text-black dark:text-white mt-0.5">
+                <h2 className="text-xl font-heading font-bold text-[#141413] dark:text-white mt-0.5">
                   Compétences, Formation & Certifications (BDR)
                 </h2>
-                <p className="text-xs text-gray-600 dark:text-zinc-400">
+                <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
                   Alimentez la Base de Données des Compétences de l’ALGB pour faciliter les synergies et le mentorat.
                 </p>
               </div>
@@ -706,15 +708,15 @@ export const AdhesionView: React.FC = () => {
                         <label
                           key={comp}
                           onClick={() => toggleCompetence(comp)}
-                          className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                          className={`p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer transition-colors ${
                             isChecked
-                              ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824] text-black dark:text-white font-semibold'
-                              : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-700'
+                              ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-white font-semibold'
+                              : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
                           }`}
                         >
                           <div
                             className={`w-4 h-4 rounded flex items-center justify-center shrink-0 text-[10px] ${
-                              isChecked ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                              isChecked ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/30 bg-white dark:bg-[#1e1e1c]'
                             }`}
                           >
                             {isChecked && '✓'}
@@ -726,15 +728,15 @@ export const AdhesionView: React.FC = () => {
 
                     <label
                       onClick={() => setCompAutreActive(!compAutreActive)}
-                      className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                      className={`p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer transition-colors ${
                         compAutreActive
-                          ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824] text-black dark:text-white font-semibold'
-                          : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-700'
+                          ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-white font-semibold'
+                          : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
                       }`}
                     >
                       <div
                         className={`w-4 h-4 rounded flex items-center justify-center shrink-0 text-[10px] ${
-                          compAutreActive ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                          compAutreActive ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/30 bg-white dark:bg-[#1e1e1c]'
                         }`}
                       >
                         {compAutreActive && '✓'}
@@ -794,10 +796,10 @@ export const AdhesionView: React.FC = () => {
 
                 {/* Certifications professionnelles */}
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-2">
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-2">
                     Certifications & Diplômes professionnels obtenus
                   </label>
-                  <div className="max-h-48 overflow-y-auto p-3 bg-gray-50 dark:bg-zinc-950 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-1.5">
+                  <div className="max-h-48 overflow-y-auto p-3 bg-[#F8F8F6] dark:bg-[#141413] rounded-xl border border-[#141413]/10 dark:border-white/10 space-y-1.5">
                     {CERTIFICATIONS_LIST.map((cert) => {
                       const isChecked = selectedCertifications.includes(cert);
                       return (
@@ -806,13 +808,13 @@ export const AdhesionView: React.FC = () => {
                           onClick={() => toggleCertification(cert)}
                           className={`p-2 rounded-lg text-xs flex items-center gap-2 cursor-pointer transition-colors ${
                             isChecked
-                              ? 'bg-yellow-50 dark:bg-yellow-500/15 text-black dark:text-white font-semibold border border-yellow-200 dark:border-yellow-500/30'
-                              : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-900'
+                              ? 'bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-white font-semibold border border-[#F2B705]/40'
+                              : 'text-[#4A4A48] dark:text-zinc-300 hover:bg-white dark:hover:bg-[#1e1e1c]'
                           }`}
                         >
                           <div
                             className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 text-[9px] ${
-                              isChecked ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                              isChecked ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/30 bg-white dark:bg-[#1e1e1c]'
                             }`}
                           >
                             {isChecked && '✓'}
@@ -825,12 +827,12 @@ export const AdhesionView: React.FC = () => {
                     <label
                       onClick={() => setCertAutreActive(!certAutreActive)}
                       className={`p-2 rounded-lg text-xs flex items-center gap-2 cursor-pointer transition-colors ${
-                        certAutreActive ? 'bg-yellow-50 dark:bg-yellow-500/15 text-black dark:text-white font-semibold' : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-900'
+                        certAutreActive ? 'bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-white font-semibold' : 'text-[#4A4A48] dark:text-zinc-300 hover:bg-white dark:hover:bg-[#1e1e1c]'
                       }`}
                     >
                       <div
                         className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 text-[9px] ${
-                          certAutreActive ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                          certAutreActive ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/30 bg-white dark:bg-[#1e1e1c]'
                         }`}
                       >
                         {certAutreActive && '✓'}
@@ -851,11 +853,11 @@ export const AdhesionView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-zinc-800">
+              <div className="flex items-center justify-between pt-4 border-t border-[#141413]/10 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 hover:border-[#141413] text-[#141413] dark:text-zinc-200 font-semibold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Précédent</span>
@@ -866,10 +868,10 @@ export const AdhesionView: React.FC = () => {
                   onClick={() => {
                     if (validateStep3()) setStep(4);
                   }}
-                  className="px-6 py-2.5 rounded-xl bg-[#E5B824] text-black font-semibold text-xs hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-6 py-2.5 rounded-lg bg-[#F2B705] text-[#141413] font-semibold text-xs hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer transition-colors"
                 >
                   <span>Continuer vers les préférences & finalisation</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 text-[#141413]" />
                 </button>
               </div>
             </div>
@@ -878,21 +880,21 @@ export const AdhesionView: React.FC = () => {
           {/* Step 4 : Preferences, Offre de Services & Finalisation */}
           {step === 4 && (
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="pb-4 border-b border-gray-200 dark:border-zinc-800">
-                <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold">
+              <div className="pb-4 border-b border-[#141413]/10 dark:border-white/10">
+                <span className="text-[11px] uppercase tracking-[0.14em] text-[#16324F] dark:text-[#F2B705] font-semibold">
                   Étape 4 sur 4
                 </span>
-                <h2 className="text-lg font-heading font-bold text-black dark:text-white mt-0.5">
+                <h2 className="text-xl font-heading font-bold text-[#141413] dark:text-white mt-0.5">
                   Offre de Services, Disponibilités & Déclaration
                 </h2>
-                <p className="text-xs text-gray-600 dark:text-zinc-400">
+                <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
                   Précisez comment vous souhaitez contribuer à l’essor de la communauté des anciens et vos préférences de contact.
                 </p>
               </div>
 
               <div className="space-y-4 text-xs">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                     Services que vous pouvez offrir au réseau *
                   </label>
                   <textarea
@@ -906,8 +908,8 @@ export const AdhesionView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-2">
-                    Vos disponibilités pour l'Amicale & les camarades
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-2">
+                    Vos disponibilités pour l’Amicale & les camarades
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {DISPONIBILITES_LIST.map((d) => {
@@ -916,15 +918,15 @@ export const AdhesionView: React.FC = () => {
                         <label
                           key={d}
                           onClick={() => toggleDisponibilite(d)}
-                          className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition-all ${
+                          className={`p-2.5 rounded-lg border flex items-center gap-2 cursor-pointer transition-colors ${
                             isChecked
-                              ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824] text-black dark:text-white font-semibold'
-                              : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-700'
+                              ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-white font-semibold'
+                              : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
                           }`}
                         >
                           <div
                             className={`w-4 h-4 rounded flex items-center justify-center shrink-0 text-[10px] ${
-                              isChecked ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                              isChecked ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/30 bg-white dark:bg-[#1e1e1c]'
                             }`}
                           >
                             {isChecked && '✓'}
@@ -937,13 +939,13 @@ export const AdhesionView: React.FC = () => {
                 </div>
 
                 {/* BDR consent */}
-                <div className="p-4 bg-gray-50 dark:bg-zinc-950 rounded-2xl border border-gray-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-4 bg-[#F8F8F6] dark:bg-[#141413] rounded-xl border border-[#141413]/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold text-black dark:text-white">
+                    <p className="text-xs font-semibold text-[#141413] dark:text-white">
                       Intégration à la Base de Données des Compétences (BDR)
                     </p>
-                    <p className="text-[11px] text-gray-600 dark:text-zinc-400">
-                      Acceptez-vous d'être référencé(e) dans l’annuaire des compétences de l’ALGB ?
+                    <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
+                      Acceptez-vous d’être référencé(e) dans l’annuaire des compétences de l’ALGB ?
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -951,7 +953,7 @@ export const AdhesionView: React.FC = () => {
                       type="button"
                       onClick={() => setBdrAnnuaire('Oui')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
-                        bdrAnnuaire === 'Oui' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300'
+                        bdrAnnuaire === 'Oui' ? 'bg-[#134E4A] text-white' : 'bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300'
                       }`}
                     >
                       Oui
@@ -960,7 +962,7 @@ export const AdhesionView: React.FC = () => {
                       type="button"
                       onClick={() => setBdrAnnuaire('Non')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
-                        bdrAnnuaire === 'Non' ? 'bg-red-600 text-white' : 'bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300'
+                        bdrAnnuaire === 'Non' ? 'bg-red-700 text-white' : 'bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300'
                       }`}
                     >
                       Non
@@ -969,12 +971,12 @@ export const AdhesionView: React.FC = () => {
                 </div>
 
                 {/* Partage contacts */}
-                <div className="p-4 bg-gray-50 dark:bg-zinc-950 rounded-2xl border border-gray-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-4 bg-[#F8F8F6] dark:bg-[#141413] rounded-xl border border-[#141413]/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold text-black dark:text-white">
+                    <p className="text-xs font-semibold text-[#141413] dark:text-white">
                       Autoriser le partage de contacts (RGPD / ARTCI)
                     </p>
-                    <p className="text-[11px] text-gray-600 dark:text-zinc-400">
+                    <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
                       Vos coordonnées seront visibles uniquement aux membres actifs à jour de cotisation qui en font la demande.
                     </p>
                   </div>
@@ -983,7 +985,7 @@ export const AdhesionView: React.FC = () => {
                       type="button"
                       onClick={() => setPartageContacts('Oui')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
-                        partageContacts === 'Oui' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300'
+                        partageContacts === 'Oui' ? 'bg-[#134E4A] text-white' : 'bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300'
                       }`}
                     >
                       Oui
@@ -992,7 +994,7 @@ export const AdhesionView: React.FC = () => {
                       type="button"
                       onClick={() => setPartageContacts('Non')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
-                        partageContacts === 'Non' ? 'bg-red-600 text-white' : 'bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300'
+                        partageContacts === 'Non' ? 'bg-red-700 text-white' : 'bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300'
                       }`}
                     >
                       Non
@@ -1001,7 +1003,7 @@ export const AdhesionView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                     Observations / Suggestions pour le Bureau Exécutif (Facultatif)
                   </label>
                   <input
@@ -1013,19 +1015,19 @@ export const AdhesionView: React.FC = () => {
                   />
                 </div>
 
-                <div className="p-3.5 bg-yellow-50 dark:bg-yellow-500/15 border border-yellow-200 dark:border-yellow-500/30 rounded-xl text-[11px] text-yellow-900 dark:text-yellow-200 flex items-start gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824] shrink-0 mt-0.5" />
+                <div className="p-3.5 bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 rounded-xl text-[11px] text-[#141413] dark:text-[#FEF8E6] flex items-start gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#16324F] dark:text-[#F2B705] shrink-0 mt-0.5" />
                   <span>
-                    En validant ce formulaire, vos données sont synchronisées de façon sécurisée avec l'infrastructure officielle de l'ALGB et vous recevez votre carte d'adhérent.
+                    En validant ce formulaire, vos données sont synchronisées de façon sécurisée avec l’infrastructure officielle de l’ALGB et vous recevez votre carte d’adhérent.
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-zinc-800">
+              <div className="flex items-center justify-between pt-4 border-t border-[#141413]/10 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => setStep(3)}
-                  className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 hover:border-[#141413] text-[#141413] dark:text-zinc-200 font-semibold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Précédent</span>
@@ -1034,17 +1036,17 @@ export const AdhesionView: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-7 py-3 rounded-xl bg-[#E5B824] hover:bg-[#dcae1f] text-black font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+                  className="px-7 py-3 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold text-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 transition-colors"
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-[#141413] border-t-transparent rounded-full animate-spin"></div>
                       <span>Enregistrement en cours...</span>
                     </>
                   ) : (
                     <>
                       <span>Finaliser & Valider mon Adhésion</span>
-                      <Send className="w-4 h-4" />
+                      <Send className="w-4 h-4 text-[#141413]" />
                     </>
                   )}
                 </button>
@@ -1055,48 +1057,48 @@ export const AdhesionView: React.FC = () => {
           {/* Step 5 : Success Confirmation */}
           {step === 5 && createdMember && (
             <div className="text-center py-8 space-y-6 max-w-lg mx-auto">
-              <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto">
+              <div className="w-16 h-16 rounded-xl bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/50 flex items-center justify-center text-[#134E4A] dark:text-emerald-400 mx-auto">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-2xl font-bold font-heading text-black dark:text-white">
+                <h3 className="text-2xl font-bold font-heading text-[#141413] dark:text-white">
                   Enrôlement Officiel Réussi !
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-400 font-editorial italic leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-400 font-editorial italic leading-relaxed">
                   Votre fiche de membre a été intégrée dans l’Annuaire des Anciens Élèves et la Base de Données des Compétences (BDR) de l’ALGB.
                 </p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 text-left space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-zinc-800">
-                  <span className="text-gray-500 dark:text-zinc-400 text-xs">Matricule Officiel</span>
-                  <span className="font-mono font-bold text-[#B8860B] dark:text-[#E5B824] text-sm">
+              <div className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 text-left space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#141413]/10 dark:border-white/10">
+                  <span className="text-[#4A4A48] dark:text-zinc-400 text-xs">Matricule Officiel</span>
+                  <span className="font-mono font-bold text-[#16324F] dark:text-[#F2B705] text-sm">
                     {createdMember.membershipCardId}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-zinc-400">Membre</span>
-                  <span className="font-semibold text-black dark:text-white">
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Membre</span>
+                  <span className="font-semibold text-[#141413] dark:text-white">
                     {createdMember.firstName} {createdMember.lastName}{' '}
                     {createdMember.nickname && (
-                      <span className="text-[#B8860B] dark:text-[#E5B824] font-normal">« {createdMember.nickname} »</span>
+                      <span className="text-[#16324F] dark:text-[#F2B705] font-normal">« {createdMember.nickname} »</span>
                     )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-zinc-400">Promotion</span>
-                  <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">{createdMember.promotionYear}</span>
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Promotion</span>
+                  <span className="font-mono text-[#141413] dark:text-zinc-200 font-semibold">{createdMember.promotionYear}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-zinc-400">Poste & Structure</span>
-                  <span className="text-gray-800 dark:text-zinc-200">
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Poste & Structure</span>
+                  <span className="text-[#141413] dark:text-zinc-200">
                     {createdMember.currentRole} — {createdMember.company}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-zinc-400">Statut BDR</span>
-                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Statut BDR</span>
+                  <span className="text-[#134E4A] dark:text-emerald-400 font-semibold flex items-center gap-1">
                     <Check className="w-3.5 h-3.5" />
                     <span>Enrôlé & Actif</span>
                   </span>
@@ -1107,16 +1109,16 @@ export const AdhesionView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setViewingCardMember(createdMember)}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#E5B824] hover:bg-[#dcae1f] text-black font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-4 h-4 text-[#141413]" />
                   <span>Afficher ma Carte Biométrique</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('anciens')}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 font-medium text-xs transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:border-[#141413] border border-[#141413]/15 dark:border-white/15 text-[#141413] dark:text-zinc-200 font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Explorer l’Annuaire
                 </button>

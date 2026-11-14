@@ -79,13 +79,21 @@ export interface AssistantRequestBody {
 
 export interface AssistantServiceResult {
   status: number;
-  payload: { reply: string; model: string } | { error: string };
+  payload:
+    | { reply: string; model: string; warning?: string }
+    | { error: string };
+}
+
+function resolveApiKey(): string | null {
+  const rawKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!rawKey) return null;
+  const apiKey = rawKey.trim().replace(/^["']+|["']+$/g, '').trim();
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey.length < 10) return null;
+  return apiKey;
 }
 
 export function getGeminiClient(): GoogleGenAI | null {
-  const rawKey = process.env.GEMINI_API_KEY;
-  if (!rawKey) return null;
-  const apiKey = rawKey.trim().replace(/^["']+|["']+$/g, '').trim();
+  const apiKey = resolveApiKey();
   if (!apiKey) return null;
   return new GoogleGenAI({
     apiKey,
@@ -100,6 +108,42 @@ export function getGeminiClient(): GoogleGenAI | null {
 function sanitizeErrorMessage(msg: unknown): string {
   const raw = typeof msg === 'string' ? msg : '';
   return raw.replace(/AIza[0-9A-Za-z_-]{20,}/g, '[CLE_MASQUEE]').slice(0, 220);
+}
+
+/**
+ * Normalizes conversation history for Gemini `generateContent`:
+ * - Strips empty turns
+ * - Ensures the conversation starts with a 'user' turn
+ * - Merges consecutive same-role turns so roles strictly alternate ('user' -> 'model')
+ * - Ensures the last history turn before the new 'user' message is 'model'
+ */
+function normalizeHistoryForGemini(history: ChatHistoryTurn[] | undefined): ChatHistoryTurn[] {
+  if (!Array.isArray(history)) return [];
+  const cleaned: ChatHistoryTurn[] = [];
+
+  for (const turn of history) {
+    if (!turn || (turn.role !== 'user' && turn.role !== 'model')) continue;
+    const text = typeof turn.text === 'string' ? turn.text.trim() : '';
+    if (!text) continue;
+
+    if (cleaned.length === 0 && turn.role !== 'user') {
+      continue;
+    }
+
+    const last = cleaned[cleaned.length - 1];
+    if (last && last.role === turn.role) {
+      last.text = `${last.text}\n${text}`;
+    } else {
+      cleaned.push({ role: turn.role, text });
+    }
+  }
+
+  // Since the current prompt is a 'user' message, history must end with 'model'
+  if (cleaned.length > 0 && cleaned[cleaned.length - 1].role === 'user') {
+    cleaned.pop();
+  }
+
+  return cleaned.slice(-12);
 }
 
 export function buildSystemInstruction(
@@ -191,46 +235,151 @@ BASE DE CONNAISSANCES ENRICHIE PAR L'ADMINISTRATION & LA COMMUNICATION (PRIORITA
 ${enrichedBlock}`;
 }
 
+export function buildLocalAssistantReply(
+  query: string,
+  snapshot: ContextSnapshot | undefined,
+  knowledgeBase: KnowledgeEntryInput[] | undefined
+): string {
+  const q = query
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const s = snapshot?.settings || {};
+  const currency = s.currency || 'FCFA';
+  const adhesionFee = (s.droitAdhesionAmount ?? 10000).toLocaleString('fr-FR');
+  const monthlyFee = (s.cotisationMensuelleAmount ?? 5000).toLocaleString('fr-FR');
+  const activeKb = (knowledgeBase || []).filter((k) => k.isActive);
+
+  // Check matching enriched KB entries first
+  const matchingKb = activeKb.filter((k) => {
+    const hay = `${k.title} ${k.content} ${k.category}`
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+    const words = q.split(/\s+/).filter((w) => w.length >= 4);
+    return words.some((w) => hay.includes(w));
+  });
+
+  if (q.includes('adher') || q.includes('inscri') || q.includes('enrol') || q.includes('cotis') || q.includes('paiement') || q.includes('tarif') || q.includes('montant')) {
+    return [
+      `Pour rejoindre l'ALGB (${s.associationName || "Amicale des Anciens Élèves du Lycée de Garçons de Bingerville"}) et régler vos cotisations :`,
+      `• Éligibilité : avoir effectué au moins une année scolaire au Lycée de Garçons de Bingerville.`,
+      `• Enrôlement : rendez-vous dans la rubrique "Adhésion" pour compléter votre dossier (identité, promotion, parcours BDR).`,
+      `• Droits d'adhésion : ${adhesionFee} ${currency} · Cotisation mensuelle : ${monthlyFee} ${currency} / mois (Exercice ${s.fiscalYear ?? 2026}).`,
+      `• Paiements : Orange Money (${s.orangeMoneyMerchantNumber || 'marchand'}), MTN MoMo (${s.mtnMoMoMerchantNumber || 'marchand'}), Moov Money, Carte Bancaire, Virement (${s.bankName || 'Compte ALGB'}) ou guichet du Trésorier avec édition de reçu et quitus dans votre Espace Membre.`,
+    ].join('\n');
+  }
+
+  if (q.includes('evenement') || q.includes('agenda') || q.includes('gala') || q.includes('retrouvailles') || q.includes('conference') || q.includes('date')) {
+    const events = snapshot?.events || [];
+    if (events.length > 0) {
+      const list = events
+        .slice(0, 4)
+        .map((ev) => `• ${ev.title} (${ev.type}) — le ${ev.date} à ${ev.time}, ${ev.location} (${ev.city}).`)
+        .join('\n');
+      return `Voici les prochains événements inscrits à l'agenda officiel de l'ALGB :\n${list}\n\nRetrouvez tous les détails et inscriptions dans la rubrique "Actualités & Événements".`;
+    }
+    return `Consultez la rubrique "Actualités & Événements" pour découvrir le calendrier des rencontres, galas et assemblées générales de l'ALGB.`;
+  }
+
+  if (q.includes('projet') || q.includes('mecenat') || q.includes('don') || q.includes('bourse') || q.includes('lycee') || q.includes('solidarite')) {
+    const projects = snapshot?.projects || [];
+    if (projects.length > 0) {
+      const list = projects
+        .slice(0, 4)
+        .map(
+          (p) =>
+            `• ${p.title} (${p.status}) — ${p.budgetRaised.toLocaleString('fr-FR')} / ${p.budgetGoal.toLocaleString('fr-FR')} ${currency}.`
+        )
+        .join('\n');
+      return `Voici les projets prioritaires soutenus par l'ALGB en faveur du Lycée de Bingerville :\n${list}\n\nVous pouvez contribuer ou consulter les rapports d'exécution depuis la rubrique "Projets & Mécénat".`;
+    }
+  }
+
+  if (q.includes('carte') || q.includes('qr') || q.includes('matricule') || q.includes('quitus') || q.includes('espace membre')) {
+    return [
+      `Concernant votre carte d'adhérent et votre Espace Membre ALGB :`,
+      `• Après validation de votre adhésion, un matricule officiel et une carte d'adhérent avec QR Code sécurisé vous sont attribués.`,
+      `• Depuis l'"Espace Membre", vous pouvez afficher votre carte officielle, flasher le QR Code pour synchroniser un paiement, consulter l'historique graphique de vos cotisations et télécharger vos reçus et quitus.`,
+    ].join('\n');
+  }
+
+  if (q.includes('mentor') || q.includes('parrain') || q.includes('carriere') || q.includes('emploi') || q.includes('stage')) {
+    return [
+      `Les programmes "Trouver un Mentor", "Collège des Parrains" et "Carrières au cœur du réseau" sont réservés aux membres connectés à jour de leurs cotisations.`,
+      `• Connectez-vous avec votre credential membre dans "Espace Membre" et vérifiez que votre statut financier est "À jour".`,
+      `• L'Annuaire des Anciens et les pages de présentation de l'Amicale restent accessibles à tout moment.`,
+    ].join('\n');
+  }
+
+  if (matchingKb.length > 0) {
+    const kbLines = matchingKb
+      .slice(0, 3)
+      .map((k) => `• ${k.title} : ${k.content}`)
+      .join('\n');
+    return `Voici les informations officielles enregistrées pour votre question :\n${kbLines}`;
+  }
+
+  return [
+    `Bienvenue auprès de l'Assistant ALGB (${s.associationSignature || 'Excellence, Fraternité, Devoir de Mémoire'}).`,
+    `Je peux vous renseigner sur :`,
+    `• L'adhésion et les cotisations (${adhesionFee} ${currency} d'adhésion · ${monthlyFee} ${currency}/mois)`,
+    `• Les prochains événements et actualités (${snapshot?.events?.length ?? 0} événement(s) à l'agenda)`,
+    `• Les projets du Lycée et le mécénat (${snapshot?.projects?.length ?? 0} projet(s) suivi(s))`,
+    `• L'Espace Membre, la carte QR Code, le Mentorat et l'Annuaire des Promotions.`,
+    `Pour toute demande spécifique, contactez le secrétariat : ${s.officialEmail || 'contact@algb-bingerville.org'} (${s.officialPhone || '+225 27 22 40 31 00'}).`,
+  ].join('\n');
+}
+
+function describeGeminiIssue(status: number | undefined, detail: string): string {
+  const lower = detail.toLowerCase();
+  if (status === 403 || lower.includes('permission') || lower.includes('referer') || lower.includes('referrer')) {
+    return lower.includes('referer') || lower.includes('referrer')
+      ? "Clé Gemini restreinte par domaine HTTP : réponse fournie via la base officielle ALGB."
+      : "Accès Gemini (403) refusé : vérifiez la clé GEMINI_API_KEY dans les secrets serveur. Réponse fournie via la base officielle ALGB.";
+  }
+  if (status === 400 || lower.includes('api key') || lower.includes('api_key_invalid')) {
+    return "Clé GEMINI_API_KEY invalide ou absente : vérifiez Settings > Secrets. Réponse fournie via la base officielle ALGB.";
+  }
+  if (status === 429) {
+    return "Quota Gemini temporairement atteint : réponse fournie via la base officielle ALGB.";
+  }
+  return "Service Gemini temporairement indisponible : réponse fournie via la base officielle ALGB.";
+}
+
 export async function handleAssistantChat(
   body: AssistantRequestBody
 ): Promise<AssistantServiceResult> {
+  const { message, history, contextSnapshot, aiKnowledgeBase } = body || {};
+
+  const trimmedMessage = typeof message === 'string' ? message.trim() : '';
+  if (!trimmedMessage) {
+    return {
+      status: 400,
+      payload: { error: 'Veuillez saisir une question pour démarrer la discussion.' },
+    };
+  }
+
+  const ai = getGeminiClient();
+  if (!ai) {
+    return {
+      status: 200,
+      payload: {
+        reply: buildLocalAssistantReply(trimmedMessage, contextSnapshot, aiKnowledgeBase),
+        model: 'algb-base-officielle',
+        warning:
+          "Clé GEMINI_API_KEY non configurée dans l'environnement serveur : réponse générée depuis la base officielle ALGB.",
+      },
+    };
+  }
+
   try {
-    const { message, history, contextSnapshot, aiKnowledgeBase } = body || {};
-
-    const trimmedMessage = typeof message === 'string' ? message.trim() : '';
-    if (!trimmedMessage) {
-      return {
-        status: 400,
-        payload: { error: 'Veuillez saisir une question pour démarrer la discussion.' },
-      };
-    }
-
-    const ai = getGeminiClient();
-    if (!ai) {
-      return {
-        status: 503,
-        payload: {
-          error:
-            "La clé d'API Gemini (GEMINI_API_KEY) n'est pas encore configurée dans les variables d'environnement du serveur.",
-        },
-      };
-    }
-
     const systemInstruction = buildSystemInstruction(contextSnapshot, aiKnowledgeBase);
-
-    const safeHistory: ChatHistoryTurn[] = Array.isArray(history)
-      ? history
-          .filter(
-            (turn) =>
-              (turn.role === 'user' || turn.role === 'model') &&
-              typeof turn.text === 'string' &&
-              turn.text.trim().length > 0
-          )
-          .slice(-12)
-      : [];
+    const normalizedHistory = normalizeHistoryForGemini(history);
 
     const contents = [
-      ...safeHistory.map((turn) => ({
+      ...normalizedHistory.map((turn) => ({
         role: turn.role,
         parts: [{ text: turn.text }],
       })),
@@ -266,7 +415,7 @@ export async function handleAssistantChat(
         throw primaryErr;
       }
 
-      usedModel = 'gemini-2.5-flash';
+      usedModel = 'gemini-3.1-flash-lite';
       response = await ai.models.generateContent({
         model: usedModel,
         contents,
@@ -279,10 +428,11 @@ export async function handleAssistantChat(
     const reply = (response.text || '').trim();
     if (!reply) {
       return {
-        status: 502,
+        status: 200,
         payload: {
-          error:
-            "L'assistant n'a pas pu formuler de réponse pour cette requête. Veuillez réessayer.",
+          reply: buildLocalAssistantReply(trimmedMessage, contextSnapshot, aiKnowledgeBase),
+          model: 'algb-base-officielle',
+          warning: "Réponse Gemini vide : réponse générée depuis la base officielle ALGB.",
         },
       };
     }
@@ -297,45 +447,14 @@ export async function handleAssistantChat(
   } catch (err: unknown) {
     const errorObj = err as { status?: number; message?: string };
     const safeDetail = sanitizeErrorMessage(errorObj?.message);
-    const lowerDetail = safeDetail.toLowerCase();
-    console.error('Erreur assistant chat:', errorObj?.status, safeDetail || err);
-
-    if (errorObj?.status === 403 || lowerDetail.includes('permission') || lowerDetail.includes('referer')) {
-      const isReferer = lowerDetail.includes('referer') || lowerDetail.includes('referrer');
-      return {
-        status: 403,
-        payload: {
-          error: isReferer
-            ? "Clé Gemini bloquée par une restriction de domaine (HTTP Referrer). Dans Google Cloud Console, retirez la restriction de site web sur votre clé car elle est appelée côté serveur par Netlify."
-            : `Accès refusé par l'API Gemini (403). Vérifiez que l'API Generative Language est active sur votre clé et qu'elle n'est pas restreinte par domaine ou IP. (${safeDetail})`,
-        },
-      };
-    }
-
-    if (errorObj?.status === 400) {
-      return {
-        status: 400,
-        payload: {
-          error: `Requête ou clé API Gemini invalide (400). Vérifiez la valeur de GEMINI_API_KEY dans Netlify (sans guillemets ni espaces) puis redéployez. (${safeDetail})`,
-        },
-      };
-    }
-
-    if (errorObj?.status === 429) {
-      return {
-        status: 429,
-        payload: {
-          error:
-            "Le service d'assistance reçoit actuellement trop de requêtes. Veuillez patienter quelques instants.",
-        },
-      };
-    }
+    console.error('Erreur assistant chat (basculé en base officielle ALGB):', errorObj?.status, safeDetail || err);
 
     return {
-      status: 500,
+      status: 200,
       payload: {
-        error:
-          "Une erreur est survenue lors de la consultation de l'assistant IA. Veuillez réessayer.",
+        reply: buildLocalAssistantReply(trimmedMessage, contextSnapshot, aiKnowledgeBase),
+        model: 'algb-base-officielle',
+        warning: describeGeminiIssue(errorObj?.status, safeDetail),
       },
     };
   }

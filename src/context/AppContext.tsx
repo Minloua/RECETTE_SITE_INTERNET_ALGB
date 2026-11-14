@@ -26,11 +26,16 @@ import {
   YouTubeVideo,
   INITIAL_PHOTOS,
   INITIAL_VIDEOS,
+  MentorshipRequestRecord,
+  JobApplicationRecord,
+  INITIAL_MENTORSHIP_REQUESTS,
+  INITIAL_JOB_APPLICATIONS,
 } from '../data/mockData';
 import { DEFAULT_GOOGLE_SCRIPT_URL } from '../data/enrollmentData';
 import { parseMemberQrPayload } from '../utils/qrPayload';
 import {
   AccessCredential,
+  ALWAYS_PUBLIC_AMICALE_TABS,
   authenticateUserCredential,
   authorizeQrPaymentAccess,
   canActiveSessionAccessMemberQr,
@@ -88,6 +93,7 @@ export type NavigationTab =
   | 'histoire'
   | 'anciens'
   | 'reseau'
+  | 'mentorat'
   | 'projets'
   | 'actualites'
   | 'galerie'
@@ -243,6 +249,9 @@ interface AppContextType {
   }) => MemberTransaction;
   updateTransactionStatus: (txId: string, status: PaymentStatus, validatorName?: string) => void;
   getMemberFinancialSummary: (memberId: string) => MemberFinancialSummary;
+  isMemberUpToDate: (memberId: string) => boolean;
+  isCurrentMemberUpToDate: boolean;
+  currentMemberFinancialSummary: MemberFinancialSummary | null;
   // QR Flash & Multi-Table Payment Sync
   qrSyncModalOpen: boolean;
   qrTargetMember: AlumniMember | null;
@@ -309,6 +318,23 @@ interface AppContextType {
   updateVisitorAllowedMenus: (menus: NavigationTab[]) => void;
   updateRoleMenuPermissions: (role: Exclude<UserRole, 'VISITEUR'>, menus: NavigationTab[]) => void;
   canAccessTab: (tab: NavigationTab) => boolean;
+  // Carrières, Mentorat, Mécénat & Newsletter
+  mentorshipRequests: MentorshipRequestRecord[];
+  jobApplications: JobApplicationRecord[];
+  submitMentorshipRequest: (params: { mentorId: string; objective: string }) => MentorshipRequestRecord | null;
+  updateMentorshipRequestStatus: (requestId: string, status: MentorshipRequestRecord['status']) => void;
+  becomeMentor: (params: { currentRole?: string; company?: string; bio?: string; availabilities?: string[] }) => void;
+  applyToJobOffer: (params: { jobId: string; note: string }) => JobApplicationRecord | null;
+  submitPatronageDonation: (params: {
+    amountEur?: number;
+    amountFcfa: number;
+    frequency: 'PONCTUEL' | 'MENSUEL';
+    projectId: string;
+    donorName?: string;
+    isAnonymous?: boolean;
+  }) => ProjectContribution | null;
+  newsletterSubscribers: string[];
+  subscribeNewsletter: (email: string) => boolean;
   // General Actions
   submitMembership: (data: Partial<AlumniMember>) => AlumniMember;
   approveMember: (memberId: string) => void;
@@ -352,6 +378,9 @@ const STORAGE_KEYS = {
   ACTIVE_CREDENTIAL_ID: 'algb_active_credential_id_v1',
   VISITOR_MENUS: 'algb_visitor_menus_v1',
   ROLE_MENUS: 'algb_role_menus_v1',
+  MENTORSHIP_REQUESTS: 'algb_mentorship_requests_v1',
+  JOB_APPLICATIONS: 'algb_job_applications_v1',
+  NEWSLETTER: 'algb_newsletter_v1',
 };
 
 const INITIAL_AI_KNOWLEDGE: AiKnowledgeEntry[] = [
@@ -411,7 +440,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (saved) {
         const parsed = JSON.parse(saved) as NavigationTab[];
         if (Array.isArray(parsed)) {
-          return parsed.includes('accueil') ? parsed : ['accueil', ...parsed];
+          const withPublicAmicale = Array.from(
+            new Set<NavigationTab>([
+              ...ALWAYS_PUBLIC_AMICALE_TABS,
+              ...parsed.filter((t) => t !== 'admin' && t !== 'espace-membre'),
+            ])
+          );
+          if (!withPublicAmicale.includes('mentorat') && withPublicAmicale.includes('reseau')) {
+            return [...withPublicAmicale, 'mentorat'];
+          }
+          return withPublicAmicale;
         }
       }
     } catch {
@@ -425,10 +463,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   >(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.ROLE_MENUS);
-      return saved ? { ...DEFAULT_ROLE_MENU_PERMISSIONS, ...JSON.parse(saved) } : DEFAULT_ROLE_MENU_PERMISSIONS;
+      if (saved) {
+        const parsed = JSON.parse(saved) as Record<Exclude<UserRole, 'VISITEUR'>, NavigationTab[]>;
+        const merged = { ...DEFAULT_ROLE_MENU_PERMISSIONS, ...parsed };
+        (Object.keys(merged) as Array<Exclude<UserRole, 'VISITEUR'>>).forEach((r) => {
+          if (!merged[r].includes('mentorat')) {
+            merged[r] = [...merged[r], 'mentorat'];
+          }
+        });
+        return merged;
+      }
     } catch {
-      return DEFAULT_ROLE_MENU_PERMISSIONS;
+      // ignore
     }
+    return DEFAULT_ROLE_MENU_PERMISSIONS;
   });
 
   const [activeCredentialId, setActiveCredentialId] = useState<string | null>(() => {
@@ -495,6 +543,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [transactions, setTransactions] = useState<MemberTransaction[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+  });
+
+  const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequestRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.MENTORSHIP_REQUESTS);
+      return saved ? JSON.parse(saved) : INITIAL_MENTORSHIP_REQUESTS;
+    } catch {
+      return INITIAL_MENTORSHIP_REQUESTS;
+    }
+  });
+
+  const [jobApplications, setJobApplications] = useState<JobApplicationRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.JOB_APPLICATIONS);
+      return saved ? JSON.parse(saved) : INITIAL_JOB_APPLICATIONS;
+    } catch {
+      return INITIAL_JOB_APPLICATIONS;
+    }
+  });
+
+  const [newsletterSubscribers, setNewsletterSubscribers] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.NEWSLETTER);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   // Current logged in user (null in public Visitor mode until authenticated by credential)
@@ -724,6 +799,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Keep session synchronized if active credential is suspended or modified
   useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.MENTORSHIP_REQUESTS, JSON.stringify(mentorshipRequests));
+    } catch {
+      // ignore
+    }
+  }, [mentorshipRequests]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.JOB_APPLICATIONS, JSON.stringify(jobApplications));
+    } catch {
+      // ignore
+    }
+  }, [jobApplications]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.NEWSLETTER, JSON.stringify(newsletterSubscribers));
+    } catch {
+      // ignore
+    }
+  }, [newsletterSubscribers]);
+
+  useEffect(() => {
     if (activeCredentialId && !activeCredential) {
       setActiveCredentialId(null);
       setCurrentRole('VISITEUR');
@@ -922,7 +1021,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           'success',
           'Accusé de réception confirmé',
           `Réception des accès confirmée pour ${targetCred.displayName} (${targetCred.identifier}). Vous pouvez désormais vous connecter.`,
-          { badge: 'Confirmation ALGB', durationMs: 8000 }
+          {
+            badge: 'Confirmation ALGB',
+            durationMs: 9000,
+            actionLabel: 'Se connecter →',
+            onAction: () => openAuthModal('espace-membre'),
+          }
         );
       } else {
         addToast(
@@ -1290,13 +1394,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Post job offer
   const postJobOffer = (offer: Omit<JobOffer, 'id' | 'postedDate'>) => {
+    if (currentRole === 'VISITEUR' || !activeCredential) {
+      addToast(
+        'warning',
+        'Accès réservé aux membres à jour',
+        'L’encart « Carrières au cœur du réseau » est réservé aux membres connectés à jour de leur cotisation.',
+        {
+          badge: 'Règle Carrières ALGB',
+          actionLabel: 'Se connecter →',
+          onAction: () => openAuthModal('reseau'),
+        }
+      );
+      return;
+    }
+
+    if (!currentUser || !isCurrentMemberUpToDate) {
+      addToast(
+        'warning',
+        'Cotisation non à jour',
+        'Régularisez votre cotisation pour publier une offre dans « Carrières au cœur du réseau ».',
+        {
+          badge: 'Cotisation requise',
+          actionLabel: 'Régulariser →',
+          onAction: () => {
+            if (currentUser) {
+              openPaymentModal({
+                type: 'COTISATION_MENSUELLE',
+                selectedMonths: currentMemberFinancialSummary?.overdueMonths,
+              });
+            } else {
+              setActiveTab('espace-membre');
+            }
+          },
+        }
+      );
+      return;
+    }
+
     const newOffer: JobOffer = {
       ...offer,
       id: `job-${Date.now().toString().slice(-4)}`,
       postedDate: new Date().toISOString().split('T')[0],
     };
     setJobOffers((prev) => [newOffer, ...prev]);
-    addToast('success', 'Offre publiée', 'L’opportunité est désormais visible pour tous les anciens élèves.');
+    addToast('success', 'Offre publiée', 'L’opportunité est désormais visible pour les membres à jour.');
   };
 
   // Add news
@@ -1332,6 +1473,257 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
     addToast('success', 'Profil actualisé', 'Vos modifications ont été enregistrées avec succès.');
+  };
+
+  // Carrières, Mentorat, Mécénat & Newsletter actions
+  const submitMentorshipRequest = (params: {
+    mentorId: string;
+    objective: string;
+  }): MentorshipRequestRecord | null => {
+    if (currentRole === 'VISITEUR' || !activeCredential) {
+      addToast(
+        'warning',
+        'Accès réservé aux membres à jour',
+        'Les encarts « Trouver un Mentor » et « Collège des Parrains » sont réservés aux membres connectés à jour de leur cotisation.',
+        {
+          badge: 'Règle Mentorat ALGB',
+          actionLabel: 'Se connecter →',
+          onAction: () => openAuthModal('mentorat'),
+        }
+      );
+      return null;
+    }
+
+    if (!currentUser || !isCurrentMemberUpToDate) {
+      addToast(
+        'warning',
+        'Cotisation non à jour',
+        'Régularisez votre cotisation pour accéder au « Collège des Parrains » et solliciter un mentor.',
+        {
+          badge: 'Cotisation requise',
+          actionLabel: 'Régulariser →',
+          onAction: () => {
+            if (currentUser) {
+              openPaymentModal({
+                type: 'COTISATION_MENSUELLE',
+                selectedMonths: currentMemberFinancialSummary?.overdueMonths,
+              });
+            } else {
+              setActiveTab('espace-membre');
+            }
+          },
+        }
+      );
+      return null;
+    }
+
+    const mentor = members.find((m) => m.id === params.mentorId);
+    if (!mentor) return null;
+
+    const menteeName = `${currentUser.firstName} ${currentUser.lastName}`;
+
+    const newReq: MentorshipRequestRecord = {
+      id: `mreq-${Date.now().toString().slice(-5)}`,
+      mentorId: mentor.id,
+      mentorName: `${mentor.firstName} ${mentor.lastName}`,
+      mentorRole: mentor.currentRole,
+      menteeId: currentUser?.id || 'mem-guest',
+      menteeName,
+      menteePromo: currentUser?.promotionYear || 2024,
+      objective: params.objective.trim(),
+      status: 'EN_ATTENTE',
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+
+    setMentorshipRequests((prev) => [newReq, ...prev]);
+    addToast(
+      'success',
+      'Demande de mentorat transmise',
+      `Votre sollicitation a été adressée à ${mentor.firstName} ${mentor.lastName} (${mentor.currentRole}).`
+    );
+    return newReq;
+  };
+
+  const updateMentorshipRequestStatus = (
+    requestId: string,
+    status: MentorshipRequestRecord['status']
+  ) => {
+    setMentorshipRequests((prev) =>
+      prev.map((req) => (req.id === requestId ? { ...req, status } : req))
+    );
+    addToast(
+      'success',
+      'Statut de mentorat mis à jour',
+      status === 'ACCEPTEE'
+        ? 'Le parrainage est accepté.'
+        : status === 'PLANIFIEE'
+        ? 'Une session d’entretien est planifiée.'
+        : 'La demande reste en attente.'
+    );
+  };
+
+  const becomeMentor = (params: {
+    currentRole?: string;
+    company?: string;
+    bio?: string;
+    availabilities?: string[];
+  }) => {
+    if (currentUser) {
+      updateMemberProfile(currentUser.id, {
+        isMentor: true,
+        currentRole: params.currentRole?.trim() || currentUser.currentRole,
+        company: params.company?.trim() || currentUser.company,
+        bio: params.bio?.trim() || currentUser.bio,
+        availabilities:
+          params.availabilities && params.availabilities.length > 0
+            ? params.availabilities
+            : Array.from(new Set([...(currentUser.availabilities || []), 'Mentorat'])),
+        privacy: { ...currentUser.privacy, allowMentorshipRequests: true },
+      });
+      addToast(
+        'success',
+        'Statut Mentor activé',
+        'Vous apparaissez désormais dans le collège des mentors dirigeants de l’ALGB.'
+      );
+      return;
+    }
+
+    addToast(
+      'info',
+      'Candidature Mentor enregistrée',
+      'Connectez-vous ou finalisez votre adhésion pour activer votre badge Mentor sur votre fiche.'
+    );
+  };
+
+  const applyToJobOffer = (params: {
+    jobId: string;
+    note: string;
+  }): JobApplicationRecord | null => {
+    if (currentRole === 'VISITEUR' || !activeCredential) {
+      addToast(
+        'warning',
+        'Accès réservé aux membres à jour',
+        'L’encart « Carrières au cœur du réseau » et le dépôt de candidature sont réservés aux membres connectés à jour de leur cotisation.',
+        {
+          badge: 'Règle Carrières ALGB',
+          actionLabel: 'Se connecter →',
+          onAction: () => openAuthModal('reseau'),
+        }
+      );
+      return null;
+    }
+
+    if (!currentUser || !isCurrentMemberUpToDate) {
+      addToast(
+        'warning',
+        'Cotisation non à jour',
+        'Régularisez votre cotisation pour accéder aux offres « Carrières au cœur du réseau » et postuler.',
+        {
+          badge: 'Cotisation requise',
+          actionLabel: 'Régulariser →',
+          onAction: () => {
+            if (currentUser) {
+              openPaymentModal({
+                type: 'COTISATION_MENSUELLE',
+                selectedMonths: currentMemberFinancialSummary?.overdueMonths,
+              });
+            } else {
+              setActiveTab('espace-membre');
+            }
+          },
+        }
+      );
+      return null;
+    }
+
+    const job = jobOffers.find((j) => j.id === params.jobId);
+    if (!job) return null;
+
+    const applicantName = `${currentUser.firstName} ${currentUser.lastName}`;
+
+    const newApp: JobApplicationRecord = {
+      id: `japp-${Date.now().toString().slice(-5)}`,
+      jobId: job.id,
+      jobTitle: job.title,
+      company: job.company,
+      contractType: job.type,
+      applicantId: currentUser?.id || 'mem-guest',
+      applicantName,
+      note: params.note.trim(),
+      status: 'TRANSMISE',
+      appliedAt: new Date().toISOString().split('T')[0],
+    };
+
+    setJobApplications((prev) => [newApp, ...prev]);
+    addToast(
+      'success',
+      'Candidature transmise',
+      `Votre dossier pour « ${job.title} » chez ${job.company} a été envoyé à ${job.postedBy} et ajouté à votre suivi.`
+    );
+    return newApp;
+  };
+
+  const submitPatronageDonation = (params: {
+    amountEur?: number;
+    amountFcfa: number;
+    frequency: 'PONCTUEL' | 'MENSUEL';
+    projectId: string;
+    donorName?: string;
+    isAnonymous?: boolean;
+  }): ProjectContribution | null => {
+    const targetProject = projects.find((p) => p.id === params.projectId) || projects[0];
+    if (!targetProject || params.amountFcfa <= 0) return null;
+
+    const contributorName = params.isAnonymous
+      ? 'Mécène Anonyme ALGB'
+      : params.donorName?.trim() ||
+        (currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Mécène & Ami de l’ALGB');
+
+    const freqLabel = params.frequency === 'MENSUEL' ? 'Engagement mensuel' : 'Don ponctuel';
+    const eurLabel = params.amountEur ? ` (~${params.amountEur} €)` : '';
+
+    const contribution = makeContribution(targetProject.id, {
+      contributorName,
+      promotionYear: currentUser?.promotionYear,
+      amount: params.amountFcfa,
+      currency: settings.currency,
+      method: 'CARTE_BANCAIRE',
+      isAnonymous: !!params.isAnonymous,
+      message: `${freqLabel}${eurLabel} via l'espace Mécénat ALGB.`,
+    });
+
+    if (currentUser) {
+      processPayment({
+        type: 'DON_PROJET',
+        amount: params.amountFcfa,
+        method: 'CARTE_BANCAIRE',
+        title: `Mécénat : ${targetProject.title}`,
+        description: `${freqLabel}${eurLabel}`,
+        memberId: currentUser.id,
+        status: 'PAYE',
+      });
+    }
+
+    return contribution;
+  };
+
+  const subscribeNewsletter = (email: string): boolean => {
+    const clean = email.trim().toLowerCase();
+    if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+      addToast('warning', 'Adresse invalide', 'Veuillez saisir une adresse e-mail valide pour la lettre d’information.');
+      return false;
+    }
+    if (newsletterSubscribers.includes(clean)) {
+      addToast('info', 'Déjà inscrit', `${clean} reçoit déjà la lettre mensuelle de l’ALGB.`);
+      return true;
+    }
+    setNewsletterSubscribers((prev) => [clean, ...prev]);
+    addToast(
+      'success',
+      'Inscription confirmée',
+      `Vous recevrez prochainement les éditions de la lettre institutionnelle ALGB sur ${clean}.`
+    );
+    return true;
   };
 
   // Variable parameter management
@@ -1850,17 +2242,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     });
 
+    const uniquePaidMonths = Array.from(new Set(paidMonths));
+    const uniquePendingMonths = Array.from(new Set(pendingMonths)).filter(
+      (mKey) => !uniquePaidMonths.includes(mKey)
+    );
+
     // Check months 2026 up to current month (November 2026 = 2026-11)
     const currentMonthKey = '2026-11';
     const elapsedMonths = MONTHS_2026.filter((m) => m.key <= currentMonthKey).map((m) => m.key);
     const overdueMonths = elapsedMonths.filter(
-      (mKey) => !paidMonths.includes(mKey) && !pendingMonths.includes(mKey)
+      (mKey) => !uniquePaidMonths.includes(mKey) && !uniquePendingMonths.includes(mKey)
     );
 
     let statusFinancial: 'A_JOUR' | 'PARTIEL' | 'EN_RETARD' = 'A_JOUR';
     if (overdueMonths.length > 2) {
       statusFinancial = 'EN_RETARD';
-    } else if (overdueMonths.length > 0 || pendingMonths.length > 0) {
+    } else if (overdueMonths.length > 0 || uniquePendingMonths.length > 0) {
       statusFinancial = 'PARTIEL';
     }
 
@@ -1872,13 +2269,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       totalCotisations,
       totalDons,
       totalAutres,
-      paidMonths: Array.from(new Set(paidMonths)),
-      pendingMonths: Array.from(new Set(pendingMonths)),
+      paidMonths: uniquePaidMonths,
+      pendingMonths: uniquePendingMonths,
       overdueMonths,
       statusFinancial,
       transactions: memberTxs,
     };
   };
+
+  const isMemberUpToDate = (memberId: string): boolean => {
+    const member = members.find((m) => m.id === memberId);
+    if (!member || member.membershipStatus !== 'A_JOUR') return false;
+    return getMemberFinancialSummary(memberId).statusFinancial === 'A_JOUR';
+  };
+
+  const currentMemberFinancialSummary = currentUser
+    ? getMemberFinancialSummary(currentUser.id)
+    : null;
+
+  const isCurrentMemberUpToDate = Boolean(
+    currentRole !== 'VISITEUR' &&
+      activeCredential &&
+      currentUser &&
+      currentUser.membershipStatus === 'A_JOUR' &&
+      currentMemberFinancialSummary?.statusFinancial === 'A_JOUR'
+  );
 
   const addAiKnowledgeEntry = (params: {
     title: string;
@@ -2111,7 +2526,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(null);
 
     const normalizedActive = activeTab === 'galerie' ? 'mediatheque' : activeTab;
-    if (!visitorAllowedMenus.includes(activeTab) && !visitorAllowedMenus.includes(normalizedActive)) {
+    const canKeepActive =
+      ALWAYS_PUBLIC_AMICALE_TABS.includes(activeTab) ||
+      ALWAYS_PUBLIC_AMICALE_TABS.includes(normalizedActive) ||
+      visitorAllowedMenus.includes(activeTab) ||
+      visitorAllowedMenus.includes(normalizedActive);
+    if (!canKeepActive) {
       setActiveTab('accueil');
     }
 
@@ -2423,9 +2843,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateVisitorAllowedMenus = (menus: NavigationTab[]) => {
     if (!canManageCredentials) return;
     const sanitized = Array.from(
-      new Set<NavigationTab>(
-        ['accueil', ...menus.filter((m) => m !== 'admin' && m !== 'espace-membre')]
-      )
+      new Set<NavigationTab>([
+        ...ALWAYS_PUBLIC_AMICALE_TABS,
+        ...menus.filter((m) => m !== 'admin' && m !== 'espace-membre'),
+      ])
     );
     if (sanitized.includes('mediatheque') && !sanitized.includes('galerie')) {
       sanitized.push('galerie');
@@ -2462,6 +2883,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const normalized: NavigationTab = tab === 'galerie' ? 'mediatheque' : tab;
     if (currentRole === 'VISITEUR' || !activeCredential) {
       if (normalized === 'admin' || normalized === 'espace-membre') return false;
+      if (
+        ALWAYS_PUBLIC_AMICALE_TABS.includes(tab) ||
+        ALWAYS_PUBLIC_AMICALE_TABS.includes(normalized)
+      ) {
+        return true;
+      }
       return visitorAllowedMenus.includes(tab) || visitorAllowedMenus.includes(normalized);
     }
     return (
@@ -2481,10 +2908,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNews(INITIAL_NEWS);
     setEvents(INITIAL_EVENTS);
     setTransactions(INITIAL_TRANSACTIONS);
+    setMentorshipRequests(INITIAL_MENTORSHIP_REQUESTS);
+    setJobApplications(INITIAL_JOB_APPLICATIONS);
+    setNewsletterSubscribers([]);
     setPhotos(INITIAL_PHOTOS);
     setVideos(INITIAL_VIDEOS);
     setAiKnowledgeEntries(INITIAL_AI_KNOWLEDGE);
     setAccessCredentials(INITIAL_ACCESS_CREDENTIALS);
+    setSendingCredentialIds([]);
     setVisitorAllowedMenus(DEFAULT_VISITOR_ALLOWED_MENUS);
     setRoleMenuPermissions(DEFAULT_ROLE_MENU_PERMISSIONS);
     setActiveCredentialId(null);
@@ -2549,6 +2980,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         processPayment,
         updateTransactionStatus,
         getMemberFinancialSummary,
+        isMemberUpToDate,
+        isCurrentMemberUpToDate,
+        currentMemberFinancialSummary,
         qrSyncModalOpen,
         qrTargetMember,
         qrAuthVerified,
@@ -2597,6 +3031,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         postJobOffer,
         addNewsItem,
         updateMemberProfile,
+        mentorshipRequests,
+        jobApplications,
+        submitMentorshipRequest,
+        updateMentorshipRequestStatus,
+        becomeMentor,
+        applyToJobOffer,
+        submitPatronageDonation,
+        newsletterSubscribers,
+        subscribeNewsletter,
         theme,
         setTheme,
         toggleTheme,

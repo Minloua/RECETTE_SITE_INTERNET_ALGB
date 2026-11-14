@@ -1,50 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { NewsItem, EventItem } from '../data/mockData';
-import { NewsFeed, getFeedCategoryLabel } from '../components/NewsFeed';
+import { EventItem, NewsItem } from '../data/mockData';
 import { AgendaCalendar } from '../components/AgendaCalendar';
+import { getFeedCategoryLabel } from '../components/NewsFeed';
 import {
-  Bell,
-  BellOff,
-  BellRing,
   Calendar,
   MapPin,
+  Clock,
+  Users,
+  Download,
+  Share2,
   PlusCircle,
   Send,
-  Share2,
-  Download,
   X,
+  BookOpen,
 } from 'lucide-react';
+
+type EventFilterTab = 'A_VENIR' | 'CONFERENCES' | 'NETWORKING' | 'RETOURS';
 
 export const ActualitesView: React.FC = () => {
   const {
-    news,
     events,
+    news,
+    photos,
     promotions,
     registerForEvent,
     addToast,
     addNewsItem,
     currentRole,
     currentUser,
-    newsAlertsEnabled,
-    toggleNewsAlerts,
-    browserPushPermission,
-    requestBrowserPushPermission,
-    focusedNewsId,
-    setFocusedNewsId,
-    triggerNewsNotification,
   } = useApp();
 
+  const [activeEventTab, setActiveEventTab] = useState<EventFilterTab>('A_VENIR');
+  const [showCalendar, setShowCalendar] = useState(false);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
+
   const [pubTitle, setPubTitle] = useState('');
-  const [pubCategory, setPubCategory] = useState<'ANNONCES' | 'EVENEMENTS' | 'REUSSITE'>('ANNONCES');
-  const [pubAuthor, setPubAuthor] = useState(
-    currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Cellule Communication ALGB'
-  );
+  const [pubCategory, setPubCategory] = useState<'ANNONCES' | 'EVENEMENTS' | 'REUSSITE'>('EVENEMENTS');
   const [pubSummary, setPubSummary] = useState('');
   const [pubContent, setPubContent] = useState('');
-  const [pubIsImportant, setPubIsImportant] = useState(true);
 
   const canPublishNews =
     currentRole === 'ADMIN' ||
@@ -52,63 +47,19 @@ export const ActualitesView: React.FC = () => {
     currentRole === 'RESPONSABLE_COMM' ||
     currentRole === 'DELEGUE';
 
-  // Auto-open article when user clicks "Lire l'actualité" from ToastContainer or browser push
-  useEffect(() => {
-    if (!focusedNewsId) return;
-    const match = news.find((item) => item.id === focusedNewsId);
-    if (match) {
-      setSelectedNews(match);
+  const heroEvent = events[0];
+
+  const filteredEvents = useMemo(() => {
+    if (activeEventTab === 'A_VENIR') return events;
+    if (activeEventTab === 'CONFERENCES') return events.filter((e) => e.type === 'CONFERENCE');
+    if (activeEventTab === 'NETWORKING') {
+      return events.filter((e) => e.type === 'NETWORKING' || e.type === 'GALA' || e.type === 'RETROUVAILLES');
     }
-    setFocusedNewsId(null);
-  }, [focusedNewsId, news, setFocusedNewsId]);
-
-  const handlePublishQuickNews = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pubTitle.trim() || !pubSummary.trim()) return;
-
-    const imageByCategory: Record<'ANNONCES' | 'EVENEMENTS' | 'REUSSITE', string> = {
-      ANNONCES: '/assets/images/bingerville_lycee_campus_1794382827777.jpg',
-      EVENEMENTS: '/assets/images/alumni_reunion_ceremony_1794382829849.jpg',
-      REUSSITE: '/assets/images/school_library_excellence_1794382830305.jpg',
-    };
-
-    addNewsItem({
-      title: pubTitle.trim(),
-      category: pubCategory,
-      author: pubAuthor.trim() || 'Cellule Communication ALGB',
-      summary: pubSummary.trim(),
-      content: pubContent.trim() || pubSummary.trim(),
-      imageUrl: imageByCategory[pubCategory],
-      isImportant: pubIsImportant,
-    });
-
-    setPubTitle('');
-    setPubSummary('');
-    setPubContent('');
-    setPublishModalOpen(false);
-  };
-
-  const handleShare = (title: string) => {
-    if (navigator.share) {
-      navigator.share({ title, url: window.location.href }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      addToast('info', 'Lien copié dans le presse-papier', 'Vous pouvez le partager sur vos groupes WhatsApp de promotion.');
-    }
-  };
+    return [];
+  }, [events, activeEventTab]);
 
   const handleDownloadCalendar = (ev: EventItem) => {
-    const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//ALGB//Lycée de Garçons de Bingerville//FR
-BEGIN:VEVENT
-SUMMARY:${ev.title}
-DESCRIPTION:${ev.summary}
-LOCATION:${ev.location}, ${ev.city}
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR`;
-
+    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//ALGB//Bingerville//FR\nBEGIN:VEVENT\nSUMMARY:${ev.title}\nDESCRIPTION:${ev.summary}\nLOCATION:${ev.location}, ${ev.city}\nSTATUS:CONFIRMED\nEND:VEVENT\nEND:VCALENDAR`;
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -117,405 +68,458 @@ END:VCALENDAR`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    addToast('success', 'Calendrier mis à jour', 'Le fichier .ics a été téléchargé.');
+  };
 
-    addToast('success', 'Événement ajouté', 'Fichier .ics téléchargé pour votre calendrier.');
+  const handleShare = (title: string) => {
+    if (navigator.share) {
+      navigator.share({ title, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      addToast('info', 'Lien copié', 'Le lien de l’article a été copié dans le presse-papier.');
+    }
+  };
+
+  const handlePublishQuickNews = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pubTitle.trim() || !pubSummary.trim()) return;
+    addNewsItem({
+      title: pubTitle.trim(),
+      category: pubCategory,
+      author: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Rédaction ALGB',
+      summary: pubSummary.trim(),
+      content: pubContent.trim() || pubSummary.trim(),
+      imageUrl: '/assets/images/alumni_gala_networking_1794580776213.jpg',
+      isImportant: false,
+    });
+    setPubTitle('');
+    setPubSummary('');
+    setPubContent('');
+    setPublishModalOpen(false);
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-950 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-        {/* Editorial Header */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 pb-8 flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6">
-          <div>
-            <span className="text-xs uppercase tracking-widest font-bold text-[#B8860B] dark:text-[#E5B824]">
-              Information & Rayonnement
-            </span>
-            <h1 className="text-2xl sm:text-4xl font-bold font-heading text-black dark:text-white mt-1">
-              Actualités & Agenda Officiel
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-zinc-400 font-editorial italic max-w-2xl mt-1">
-              « Communiqués du Bureau Exécutif, vie des promotions, cérémonies et événements du lycée. »
-            </p>
-          </div>
-
-          {canPublishNews && (
-            <button
-              type="button"
-              onClick={() => setPublishModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#E5B824] hover:bg-[#dcae1f] text-black text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer shrink-0"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Publier une actualité</span>
-            </button>
-          )}
-        </div>
-
-        {/* Live Push / ToastContainer Alerts Bar */}
-        <section
-          aria-label="Système d'alertes et notifications d'actualités"
-          className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-        >
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                newsAlertsEnabled
-                  ? 'bg-black dark:bg-[#E5B824] text-[#E5B824] dark:text-black border-black dark:border-[#E5B824]'
-                  : 'bg-white dark:bg-zinc-950 text-gray-400 dark:text-zinc-500 border-gray-300 dark:border-zinc-700'
-              }`}
-            >
-              {newsAlertsEnabled ? (
-                <BellRing className="w-5 h-5" />
-              ) : (
-                <BellOff className="w-5 h-5" />
-              )}
-            </div>
-
-            <div className="space-y-0.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-sm font-heading font-bold text-black dark:text-white">
-                  Alertes & Notifications d’Actualités en Temps Réel
-                </h2>
-                <span
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
-                    newsAlertsEnabled
-                      ? 'bg-yellow-50 dark:bg-yellow-500/15 text-[#B8860B] dark:text-[#E5B824] border border-yellow-200 dark:border-yellow-500/30'
-                      : 'bg-gray-200 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400'
-                  }`}
-                >
-                  {newsAlertsEnabled ? 'Alertes ToastContainer actives' : 'Alertes en pause'}
-                </span>
-                {browserPushPermission === 'granted' && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                    Push navigateur actif
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-600 dark:text-zinc-400">
-                Recevez automatiquement une alerte interactive dès qu’une nouvelle actualité ALGB est publiée.
+    <div className="bg-[#F8F8F6] dark:bg-[#141413] min-h-screen transition-colors">
+      {/* En-tête Événements & Magazine — Terracotta & Blanc Albâtre */}
+      <section className="bg-[#FFF7ED] dark:bg-[#221712] border-b border-[#C2410C]/15 py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <span className="text-xs uppercase tracking-[0.16em] font-semibold text-[#C2410C] dark:text-orange-400 inline-flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Vie du Réseau & Magazine Alumni</span>
+              </span>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#141413] dark:text-white">
+                Événements, Galas & Portraits
+              </h1>
+              <p className="text-sm text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
+                Retrouvez le calendrier des grands rendez-vous de l’ALGB, inscrivez-vous aux
+                conférences et explorez nos dossiers rédactionnels sur les parcours d’anciens.
               </p>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={toggleNewsAlerts}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
-                newsAlertsEnabled
-                  ? 'bg-white dark:bg-zinc-950 text-black dark:text-white border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800'
-                  : 'bg-[#E5B824] text-black border-[#E5B824] hover:bg-[#dcae1f]'
-              }`}
-            >
-              {newsAlertsEnabled ? (
-                <>
-                  <BellOff className="w-3.5 h-3.5" />
-                  <span>Mettre en pause</span>
-                </>
-              ) : (
-                <>
-                  <Bell className="w-3.5 h-3.5" />
-                  <span>Activer les alertes</span>
-                </>
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowCalendar(!showCalendar)}
+                className="px-4 py-2.5 rounded-lg bg-white dark:bg-[#1e1e1c] border border-black/15 dark:border-white/15 text-[#141413] dark:text-white text-xs font-semibold cursor-pointer hover:border-[#C2410C]"
+              >
+                {showCalendar ? 'Masquer le calendrier' : 'Vue calendrier mensuel'}
+              </button>
+              {canPublishNews && (
+                <button
+                  type="button"
+                  onClick={() => setPublishModalOpen(true)}
+                  className="px-4 py-2.5 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Publier un article</span>
+                </button>
               )}
-            </button>
-
-            {browserPushPermission !== 'granted' && (
-              <button
-                type="button"
-                onClick={requestBrowserPushPermission}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-950 text-black dark:text-white border border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-              >
-                <BellRing className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
-                <span>Activer Push Navigateur</span>
-              </button>
-            )}
-
-            {news.length > 0 && (
-              <button
-                type="button"
-                onClick={() => triggerNewsNotification(news[0])}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-black dark:bg-zinc-800 hover:bg-gray-800 dark:hover:bg-zinc-700 text-[#E5B824] border border-transparent dark:border-zinc-700 transition-colors cursor-pointer"
-              >
-                <Bell className="w-3.5 h-3.5" />
-                <span>Tester l’alerte</span>
-              </button>
-            )}
-          </div>
-        </section>
-
-        {/* Featured Agenda Ribbon */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-zinc-800">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#B8860B] dark:text-[#E5B824]" />
-              <h2 className="text-lg font-heading font-bold text-black dark:text-white">
-                Événements à Venir & Inscriptions
-              </h2>
             </div>
-            <span className="text-xs text-gray-500 dark:text-zinc-400">{events.length} événements programmés</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {events.map((ev) => (
-              <div
-                key={ev.id}
-                className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden hover:border-gray-300 dark:hover:border-zinc-700 shadow-sm transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="relative h-44 overflow-hidden bg-gray-100 dark:bg-zinc-800">
-                    <img
-                      src={ev.imageUrl}
-                      alt={ev.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                    />
-                    <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded bg-black/85 text-[10px] font-bold text-[#E5B824] uppercase">
-                      {ev.type.replace('_', ' ')}
-                    </div>
-                  </div>
+          {/* Carte Héroïque du prochain événement majeur avec badge date en Terracotta Intense (#C2410C) */}
+          {heroEvent && (
+            <div className="bg-white dark:bg-[#1e1e1c] rounded-xl overflow-hidden shadow-editorial border border-black/5 dark:border-white/10 grid grid-cols-1 lg:grid-cols-12">
+              <div className="lg:col-span-6 relative h-64 sm:h-80 lg:h-full min-h-[300px]">
+                <img
+                  src={heroEvent.imageUrl}
+                  alt={heroEvent.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 left-4 px-3.5 py-2 rounded-lg bg-[#C2410C] text-white text-xs font-semibold shadow-md">
+                  {heroEvent.date}
+                </div>
+              </div>
 
-                  <div className="p-5 space-y-3">
-                    <div className="text-xs text-[#B8860B] dark:text-[#E5B824] font-semibold flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{ev.date} · {ev.time}</span>
-                    </div>
+              <div className="lg:col-span-6 p-7 sm:p-10 flex flex-col justify-between gap-6">
+                <div className="space-y-4">
+                  <span className="text-xs uppercase tracking-wider font-semibold text-[#C2410C] dark:text-orange-400">
+                    Événement Majeur à la Une
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-heading font-bold text-[#141413] dark:text-white leading-snug">
+                    {heroEvent.title}
+                  </h2>
+                  <p className="text-sm text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
+                    {heroEvent.description}
+                  </p>
 
-                    <h3 className="text-base font-bold font-heading text-black dark:text-white leading-snug">
-                      {ev.title}
-                    </h3>
-
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 leading-relaxed">
-                      {ev.summary}
-                    </p>
-
-                    <div className="text-[11px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5 pt-1">
-                      <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
-                      <span className="truncate">{ev.location}</span>
-                    </div>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-[#4A4A48] dark:text-zinc-400 pt-1">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-[#C2410C] dark:text-orange-400" />
+                      <span>{heroEvent.time}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-[#C2410C] dark:text-orange-400" />
+                      <span>
+                        {heroEvent.location}, {heroEvent.city}
+                      </span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-[#C2410C] dark:text-orange-400" />
+                      <span>{heroEvent.attendeesCount} inscrits</span>
+                    </span>
                   </div>
                 </div>
 
-                <div className="p-5 pt-3 border-t border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 flex items-center justify-between text-xs">
+                <div className="pt-4 border-t border-black/10 dark:border-white/10 flex flex-wrap items-center gap-3">
                   <button
-                    onClick={() => handleDownloadCalendar(ev)}
-                    className="text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white flex items-center gap-1 text-[11px] font-medium cursor-pointer"
+                    type="button"
+                    onClick={() => registerForEvent(heroEvent.id)}
+                    className="px-6 py-3 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs sm:text-sm font-semibold cursor-pointer transition-colors"
+                  >
+                    S’inscrire ({heroEvent.attendeesCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadCalendar(heroEvent)}
+                    className="px-4 py-3 rounded-lg border border-black/15 dark:border-white/15 text-[#141413] dark:text-white text-xs font-medium inline-flex items-center gap-1.5 hover:bg-[#F8F8F6] dark:hover:bg-white/5 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Calendrier (.ics)</span>
-                  </button>
-
-                  <button
-                    onClick={() => registerForEvent(ev.id)}
-                    className="px-3.5 py-1.5 bg-[#E5B824] text-black font-semibold rounded-lg hover:bg-[#dcae1f] transition-all cursor-pointer shadow-xs text-xs"
-                  >
-                    Confirmer ({ev.attendeesCount})
+                    <span>Ajouter à mon agenda (.ics)</span>
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        {showCalendar && (
+          <AgendaCalendar
+            events={events}
+            promotions={promotions}
+            onRegisterEvent={registerForEvent}
+            onDownloadIcs={handleDownloadCalendar}
+          />
+        )}
+
+        {/* Onglets de filtrage (À venir, Conférences, Networking, Retours en images) */}
+        <section className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/10 dark:border-white/10 pb-4">
+            <h2 className="text-2xl font-heading font-bold text-[#141413] dark:text-white">
+              Agenda & Retours en Images
+            </h2>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { id: 'A_VENIR', label: 'À venir' },
+                { id: 'CONFERENCES', label: 'Conférences' },
+                { id: 'NETWORKING', label: 'Networking' },
+                { id: 'RETOURS', label: 'Retours en images' },
+              ].map((tab) => {
+                const active = activeEventTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveEventTab(tab.id as EventFilterTab)}
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                      active
+                        ? 'bg-[#C2410C] text-white'
+                        : 'bg-white dark:bg-[#1e1e1c] text-[#141413] dark:text-zinc-200 border border-black/10 dark:border-white/10 hover:border-[#C2410C]'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {activeEventTab === 'RETOURS' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {photos.map((photo) => (
+                <figure
+                  key={photo.id}
+                  className="bg-white dark:bg-[#1e1e1c] rounded-xl overflow-hidden shadow-editorial border border-black/5 dark:border-white/10 flex flex-col"
+                >
+                  <div className="relative h-56 overflow-hidden">
+                    <img
+                      src={photo.imageUrl}
+                      alt={photo.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute top-3 left-3 px-2.5 py-1 rounded bg-[#C2410C] text-white text-[10px] font-semibold uppercase">
+                      {photo.year}
+                    </span>
+                  </div>
+                  <figcaption className="p-5 space-y-1.5">
+                    <h3 className="text-base font-heading font-bold text-[#141413] dark:text-white">
+                      {photo.title}
+                    </h3>
+                    <p className="text-xs text-[#4A4A48] dark:text-zinc-400 leading-relaxed">
+                      {photo.caption}
+                    </p>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEvents.map((ev) => (
+                <article
+                  key={ev.id}
+                  className="bg-white dark:bg-[#1e1e1c] rounded-xl overflow-hidden shadow-editorial border border-black/5 dark:border-white/10 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={ev.imageUrl}
+                        alt={ev.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded bg-[#C2410C] text-white text-[10px] font-semibold">
+                        {ev.date}
+                      </span>
+                    </div>
+
+                    <div className="p-6 space-y-3">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-[#C2410C] dark:text-orange-400">
+                        {ev.type.replace('_', ' ')}
+                      </div>
+                      <h3 className="text-lg font-heading font-bold text-[#141413] dark:text-white leading-snug">
+                        {ev.title}
+                      </h3>
+                      <p className="text-xs text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
+                        {ev.summary}
+                      </p>
+                      <div className="text-[11px] text-[#4A4A48] dark:text-zinc-400 space-y-1 pt-1">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-[#C2410C]" />
+                          <span>{ev.time}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-[#C2410C]" />
+                          <span className="truncate">
+                            {ev.location} · {ev.city}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-4 border-t border-black/10 dark:border-white/10 flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
+                      {ev.attendeesCount} participants
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => registerForEvent(ev.id)}
+                      className="px-4 py-2 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs font-semibold cursor-pointer transition-colors"
+                    >
+                      S’inscrire
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Section Articles & Portraits d'Anciens Élèves au style Magazine */}
+        <section className="space-y-8">
+          <div className="border-b border-black/10 dark:border-white/10 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+              <span className="text-xs uppercase tracking-[0.16em] font-semibold text-[#C2410C] dark:text-orange-400 inline-flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Le Magazine ALGB</span>
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-heading font-bold text-[#141413] dark:text-white mt-1">
+                Articles & Portraits d’Anciens Élèves
+              </h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {news.map((item) => (
+              <article
+                key={item.id}
+                onClick={() => setSelectedNews(item)}
+                className="bg-white dark:bg-[#1e1e1c] rounded-xl overflow-hidden shadow-editorial border border-black/5 dark:border-white/10 flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  <div className="relative h-52 overflow-hidden">
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-6 space-y-3">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-semibold uppercase tracking-wider text-[#C2410C] dark:text-orange-400">
+                        {getFeedCategoryLabel(item.category)}
+                      </span>
+                      <span className="text-[#4A4A48] dark:text-zinc-400">{item.date}</span>
+                    </div>
+                    <h3 className="text-lg font-heading font-bold text-[#141413] dark:text-white group-hover:text-[#C2410C] dark:group-hover:text-[#F2B705] transition-colors leading-snug">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-[#4A4A48] dark:text-zinc-300 leading-relaxed line-clamp-3 font-editorial">
+                      {item.summary}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="px-6 py-4 border-t border-black/10 dark:border-white/10 flex items-center justify-between text-xs">
+                  <span className="text-[#4A4A48] dark:text-zinc-400 truncate pr-2">{item.author}</span>
+                  <span className="font-semibold text-[#141413] dark:text-[#F2B705] shrink-0">
+                    Lire le dossier →
+                  </span>
+                </div>
+              </article>
             ))}
           </div>
         </section>
+      </div>
 
-        {/* Interactive Calendar Component */}
-        <AgendaCalendar
-          events={events}
-          promotions={promotions}
-          onRegisterEvent={registerForEvent}
-          onDownloadIcs={handleDownloadCalendar}
-        />
+      {/* Modal Lecture Article Magazine */}
+      {selectedNews && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#1e1e1c] rounded-xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 my-8">
+            <div className="relative h-64">
+              <img src={selectedNews.imageUrl} alt={selectedNews.title} className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setSelectedNews(null)}
+                aria-label="Fermer"
+                className="absolute top-4 right-4 p-2 rounded-full bg-white text-[#141413] shadow cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 sm:p-8 space-y-4">
+              <div className="flex items-center justify-between text-xs text-[#4A4A48] dark:text-zinc-400 border-b border-black/10 dark:border-white/10 pb-3">
+                <span className="font-semibold uppercase tracking-wider text-[#C2410C] dark:text-orange-400">
+                  {getFeedCategoryLabel(selectedNews.category)}
+                </span>
+                <span>
+                  {selectedNews.date} · {selectedNews.author}
+                </span>
+              </div>
+              <h2 className="text-2xl font-heading font-bold text-[#141413] dark:text-white">
+                {selectedNews.title}
+              </h2>
+              <p className="text-sm font-editorial italic text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
+                {selectedNews.summary}
+              </p>
+              <div className="text-sm text-[#141413] dark:text-zinc-200 leading-relaxed pt-2 border-t border-black/10 dark:border-white/10">
+                {selectedNews.content}
+              </div>
+              <div className="pt-4 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => handleShare(selectedNews.title)}
+                  className="px-3.5 py-2 rounded-lg border border-black/15 dark:border-white/15 text-[#141413] dark:text-white text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Partager</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedNews(null)}
+                  className="px-5 py-2 rounded-lg bg-[#F2B705] text-[#141413] text-xs font-semibold cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-        {/* News Feed Component */}
-        <NewsFeed
-          news={news}
-          onSelectNews={setSelectedNews}
-          onShare={handleShare}
-        />
-
-        {/* Quick Publish News Modal inside ActualitesView */}
-        {publishModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm overflow-y-auto">
-            <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-8">
-              <div className="px-6 py-4 bg-gray-50 dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Send className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
-                  <h3 className="text-base font-heading font-bold text-black dark:text-white">
-                    Publier une Nouvelle Actualité ALGB
-                  </h3>
-                </div>
+      {/* Modal Publication Article */}
+      {publishModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-white dark:bg-[#1e1e1c] rounded-xl p-6 shadow-2xl border border-black/10 dark:border-white/10 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-heading font-bold text-[#141413] dark:text-white">
+                Publier un article / portrait
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPublishModalOpen(false)}
+                className="p-1 text-[#4A4A48] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handlePublishQuickNews} className="space-y-3 text-xs">
+              <input
+                type="text"
+                required
+                placeholder="Titre de l'article *"
+                value={pubTitle}
+                onChange={(e) => setPubTitle(e.target.value)}
+                className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-black/15 dark:border-white/15 rounded-lg p-2.5 text-[#141413] dark:text-white"
+              />
+              <select
+                value={pubCategory}
+                onChange={(e) => setPubCategory(e.target.value as 'ANNONCES' | 'EVENEMENTS' | 'REUSSITE')}
+                className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-black/15 dark:border-white/15 rounded-lg p-2.5 text-[#141413] dark:text-white"
+              >
+                <option value="EVENEMENTS">Événements</option>
+                <option value="REUSSITE">Portrait & Réussite</option>
+                <option value="ANNONCES">Annonces</option>
+              </select>
+              <textarea
+                rows={2}
+                required
+                placeholder="Chapô de présentation *"
+                value={pubSummary}
+                onChange={(e) => setPubSummary(e.target.value)}
+                className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-black/15 dark:border-white/15 rounded-lg p-2.5 text-[#141413] dark:text-white"
+              />
+              <textarea
+                rows={4}
+                placeholder="Corps de l'article..."
+                value={pubContent}
+                onChange={(e) => setPubContent(e.target.value)}
+                className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-black/15 dark:border-white/15 rounded-lg p-2.5 text-[#141413] dark:text-white"
+              />
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setPublishModalOpen(false)}
-                  aria-label="Fermer"
-                  className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg cursor-pointer"
+                  className="px-4 py-2 text-[#4A4A48] cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  Annuler
                 </button>
-              </div>
-
-              <form onSubmit={handlePublishQuickNews} className="p-6 space-y-4 text-xs">
-                <div>
-                  <label className="block font-bold text-black dark:text-white mb-1">
-                    Titre de l’actualité *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={pubTitle}
-                    onChange={(e) => setPubTitle(e.target.value)}
-                    placeholder="Ex : Ouverture des inscriptions au Dîner de Gala 2026"
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-black dark:text-white mb-1">
-                      Catégorie *
-                    </label>
-                    <select
-                      value={pubCategory}
-                      onChange={(e) =>
-                        setPubCategory(e.target.value as 'ANNONCES' | 'EVENEMENTS' | 'REUSSITE')
-                      }
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg text-black dark:text-white focus:outline-none focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950"
-                    >
-                      <option value="ANNONCES">Annonces</option>
-                      <option value="EVENEMENTS">Événements</option>
-                      <option value="REUSSITE">Réussite</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-black dark:text-white mb-1">
-                      Organe / Auteur
-                    </label>
-                    <input
-                      type="text"
-                      value={pubAuthor}
-                      onChange={(e) => setPubAuthor(e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg text-black dark:text-white focus:outline-none focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-black dark:text-white mb-1">
-                    Résumé (affiché dans l’alerte et le flux) *
-                  </label>
-                  <textarea
-                    rows={2}
-                    required
-                    value={pubSummary}
-                    onChange={(e) => setPubSummary(e.target.value)}
-                    placeholder="Synthèse claire de la nouvelle..."
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-black dark:text-white mb-1">
-                    Contenu détaillé
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={pubContent}
-                    onChange={(e) => setPubContent(e.target.value)}
-                    placeholder="Détails complets de la publication..."
-                    className="w-full px-3 py-2 bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 font-editorial focus:outline-none focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950"
-                  />
-                </div>
-
-                <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-zinc-300 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={pubIsImportant}
-                    onChange={(e) => setPubIsImportant(e.target.checked)}
-                    className="rounded border-gray-300 dark:border-zinc-700 text-[#E5B824] focus:ring-[#E5B824]"
-                  />
-                  <span>Marquer comme publication urgente / officielle</span>
-                </label>
-
-                <div className="pt-3 border-t border-gray-200 dark:border-zinc-800 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPublishModalOpen(false)}
-                    className="px-4 py-2 bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-black dark:text-white font-semibold rounded-lg cursor-pointer"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold rounded-lg cursor-pointer shadow-xs"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Publier et notifier</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Selected News Article Modal */}
-        {selectedNews && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm overflow-y-auto">
-            <div className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-8">
-              <div className="relative h-64 sm:h-72 bg-gray-100 dark:bg-zinc-800">
-                <img
-                  src={selectedNews.imageUrl}
-                  alt={selectedNews.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
                 <button
-                  onClick={() => setSelectedNews(null)}
-                  aria-label="Fermer"
-                  className="absolute top-4 right-4 p-2 bg-white/90 dark:bg-zinc-900/90 hover:bg-white dark:hover:bg-zinc-800 rounded-full text-black dark:text-white shadow-md cursor-pointer"
+                  type="submit"
+                  className="px-5 py-2.5 rounded-lg bg-[#F2B705] text-[#141413] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  ✕
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Publier</span>
                 </button>
               </div>
-
-              <div className="p-6 sm:p-8 space-y-4">
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400 border-b border-gray-200 dark:border-zinc-800 pb-3">
-                  <span className="text-[#B8860B] dark:text-[#E5B824] font-bold uppercase tracking-wide">
-                    {getFeedCategoryLabel(selectedNews.category)}
-                  </span>
-                  <span>{selectedNews.date} · Source : {selectedNews.author}</span>
-                </div>
-
-                <h2 className="text-xl sm:text-2xl font-bold font-heading text-black dark:text-white">
-                  {selectedNews.title}
-                </h2>
-
-                <p className="text-sm text-gray-800 dark:text-zinc-200 font-editorial leading-relaxed">
-                  {selectedNews.summary}
-                </p>
-
-                <div className="text-xs sm:text-sm text-gray-700 dark:text-zinc-300 font-editorial leading-relaxed pt-2 border-t border-gray-200 dark:border-zinc-800">
-                  {selectedNews.content}
-                </div>
-
-                <div className="pt-4 border-t border-gray-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-                  <button
-                    onClick={() => handleShare(selectedNews.title)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-black dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700 cursor-pointer font-medium"
-                  >
-                    <Share2 className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
-                    <span>Partager sur les réseaux</span>
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedNews(null)}
-                    className="px-4 py-1.5 bg-[#E5B824] text-black font-semibold rounded-lg hover:bg-[#dcae1f] cursor-pointer"
-                  >
-                    Fermer
-                  </button>
-                </div>
-              </div>
-            </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

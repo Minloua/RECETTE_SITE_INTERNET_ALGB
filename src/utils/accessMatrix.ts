@@ -8,6 +8,10 @@ export interface ProfileAccessRule {
   scopeLabel: string;
   scopeType: 'NONE' | 'SELF_ONLY' | 'PROMO_ONLY' | 'ALL_MEMBERS';
   canUpdateAllPaymentTables: boolean;
+  mentorshipAccessRule: 'NONE' | 'UP_TO_DATE_ONLY';
+  mentorshipRuleLabel: string;
+  careersAccessRule: 'NONE' | 'UP_TO_DATE_ONLY';
+  careersRuleLabel: string;
   description: string;
 }
 
@@ -25,61 +29,76 @@ export const MENU_DEFINITIONS: MenuDefinition[] = [
     label: 'Accueil',
     category: 'PUBLIC',
     lockedForVisitors: true,
-    description: 'Page d’accueil officielle du portail ALGB (toujours publique).',
+    description: 'Page d’accueil officielle présentant l’Amicale et ses activités (toujours accessible sans credential).',
   },
   {
     tab: 'amicale',
     label: 'L’Amicale',
     category: 'PUBLIC',
-    description: 'Présentation institutionnelle, statuts, bureau exécutif et FAQ.',
+    lockedForVisitors: true,
+    description: 'Présentation institutionnelle, missions, statuts, bureau exécutif et FAQ (toujours accessible sans credential).',
   },
   {
     tab: 'histoire',
     label: 'Histoire',
     category: 'PUBLIC',
-    description: 'Mémoire et patrimoine du Lycée de Garçons de Bingerville.',
+    lockedForVisitors: true,
+    description: 'Mémoire et patrimoine du Lycée de Garçons de Bingerville (toujours accessible sans credential).',
   },
   {
     tab: 'anciens',
-    label: 'Promotions & Annuaire',
+    label: 'Annuaire des Membres',
     category: 'PUBLIC',
-    description: 'Répertoire des promotions, recherche d’anciens élèves et carte mondiale.',
+    description: 'Annuaire officiel des membres, promotions, mentors et carte mondiale.',
   },
   {
     tab: 'reseau',
-    label: 'Réseau Pro',
+    label: 'Carrières & Offres',
     category: 'PUBLIC',
-    description: 'Offres d’emploi, mentorat et base des ressources (BDR).',
+    description:
+      'Portail emploi et mobilité. L’encart « Carrières au cœur du réseau » et les offres sont réservés aux membres à jour de cotisation.',
+  },
+  {
+    tab: 'mentorat',
+    label: 'Mentorat & Réseau Exécutif',
+    category: 'PUBLIC',
+    description:
+      'Programme de parrainage. Les encarts « Trouver un Mentor » et « Collège des Parrains » sont réservés aux membres à jour de cotisation.',
   },
   {
     tab: 'projets',
-    label: 'Projets',
+    label: 'Mécénat & Bourses',
     category: 'PUBLIC',
-    description: 'Chantiers solidaires, réhabilitation et appels à contribution.',
+    lockedForVisitors: true,
+    description: 'Mécénat, bourses d’études, chantiers solidaires et mur des donateurs (toujours accessible sans credential).',
   },
   {
     tab: 'actualites',
-    label: 'Actualités & Agenda',
+    label: 'Événements & Actualités',
     category: 'PUBLIC',
-    description: 'Communiqués officiels, calendrier interactif et événements.',
+    lockedForVisitors: true,
+    description: 'Gala annuel, conférences, networking, portraits et activités de l’Amicale (toujours accessible sans credential).',
   },
   {
     tab: 'mediatheque',
     label: 'Médiathèque & Galerie',
     category: 'PUBLIC',
-    description: 'Archives photographiques et chaîne vidéo ALGB TV.',
+    lockedForVisitors: true,
+    description: 'Archives photographiques et chaîne vidéo ALGB TV des activités (toujours accessible sans credential).',
   },
   {
     tab: 'adhesion',
     label: 'Adhésion',
     category: 'PUBLIC',
-    description: 'Formulaire d’enrôlement et demande d’adhésion en ligne.',
+    lockedForVisitors: true,
+    description: 'Présentation de l’adhésion et formulaire d’enrôlement en ligne (toujours accessible sans credential).',
   },
   {
     tab: 'contact',
     label: 'Contact & Partenariats',
     category: 'PUBLIC',
-    description: 'Coordonnées officielles et formulaire de correspondance.',
+    lockedForVisitors: true,
+    description: 'Coordonnées officielles et formulaire de correspondance (toujours accessible sans credential).',
   },
   {
     tab: 'espace-membre',
@@ -95,12 +114,25 @@ export const MENU_DEFINITIONS: MenuDefinition[] = [
   },
 ];
 
+export const ALWAYS_PUBLIC_AMICALE_TABS: NavigationTab[] = [
+  'accueil',
+  'amicale',
+  'histoire',
+  'projets',
+  'actualites',
+  'mediatheque',
+  'galerie',
+  'adhesion',
+  'contact',
+];
+
 export const DEFAULT_VISITOR_ALLOWED_MENUS: NavigationTab[] = [
   'accueil',
   'amicale',
   'histoire',
   'anciens',
   'reseau',
+  'mentorat',
   'projets',
   'actualites',
   'mediatheque',
@@ -115,6 +147,7 @@ export const ALL_PUBLIC_TABS: NavigationTab[] = [
   'histoire',
   'anciens',
   'reseau',
+  'mentorat',
   'projets',
   'actualites',
   'mediatheque',
@@ -281,11 +314,15 @@ export const PROFILE_ACCESS_MATRIX: Record<UserRole, ProfileAccessRule> = {
     role: 'VISITEUR',
     label: 'Visiteur public',
     accessCode: '',
-    scopeLabel: 'Menus publics sans credential',
+    scopeLabel: 'Présentation Amicale & Activités sans credential',
     scopeType: 'NONE',
     canUpdateAllPaymentTables: false,
+    mentorshipAccessRule: 'NONE',
+    mentorshipRuleLabel: 'Trouver un Mentor & Collège des Parrains : Verrouillés (membres à jour uniquement)',
+    careersAccessRule: 'NONE',
+    careersRuleLabel: 'Carrières au cœur du réseau : Verrouillé (membres à jour uniquement)',
     description:
-      'Consultation libre des rubriques publiques définies pour les visiteurs. Aucun credential requis.',
+      'Consultation libre sans credential de toutes les informations présentant l’Amicale et ses activités (Accueil, L’Amicale, Histoire, Événements, Mécénat, Médiathèque, Adhésion, Contact). Les encarts « Trouver un Mentor », « Collège des Parrains » et « Carrières au cœur du réseau » restent verrouillés.',
   },
   MEMBRE: {
     role: 'MEMBRE',
@@ -294,8 +331,12 @@ export const PROFILE_ACCESS_MATRIX: Record<UserRole, ProfileAccessRule> = {
     scopeLabel: 'Espace personnel uniquement',
     scopeType: 'SELF_ONLY',
     canUpdateAllPaymentTables: false,
+    mentorshipAccessRule: 'UP_TO_DATE_ONLY',
+    mentorshipRuleLabel: 'Trouver un Mentor & Collège des Parrains : si cotisation à jour',
+    careersAccessRule: 'UP_TO_DATE_ONLY',
+    careersRuleLabel: 'Carrières au cœur du réseau : si cotisation à jour',
     description:
-      'Accède à son espace membre, sa carte officielle, ses cotisations et son espace de paiement personnel.',
+      'Accède à son espace membre, sa carte officielle et ses cotisations. Accède à « Trouver un Mentor », au « Collège des Parrains » et à « Carrières au cœur du réseau » uniquement si sa cotisation est à jour.',
   },
   DELEGUE: {
     role: 'DELEGUE',
@@ -304,8 +345,12 @@ export const PROFILE_ACCESS_MATRIX: Record<UserRole, ProfileAccessRule> = {
     scopeLabel: 'Sa promotion & espace personnel',
     scopeType: 'PROMO_ONLY',
     canUpdateAllPaymentTables: false,
+    mentorshipAccessRule: 'UP_TO_DATE_ONLY',
+    mentorshipRuleLabel: 'Trouver un Mentor & Collège des Parrains : si cotisation à jour',
+    careersAccessRule: 'UP_TO_DATE_ONLY',
+    careersRuleLabel: 'Carrières au cœur du réseau : si cotisation à jour',
     description:
-      'Accède à son espace membre et peut régulariser les paiements des membres de sa propre promotion.',
+      'Accède à son espace membre et peut régulariser les paiements de sa promotion. L’accès à « Trouver un Mentor », au « Collège des Parrains » et à « Carrières au cœur du réseau » requiert une cotisation à jour.',
   },
   RESPONSABLE_COMM: {
     role: 'RESPONSABLE_COMM',
@@ -314,8 +359,12 @@ export const PROFILE_ACCESS_MATRIX: Record<UserRole, ProfileAccessRule> = {
     scopeLabel: 'Communication & espace personnel',
     scopeType: 'SELF_ONLY',
     canUpdateAllPaymentTables: false,
+    mentorshipAccessRule: 'UP_TO_DATE_ONLY',
+    mentorshipRuleLabel: 'Trouver un Mentor & Collège des Parrains : si cotisation à jour',
+    careersAccessRule: 'UP_TO_DATE_ONLY',
+    careersRuleLabel: 'Carrières au cœur du réseau : si cotisation à jour',
     description:
-      'Gère les communiqués officiels, actualités et base IA. Accès financier limité à son espace personnel.',
+      'Gère les communiqués officiels, actualités et base IA. L’accès à « Trouver un Mentor », au « Collège des Parrains » et à « Carrières au cœur du réseau » est conditionné au statut de cotisation à jour.',
   },
   RESPONSABLE_FINANCE: {
     role: 'RESPONSABLE_FINANCE',
@@ -324,8 +373,12 @@ export const PROFILE_ACCESS_MATRIX: Record<UserRole, ProfileAccessRule> = {
     scopeLabel: 'Tous les membres & Trésorerie',
     scopeType: 'ALL_MEMBERS',
     canUpdateAllPaymentTables: true,
+    mentorshipAccessRule: 'UP_TO_DATE_ONLY',
+    mentorshipRuleLabel: 'Trouver un Mentor & Collège des Parrains : si cotisation à jour',
+    careersAccessRule: 'UP_TO_DATE_ONLY',
+    careersRuleLabel: 'Carrières au cœur du réseau : si cotisation à jour',
     description:
-      'Accès complet à la console trésorerie, encaissements, pointages QR et tables comptables.',
+      'Accès complet à la console trésorerie, encaissements, pointages QR et tables comptables. L’accès au Collège des Parrains et à Carrières au cœur du réseau suit la règle de cotisation à jour.',
   },
   ADMIN: {
     role: 'ADMIN',
@@ -334,8 +387,12 @@ export const PROFILE_ACCESS_MATRIX: Record<UserRole, ProfileAccessRule> = {
     scopeLabel: 'Gouvernance & Credentials',
     scopeType: 'ALL_MEMBERS',
     canUpdateAllPaymentTables: true,
+    mentorshipAccessRule: 'UP_TO_DATE_ONLY',
+    mentorshipRuleLabel: 'Trouver un Mentor & Collège des Parrains : si cotisation à jour',
+    careersAccessRule: 'UP_TO_DATE_ONLY',
+    careersRuleLabel: 'Carrières au cœur du réseau : si cotisation à jour',
     description:
-      'Plein exercice sur les profils, credentials, adhésions, finances, projets et communication.',
+      'Plein exercice sur les profils, credentials, adhésions, finances, projets et communication. L’accès personnel au Collège des Parrains et à Carrières au cœur du réseau reste soumis à une cotisation à jour.',
   },
   SUPER_ADMIN: {
     role: 'SUPER_ADMIN',
@@ -344,8 +401,12 @@ export const PROFILE_ACCESS_MATRIX: Record<UserRole, ProfileAccessRule> = {
     scopeLabel: 'Autorité totale (Toutes tables)',
     scopeType: 'ALL_MEMBERS',
     canUpdateAllPaymentTables: true,
+    mentorshipAccessRule: 'UP_TO_DATE_ONLY',
+    mentorshipRuleLabel: 'Trouver un Mentor & Collège des Parrains : si cotisation à jour',
+    careersAccessRule: 'UP_TO_DATE_ONLY',
+    careersRuleLabel: 'Carrières au cœur du réseau : si cotisation à jour',
     description:
-      'Contrôle complet sur tous les credentials, menus visiteurs, espaces de paiement et exports.',
+      'Contrôle complet sur tous les credentials, menus visiteurs, espaces de paiement et exports. L’accès personnel au Collège des Parrains et à Carrières au cœur du réseau requiert une cotisation à jour.',
   },
 };
 

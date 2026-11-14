@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp, NavigationTab, UserRole } from '../context/AppContext';
 import {
   AccessCredential,
@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  CreditCard,
   Edit3,
   Eye,
   EyeOff,
@@ -76,6 +77,9 @@ export const AdminAccessManager: React.FC = () => {
     deleteAccessCredential,
     updateVisitorAllowedMenus,
     updateRoleMenuPermissions,
+    getMemberFinancialSummary,
+    isMemberUpToDate,
+    openPaymentModal,
     addToast,
   } = useApp();
 
@@ -94,6 +98,20 @@ export const AdminAccessManager: React.FC = () => {
   const [ackCopyEnabled, setAckCopyEnabled] = useState<boolean>(
     settings.credentialAckCopyToAdmin !== false
   );
+
+  useEffect(() => {
+    setSenderEmailInput(settings.credentialSenderEmail || settings.officialEmail);
+    setSenderNameInput(settings.credentialSenderName || 'Secrétariat Général ALGB');
+    setAutoSendEnabled(settings.autoSendCredentialEmail !== false);
+    setAckCopyEnabled(settings.credentialAckCopyToAdmin !== false);
+    setSendNowOnCreate(settings.autoSendCredentialEmail !== false);
+  }, [
+    settings.credentialSenderEmail,
+    settings.credentialSenderName,
+    settings.autoSendCredentialEmail,
+    settings.credentialAckCopyToAdmin,
+    settings.officialEmail,
+  ]);
 
   // Creation form state
   const [linkedMemberId, setLinkedMemberId] = useState<string>('');
@@ -129,7 +147,7 @@ export const AdminAccessManager: React.FC = () => {
   } | null>(null);
 
   const inputClass =
-    'w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950 rounded-lg p-2.5 text-xs text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none transition-colors';
+    'w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg p-2.5 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none transition-colors';
 
   const publicMenus = MENU_DEFINITIONS.filter((m) => m.category === 'PUBLIC');
 
@@ -305,38 +323,38 @@ export const AdminAccessManager: React.FC = () => {
   return (
     <div className="space-y-8 text-xs">
       {/* 1. VISITOR PUBLIC MENUS (NO CREDENTIAL REQUIRED) */}
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-gray-200 dark:border-zinc-800">
+      <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-5 shadow-editorial">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-[#141413]/10 dark:border-white/10">
           <div>
-            <span className="text-[10px] uppercase tracking-wider font-bold text-[#B8860B] dark:text-[#E5B824] flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5" />
+            <span className="text-[10px] uppercase tracking-wider font-bold text-[#141413] dark:text-[#F2B705] flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-[#F2B705]" />
               <span>Accès Public Sans Credential</span>
             </span>
-            <h3 className="text-lg font-bold font-heading text-black dark:text-white mt-1">
+            <h3 className="text-lg font-bold font-heading text-[#141413] dark:text-white mt-1">
               Menus ouverts aux Visiteurs (sans authentification)
             </h3>
-            <p className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
-              Les visiteurs accèdent librement aux rubriques cochées ci-dessous sans credential. L’Espace Membre et l’Administration restent toujours protégés par credential.
+            <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
+              Toutes les rubriques présentant l’Amicale et ses activités (Accueil, L’Amicale, Histoire, Événements, Mécénat, Médiathèque, Adhésion, Contact) sont toujours ouvertes sans credential. Les encarts « Trouver un Mentor », « Collège des Parrains » et « Carrières au cœur du réseau » restent réservés aux membres à jour de cotisation.
             </p>
           </div>
 
-          <span className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-semibold shrink-0 w-fit">
-            {visitorAllowedMenus.filter((m) => m !== 'galerie').length} / {publicMenus.length} menus publics actifs
+          <span className="px-3 py-1.5 rounded-lg bg-[#F0FDF9] dark:bg-[#0f2422] border border-[#134E4A]/30 dark:border-emerald-800 text-[#134E4A] dark:text-emerald-400 font-semibold shrink-0 w-fit">
+            {publicMenus.filter((m) => m.lockedForVisitors || visitorAllowedMenus.includes(m.tab)).length} / {publicMenus.length} menus publics actifs
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {publicMenus.map((menu) => {
-            const isChecked = visitorAllowedMenus.includes(menu.tab);
+            const isChecked = !!menu.lockedForVisitors || visitorAllowedMenus.includes(menu.tab);
             return (
               <label
                 key={menu.tab}
                 className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all ${
                   menu.lockedForVisitors
-                    ? 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 cursor-not-allowed opacity-90'
+                    ? 'bg-[#F0FDF9]/60 dark:bg-[#0f2422]/40 border-[#134E4A]/25 dark:border-emerald-900/60 cursor-not-allowed'
                     : isChecked
-                    ? 'bg-yellow-50/60 dark:bg-yellow-500/10 border-[#E5B824]/60 cursor-pointer'
-                    : 'bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 hover:border-gray-400 dark:hover:border-zinc-600 cursor-pointer'
+                    ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705]/60 cursor-pointer'
+                    : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 hover:border-[#141413]/30 dark:hover:border-white/25 cursor-pointer'
                 }`}
               >
                 <input
@@ -344,18 +362,18 @@ export const AdminAccessManager: React.FC = () => {
                   checked={isChecked}
                   disabled={menu.lockedForVisitors}
                   onChange={() => handleToggleVisitorMenu(menu.tab)}
-                  className="mt-0.5 accent-[#E5B824] w-4 h-4 shrink-0 cursor-pointer"
+                  className="mt-0.5 accent-[#F2B705] w-4 h-4 shrink-0 cursor-pointer"
                 />
                 <div className="min-w-0">
-                  <div className="font-bold text-black dark:text-white flex items-center gap-1.5">
+                  <div className="font-bold text-[#141413] dark:text-white flex items-center gap-1.5 flex-wrap">
                     <span>{menu.label}</span>
                     {menu.lockedForVisitors && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold">
-                        Obligatoire
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#134E4A] text-white font-semibold">
+                        Public · Sans credential
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-gray-600 dark:text-zinc-400 mt-0.5 leading-snug">
+                  <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 mt-0.5 leading-snug">
                     {menu.description}
                   </p>
                 </div>
@@ -366,19 +384,19 @@ export const AdminAccessManager: React.FC = () => {
       </div>
 
       {/* 1B. EMAIL DISPATCH & ACKNOWLEDGMENT PARAMETERS */}
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-gray-200 dark:border-zinc-800">
+      <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-5 shadow-editorial">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-[#141413]/10 dark:border-white/10">
           <div>
-            <span className="text-[10px] uppercase tracking-wider font-bold text-[#B8860B] dark:text-[#E5B824] flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5" />
+            <span className="text-[10px] uppercase tracking-wider font-bold text-[#141413] dark:text-[#F2B705] flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-[#F2B705]" />
               <span>Notification E-mail & Accusé de Réception</span>
             </span>
-            <h3 className="text-lg font-bold font-heading text-black dark:text-white mt-1">
+            <h3 className="text-lg font-bold font-heading text-[#141413] dark:text-white mt-1">
               Paramètres d’expédition automatique des Credentials
             </h3>
-            <p className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
+            <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
               Dès qu’un credential est créé (manuellement, par validation d’adhésion ou par enrôlement en ligne), la route serveur{' '}
-              <code className="font-mono text-black dark:text-zinc-200">/api/credentials/send-email</code> envoie les accès avec un lien d’accusé de réception.
+              <code className="font-mono text-[#141413] dark:text-zinc-200">/api/credentials/send-email</code> envoie les accès avec un lien d’accusé de réception.
             </p>
           </div>
         </div>
@@ -386,7 +404,7 @@ export const AdminAccessManager: React.FC = () => {
         <form onSubmit={handleSaveMailSettings} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 Adresse e-mail d’expédition & de réception des accusés *
               </label>
               <input
@@ -400,7 +418,7 @@ export const AdminAccessManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 Nom d’expéditeur affiché *
               </label>
               <input
@@ -416,22 +434,22 @@ export const AdminAccessManager: React.FC = () => {
 
           <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
             <div className="flex flex-wrap gap-5">
-              <label className="inline-flex items-center gap-2 text-gray-800 dark:text-zinc-200 cursor-pointer">
+              <label className="inline-flex items-center gap-2 text-[#141413] dark:text-zinc-200 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={autoSendEnabled}
                   onChange={(e) => setAutoSendEnabled(e.target.checked)}
-                  className="accent-[#E5B824] w-4 h-4"
+                  className="accent-[#F2B705] w-4 h-4"
                 />
                 <span>Envoi automatique dès création</span>
               </label>
 
-              <label className="inline-flex items-center gap-2 text-gray-800 dark:text-zinc-200 cursor-pointer">
+              <label className="inline-flex items-center gap-2 text-[#141413] dark:text-zinc-200 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={ackCopyEnabled}
                   onChange={(e) => setAckCopyEnabled(e.target.checked)}
-                  className="accent-[#E5B824] w-4 h-4"
+                  className="accent-[#F2B705] w-4 h-4"
                 />
                 <span>Copie BCC & accusé vers l’adresse administrateur</span>
               </label>
@@ -439,7 +457,7 @@ export const AdminAccessManager: React.FC = () => {
 
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-black dark:bg-zinc-800 hover:bg-gray-900 dark:hover:bg-zinc-700 text-[#E5B824] font-bold flex items-center gap-1.5 cursor-pointer border border-transparent dark:border-[#E5B824]/40"
+              className="px-4 py-2 rounded-lg bg-[#141413] dark:bg-white/10 hover:bg-[#141413]/90 dark:hover:bg-white/15 text-[#F2B705] font-bold flex items-center gap-1.5 cursor-pointer border border-transparent dark:border-[#F2B705]/40"
             >
               <Save className="w-3.5 h-3.5" />
               <span>Enregistrer l’expéditeur</span>
@@ -449,16 +467,16 @@ export const AdminAccessManager: React.FC = () => {
       </div>
 
       {/* 2. CREATE NEW CREDENTIAL FORM */}
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
-        <div className="pb-4 border-b border-gray-200 dark:border-zinc-800">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-[#B8860B] dark:text-[#E5B824] flex items-center gap-1.5">
-            <PlusCircle className="w-3.5 h-3.5" />
+      <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-6 shadow-editorial">
+        <div className="pb-4 border-b border-[#141413]/10 dark:border-white/10">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-[#141413] dark:text-[#F2B705] flex items-center gap-1.5">
+            <PlusCircle className="w-3.5 h-3.5 text-[#F2B705]" />
             <span>Attribution d’Accès Nominatifs & Fonctionnels</span>
           </span>
-          <h3 className="text-lg font-bold font-heading text-black dark:text-white mt-1">
+          <h3 className="text-lg font-bold font-heading text-[#141413] dark:text-white mt-1">
             Créer un nouveau Credential d’accès
           </h3>
-          <p className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
+          <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
             Générez des identifiants dédiés pour les adhérents, délégués de promotion, responsables communication, trésoriers ou administrateurs.
           </p>
         </div>
@@ -466,7 +484,7 @@ export const AdminAccessManager: React.FC = () => {
         <form onSubmit={handleCreateSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 Rattacher un ancien élève (optionnel)
               </label>
               <select
@@ -475,16 +493,39 @@ export const AdminAccessManager: React.FC = () => {
                 className={inputClass}
               >
                 <option value="">— Compte fonctionnel libre / non rattaché —</option>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.firstName} {m.lastName} · Promo {m.promotionYear} ({m.membershipCardId})
-                  </option>
-                ))}
+                {members.map((m) => {
+                  const upToDate = isMemberUpToDate(m.id);
+                  return (
+                    <option key={m.id} value={m.id}>
+                      {m.firstName} {m.lastName} · Promo {m.promotionYear} ({m.membershipCardId}) ·{' '}
+                      {upToDate ? 'Cotisation à jour' : 'À régulariser'}
+                    </option>
+                  );
+                })}
               </select>
+              {linkedMemberId && (
+                <div className="mt-1.5 text-[11px] flex items-center gap-1.5">
+                  {isMemberUpToDate(linkedMemberId) ? (
+                    <span className="text-[#134E4A] dark:text-emerald-400 font-semibold inline-flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>
+                        Cotisation à jour : « Trouver un Mentor », « Collège des Parrains » & « Carrières au cœur du réseau » débloqués
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-[#C2410C] dark:text-amber-300 font-semibold inline-flex items-center gap-1">
+                      <Lock className="w-3.5 h-3.5 shrink-0" />
+                      <span>
+                        Cotisation non à jour : « Trouver un Mentor », « Collège des Parrains » & « Carrières au cœur du réseau » verrouillés
+                      </span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 Profil attribué
               </label>
               <select
@@ -505,7 +546,7 @@ export const AdminAccessManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 Nom complet ou intitulé du compte *
               </label>
               <input
@@ -519,7 +560,7 @@ export const AdminAccessManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 Identifiant de connexion (e-mail, matricule ou login) *
               </label>
               <input
@@ -539,7 +580,7 @@ export const AdminAccessManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 E-mail destinataire (pour l’envoi & accusé de réception)
               </label>
               <input
@@ -552,7 +593,7 @@ export const AdminAccessManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 Code d’accès secret (Credential) *
               </label>
               <div className="flex items-center gap-2">
@@ -567,16 +608,16 @@ export const AdminAccessManager: React.FC = () => {
                   type="button"
                   onClick={() => setSecretCode(generateRandomSecret(role))}
                   title="Générer un nouveau code aléatoire"
-                  className="px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 hover:border-[#E5B824] text-gray-800 dark:text-zinc-200 font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  className="px-3 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 hover:border-[#F2B705] text-[#141413] dark:text-zinc-200 font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer"
                 >
-                  <RefreshCw className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                  <RefreshCw className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
                   <span>Générer</span>
                 </button>
               </div>
             </div>
 
             <div className="md:col-span-2">
-              <label className="block font-semibold text-gray-800 dark:text-zinc-200 mb-1">
+              <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
                 Note d’affectation (facultatif)
               </label>
               <input
@@ -590,12 +631,12 @@ export const AdminAccessManager: React.FC = () => {
           </div>
 
           {/* Per-credential menu permissions */}
-          <div className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 space-y-3">
+          <div className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-bold text-black dark:text-white">
+              <span className="font-bold text-[#141413] dark:text-white">
                 Menus accessibles pour ce credential ({allowedTabs.filter((t) => t !== 'galerie').length})
               </span>
-              <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+              <span className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
                 Pré-remplis selon le profil « {PROFILE_ACCESS_MATRIX[role].label} »
               </span>
             </div>
@@ -607,10 +648,10 @@ export const AdminAccessManager: React.FC = () => {
                     key={menu.tab}
                     className={`flex items-center gap-2 p-2 rounded-lg border text-[11px] transition-colors ${
                       menu.tab === 'accueil'
-                        ? 'bg-gray-100 dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 cursor-not-allowed'
+                        ? 'bg-[#F8F8F6] dark:bg-[#1e1e1c] border-[#141413]/10 dark:border-white/10 cursor-not-allowed'
                         : checked
-                        ? 'bg-white dark:bg-zinc-900 border-[#E5B824]/70 text-black dark:text-white font-semibold cursor-pointer'
-                        : 'bg-white/60 dark:bg-zinc-900/50 border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 cursor-pointer'
+                        ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-[#FEF8E6] font-semibold cursor-pointer'
+                        : 'bg-white dark:bg-[#1e1e1c] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-400 cursor-pointer'
                     }`}
                   >
                     <input
@@ -618,7 +659,7 @@ export const AdminAccessManager: React.FC = () => {
                       checked={checked}
                       disabled={menu.tab === 'accueil'}
                       onChange={() => toggleCreateTab(menu.tab)}
-                      className="accent-[#E5B824] w-3.5 h-3.5 cursor-pointer"
+                      className="accent-[#F2B705] w-3.5 h-3.5 cursor-pointer"
                     />
                     <span className="truncate">{menu.label}</span>
                   </label>
@@ -628,19 +669,19 @@ export const AdminAccessManager: React.FC = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <label className="inline-flex items-center gap-2 text-gray-800 dark:text-zinc-200 cursor-pointer">
+            <label className="inline-flex items-center gap-2 text-[#141413] dark:text-zinc-200 cursor-pointer">
               <input
                 type="checkbox"
                 checked={sendNowOnCreate}
                 onChange={(e) => setSendNowOnCreate(e.target.checked)}
-                className="accent-[#E5B824] w-4 h-4"
+                className="accent-[#F2B705] w-4 h-4"
               />
               <span>Envoyer automatiquement par e-mail dès création (avec accusé de réception)</span>
             </label>
 
             <button
               type="submit"
-              className="px-6 py-2.5 bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              className="px-6 py-2.5 bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-sm"
             >
               <KeyRound className="w-4 h-4" />
               <span>Créer le Credential & Activer l’accès</span>
@@ -650,34 +691,34 @@ export const AdminAccessManager: React.FC = () => {
       </div>
 
       {/* 3. CREDENTIALS REGISTRY */}
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-zinc-800">
+      <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-5 shadow-editorial">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#141413]/10 dark:border-white/10">
           <div>
-            <h3 className="text-lg font-bold font-heading text-black dark:text-white flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[#B8860B] dark:text-[#E5B824]" />
+            <h3 className="text-lg font-bold font-heading text-[#141413] dark:text-white flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-[#F2B705]" />
               <span>Registre des Credentials Actifs & Suspendus ({accessCredentials.length})</span>
             </h3>
-            <p className="text-xs text-gray-600 dark:text-zinc-400 mt-0.5">
+            <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-0.5">
               Chaque credential contrôle l’accès aux espaces protégés du portail ainsi que le déverrouillage des liens QR de paiement.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[#4A4A48] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Rechercher..."
-                className="bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-black dark:text-white focus:border-[#E5B824] focus:outline-none"
+                className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#141413] dark:text-white focus:border-[#F2B705] focus:outline-none"
               />
             </div>
 
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value as 'ALL' | AuthRoleKey)}
-              className="bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-black dark:text-white focus:border-[#E5B824] focus:outline-none"
+              className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-[#141413] dark:text-white focus:border-[#F2B705] focus:outline-none"
             >
               <option value="ALL">Tous profils</option>
               {ASSIGNABLE_ROLES.map((rKey) => (
@@ -690,7 +731,7 @@ export const AdminAccessManager: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'ACTIVE' | 'SUSPENDED')}
-              className="bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-black dark:text-white focus:border-[#E5B824] focus:outline-none"
+              className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-[#141413] dark:text-white focus:border-[#F2B705] focus:outline-none"
             >
               <option value="ALL">Tous statuts</option>
               <option value="ACTIVE">Actifs</option>
@@ -708,6 +749,8 @@ export const AdminAccessManager: React.FC = () => {
             const linkedMember = cred.linkedMemberId
               ? members.find((m) => m.id === cred.linkedMemberId)
               : null;
+            const linkedSummary = linkedMember ? getMemberFinancialSummary(linkedMember.id) : null;
+            const linkedUpToDate = linkedMember ? isMemberUpToDate(linkedMember.id) : false;
             const resolvedEmail =
               cred.recipientEmail ||
               (cred.identifier.includes('@') ? cred.identifier : linkedMember?.email || '');
@@ -717,7 +760,7 @@ export const AdminAccessManager: React.FC = () => {
                 key={cred.id}
                 className={`p-4 rounded-xl border transition-colors ${
                   cred.isActive
-                    ? 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800'
+                    ? 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10'
                     : 'bg-red-50/40 dark:bg-red-950/20 border-red-200 dark:border-red-900/60 opacity-85'
                 }`}
               >
@@ -725,60 +768,60 @@ export const AdminAccessManager: React.FC = () => {
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-sm text-black dark:text-white">
+                        <span className="font-bold text-sm text-[#141413] dark:text-white">
                           {cred.displayName}
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-500/15 text-yellow-900 dark:text-[#E5B824] border border-yellow-300 dark:border-[#E5B824]/30 text-[10px] font-bold">
+                        <span className="px-2 py-0.5 rounded bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-[#FEF8E6] border border-[#F2B705]/40 text-[10px] font-bold">
                           {PROFILE_ACCESS_MATRIX[cred.role].label}
                         </span>
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                             cred.isActive
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                              ? 'bg-[#F0FDF9] dark:bg-[#0f2422] text-[#134E4A] dark:text-emerald-400 border border-[#134E4A]/30 dark:border-emerald-800'
                               : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
                           }`}
                         >
                           {cred.isActive ? 'Actif' : 'Suspendu'}
                         </span>
                         {isSelf && (
-                          <span className="px-2 py-0.5 rounded bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded bg-[#141413] dark:bg-white text-white dark:text-[#141413] text-[10px] font-bold">
                             Session en cours
                           </span>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-gray-600 dark:text-zinc-400">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#4A4A48] dark:text-zinc-400">
                         <span>
                           Identifiant :{' '}
-                          <strong className="font-mono text-black dark:text-zinc-200">
+                          <strong className="font-mono text-[#141413] dark:text-zinc-200">
                             {cred.identifier}
                           </strong>
                         </span>
                         {resolvedEmail && resolvedEmail.toLowerCase() !== cred.identifier.toLowerCase() && (
                           <span>
                             E-mail :{' '}
-                            <strong className="font-mono text-black dark:text-zinc-200">
+                            <strong className="font-mono text-[#141413] dark:text-zinc-200">
                               {resolvedEmail}
                             </strong>
                           </span>
                         )}
                         <span className="flex items-center gap-1.5">
                           Code secret :{' '}
-                          <strong className="font-mono text-[#B8860B] dark:text-[#E5B824]">
+                          <strong className="font-mono text-[#141413] dark:text-[#F2B705]">
                             {isRevealed ? cred.secretCode : '••••••••••••'}
                           </strong>
                           <button
                             type="button"
                             onClick={() => toggleReveal(cred.id)}
                             title={isRevealed ? 'Masquer le code' : 'Afficher le code'}
-                            className="p-0.5 text-gray-500 hover:text-black dark:hover:text-white cursor-pointer"
+                            className="p-0.5 text-[#4A4A48] hover:text-[#141413] dark:hover:text-white cursor-pointer"
                           >
                             {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                           </button>
                         </span>
                         <span>
                           Menus :{' '}
-                          <strong className="text-black dark:text-zinc-200">
+                          <strong className="text-[#141413] dark:text-zinc-200">
                             {cred.allowedTabs.filter((t) => t !== 'galerie').length} rubriques
                           </strong>
                         </span>
@@ -792,7 +835,7 @@ export const AdminAccessManager: React.FC = () => {
                             <span>Envoi en cours vers {resolvedEmail || 'destinataire'}...</span>
                           </span>
                         ) : cred.emailStatus === 'ENVOYE' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F0FDF9] dark:bg-[#0f2422] border border-[#134E4A]/30 dark:border-emerald-800 text-[#134E4A] dark:text-emerald-400 text-[10px] font-semibold">
                             <Mail className="w-3 h-3" />
                             <span>
                               Envoyé le {cred.emailSentAt || cred.createdAt}
@@ -808,28 +851,28 @@ export const AdminAccessManager: React.FC = () => {
                             <span>Échec d’envoi</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 text-[10px] font-semibold">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-400 text-[10px] font-semibold">
                             <Mail className="w-3 h-3" />
                             <span>Non envoyé par e-mail</span>
                           </span>
                         )}
 
                         {cred.acknowledgedAt && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 text-[10px] font-semibold">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F0FDF9] dark:bg-[#0f2422] border border-[#134E4A]/35 dark:border-emerald-700 text-[#134E4A] dark:text-emerald-300 text-[10px] font-semibold">
                             <CheckCircle2 className="w-3 h-3" />
                             <span>Accusé confirmé le {cred.acknowledgedAt}</span>
                           </span>
                         )}
 
                         {cred.firstLoginAt && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-[10px] font-semibold">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 text-[#141413] dark:text-[#FEF8E6] text-[10px] font-semibold">
                             <UserCheck className="w-3 h-3" />
                             <span>1re connexion le {cred.firstLoginAt}</span>
                           </span>
                         )}
 
                         {!cred.acknowledgedAt && !cred.firstLoginAt && cred.emailStatus === 'ENVOYE' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px]">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-400 text-[10px]">
                             <Clock className="w-3 h-3" />
                             <span>En attente d’accusé ou de 1re connexion</span>
                           </span>
@@ -842,7 +885,33 @@ export const AdminAccessManager: React.FC = () => {
                         </p>
                       )}
 
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-gray-500 dark:text-zinc-500">
+                      {/* Statut Cotisation & Éligibilité Mentorat / Collège des Parrains / Carrières */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {linkedMember ? (
+                          linkedUpToDate ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F0FDF9] dark:bg-[#0f2422] border border-[#134E4A]/30 dark:border-emerald-800 text-[#134E4A] dark:text-emerald-400 text-[10px] font-semibold">
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>
+                                Cotisation à jour ({linkedSummary?.paidMonths.length ?? 0}/12) · Mentorat, Parrains & Carrières débloqués
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FFF7ED] dark:bg-[#1a1310] border border-[#C2410C]/30 dark:border-amber-800 text-[#C2410C] dark:text-amber-300 text-[10px] font-semibold">
+                              <Lock className="w-3 h-3" />
+                              <span>
+                                Cotisation {linkedSummary?.statusFinancial === 'PARTIEL' ? 'partielle' : 'en retard'} ({linkedSummary?.paidMonths.length ?? 0}/12) · Mentorat, Parrains & Carrières verrouillés
+                              </span>
+                            </span>
+                          )
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-400 text-[10px] font-semibold">
+                            <Lock className="w-3 h-3" />
+                            <span>Compte sans fiche membre liée · Mentorat, Parrains & Carrières verrouillés</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#4A4A48] dark:text-zinc-400">
                         {linkedMember && (
                           <span>
                             Annuaire : {linkedMember.membershipCardId} (Promo {linkedMember.promotionYear})
@@ -852,18 +921,35 @@ export const AdminAccessManager: React.FC = () => {
                         {cred.lastLoginAt && <span>Dernière connexion : {cred.lastLoginAt}</span>}
                       </div>
                       {cred.notes && (
-                        <p className="text-[11px] italic text-gray-600 dark:text-zinc-400">
+                        <p className="text-[11px] italic text-[#4A4A48] dark:text-zinc-400">
                           {cred.notes}
                         </p>
                       )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0">
+                      {linkedMember && !linkedUpToDate && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openPaymentModal({
+                              type: 'COTISATION_MENSUELLE',
+                              targetMember: linkedMember,
+                              selectedMonths: linkedSummary?.overdueMonths,
+                            })
+                          }
+                          className="px-2.5 py-1.5 rounded-lg bg-[#141413] hover:bg-[#1e1e1c] text-[#F2B705] border border-[#F2B705]/40 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <CreditCard className="w-3.5 h-3.5 text-[#F2B705]" />
+                          <span>Régulariser cotisation</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         disabled={isSendingEmail}
                         onClick={() => void sendCredentialEmail(cred.id, 'RESEND')}
-                        className="px-2.5 py-1.5 rounded-lg bg-yellow-50 dark:bg-yellow-500/10 border border-[#E5B824]/60 hover:bg-[#E5B824] hover:text-black text-yellow-900 dark:text-[#E5B824] font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50 transition-colors"
+                        className="px-2.5 py-1.5 rounded-lg bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/50 hover:bg-[#F2B705] hover:text-[#141413] text-[#141413] dark:text-[#FEF8E6] font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-50 transition-colors"
                       >
                         {isSendingEmail ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -880,12 +966,12 @@ export const AdminAccessManager: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleCopyCredentials(cred)}
-                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 hover:border-[#E5B824] text-gray-800 dark:text-zinc-200 font-semibold flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 hover:border-[#F2B705] text-[#141413] dark:text-zinc-200 font-semibold flex items-center gap-1 cursor-pointer"
                       >
                         {copiedId === cred.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <Check className="w-3.5 h-3.5 text-[#134E4A] dark:text-emerald-400" />
                         ) : (
-                          <Copy className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                          <Copy className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
                         )}
                         <span>Copier</span>
                       </button>
@@ -893,7 +979,7 @@ export const AdminAccessManager: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => startEditing(cred)}
-                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 hover:border-black dark:hover:border-white text-gray-800 dark:text-zinc-200 font-semibold flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 hover:border-[#141413] dark:hover:border-white text-[#141413] dark:text-zinc-200 font-semibold flex items-center gap-1 cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                         <span>Modifier</span>
@@ -907,8 +993,8 @@ export const AdminAccessManager: React.FC = () => {
                         }
                         className={`px-2.5 py-1.5 rounded-lg border font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                           cred.isActive
-                            ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 hover:bg-amber-100'
-                            : 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100'
+                            ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705]/40 text-[#141413] dark:text-[#FEF8E6] hover:bg-[#F2B705]/25'
+                            : 'bg-[#F0FDF9] dark:bg-[#0f2422] border-[#134E4A]/30 dark:border-emerald-800 text-[#134E4A] dark:text-emerald-400 hover:bg-[#134E4A]/15'
                         }`}
                       >
                         {cred.isActive ? (
@@ -929,7 +1015,7 @@ export const AdminAccessManager: React.FC = () => {
                         disabled={isSelf}
                         onClick={() => deleteAccessCredential(cred.id)}
                         title="Supprimer ce credential"
-                        className="p-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-red-500 text-red-600 dark:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                        className="p-1.5 rounded-lg border border-[#141413]/15 dark:border-white/15 hover:border-red-500 text-red-600 dark:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -937,9 +1023,9 @@ export const AdminAccessManager: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 pb-2">
-                      <span className="font-bold text-black dark:text-white flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                    <div className="flex items-center justify-between border-b border-[#141413]/10 dark:border-white/10 pb-2">
+                      <span className="font-bold text-[#141413] dark:text-white flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-[#F2B705]" />
                         <span>Modifier le credential : {cred.displayName}</span>
                       </span>
                       <button
@@ -948,7 +1034,7 @@ export const AdminAccessManager: React.FC = () => {
                           setEditingId(null);
                           setEditForm(null);
                         }}
-                        className="p-1 text-gray-500 hover:text-black dark:hover:text-white cursor-pointer"
+                        className="p-1 text-[#4A4A48] hover:text-[#141413] dark:hover:text-white cursor-pointer"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -956,7 +1042,7 @@ export const AdminAccessManager: React.FC = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <div>
-                        <label className="block font-semibold mb-1 text-gray-700 dark:text-zinc-300">
+                        <label className="block font-semibold mb-1 text-[#141413] dark:text-zinc-300">
                           Nom affiché
                         </label>
                         <input
@@ -970,7 +1056,7 @@ export const AdminAccessManager: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block font-semibold mb-1 text-gray-700 dark:text-zinc-300">
+                        <label className="block font-semibold mb-1 text-[#141413] dark:text-zinc-300">
                           Identifiant
                         </label>
                         <input
@@ -984,7 +1070,7 @@ export const AdminAccessManager: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block font-semibold mb-1 text-gray-700 dark:text-zinc-300">
+                        <label className="block font-semibold mb-1 text-[#141413] dark:text-zinc-300">
                           E-mail destinataire
                         </label>
                         <input
@@ -999,7 +1085,7 @@ export const AdminAccessManager: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block font-semibold mb-1 text-gray-700 dark:text-zinc-300">
+                        <label className="block font-semibold mb-1 text-[#141413] dark:text-zinc-300">
                           Nouveau code secret
                         </label>
                         <div className="flex items-center gap-1.5">
@@ -1019,16 +1105,16 @@ export const AdminAccessManager: React.FC = () => {
                                 secretCode: generateRandomSecret(editForm.role),
                               })
                             }
-                            className="p-2.5 rounded-lg bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 cursor-pointer"
+                            className="p-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 cursor-pointer"
                             title="Générer un nouveau code"
                           >
-                            <RefreshCw className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                            <RefreshCw className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
                           </button>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block font-semibold mb-1 text-gray-700 dark:text-zinc-300">
+                        <label className="block font-semibold mb-1 text-[#141413] dark:text-zinc-300">
                           Profil
                         </label>
                         <select
@@ -1056,7 +1142,7 @@ export const AdminAccessManager: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block font-semibold mb-1 text-gray-700 dark:text-zinc-300">
+                        <label className="block font-semibold mb-1 text-[#141413] dark:text-zinc-300">
                           Membre rattaché
                         </label>
                         <select
@@ -1069,14 +1155,15 @@ export const AdminAccessManager: React.FC = () => {
                           <option value="">— Aucun membre rattaché —</option>
                           {members.map((m) => (
                             <option key={m.id} value={m.id}>
-                              {m.firstName} {m.lastName} ({m.membershipCardId})
+                              {m.firstName} {m.lastName} ({m.membershipCardId}) ·{' '}
+                              {isMemberUpToDate(m.id) ? 'Cotisation à jour' : 'À régulariser'}
                             </option>
                           ))}
                         </select>
                       </div>
 
                       <div>
-                        <label className="block font-semibold mb-1 text-gray-700 dark:text-zinc-300">
+                        <label className="block font-semibold mb-1 text-[#141413] dark:text-zinc-300">
                           Notes
                         </label>
                         <input
@@ -1094,7 +1181,7 @@ export const AdminAccessManager: React.FC = () => {
                         return (
                           <label
                             key={menu.tab}
-                            className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-[11px] cursor-pointer"
+                            className="flex items-center gap-2 p-2 rounded-lg border border-[#141413]/15 dark:border-white/15 bg-white dark:bg-[#1e1e1c] text-[11px] cursor-pointer"
                           >
                             <input
                               type="checkbox"
@@ -1107,7 +1194,7 @@ export const AdminAccessManager: React.FC = () => {
                                   : [...editForm.allowedTabs, menu.tab];
                                 setEditForm({ ...editForm, allowedTabs: nextTabs });
                               }}
-                              className="accent-[#E5B824] w-3.5 h-3.5"
+                              className="accent-[#F2B705] w-3.5 h-3.5"
                             />
                             <span className="truncate">{menu.label}</span>
                           </label>
@@ -1122,14 +1209,14 @@ export const AdminAccessManager: React.FC = () => {
                           setEditingId(null);
                           setEditForm(null);
                         }}
-                        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 cursor-pointer"
+                        className="px-4 py-2 rounded-lg border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300 cursor-pointer"
                       >
                         Annuler
                       </button>
                       <button
                         type="button"
                         onClick={() => handleSaveEdit(cred.id)}
-                        className="px-5 py-2 rounded-lg bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold flex items-center gap-1.5 cursor-pointer"
+                        className="px-5 py-2 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold flex items-center gap-1.5 cursor-pointer"
                       >
                         <Save className="w-3.5 h-3.5" />
                         <span>Enregistrer</span>
@@ -1142,7 +1229,7 @@ export const AdminAccessManager: React.FC = () => {
           })}
 
           {filteredCredentials.length === 0 && (
-            <div className="text-center py-8 text-gray-500 dark:text-zinc-400">
+            <div className="text-center py-8 text-[#4A4A48] dark:text-zinc-400">
               Aucun credential ne correspond à votre recherche.
             </div>
           )}
@@ -1150,13 +1237,37 @@ export const AdminAccessManager: React.FC = () => {
       </div>
 
       {/* 4. ROLE MATRIX REFERENCE & DEFAULT MENUS */}
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
-        <div className="pb-4 border-b border-gray-200 dark:border-zinc-800">
-          <h3 className="text-lg font-bold font-heading text-black dark:text-white">
+      <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-5 shadow-editorial">
+        <div className="pb-4 border-b border-[#141413]/10 dark:border-white/10">
+          <h3 className="text-lg font-bold font-heading text-[#141413] dark:text-white">
             Matrice des Profils & Menus par défaut
           </h3>
-          <p className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
+          <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
             Définissez les rubriques pré-cochées automatiquement lorsque vous créez un credential pour chaque profil.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-bold text-[#141413] dark:text-white">
+              {PROFILE_ACCESS_MATRIX.VISITEUR.label}
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#F0FDF9] dark:bg-[#0f2422] border border-[#134E4A]/30 dark:border-emerald-800 text-[#134E4A] dark:text-emerald-300 font-semibold">
+                {PROFILE_ACCESS_MATRIX.VISITEUR.scopeLabel}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 text-[#141413] dark:text-[#FEF8E6] font-semibold">
+                <Lock className="w-3 h-3" />
+                <span>{PROFILE_ACCESS_MATRIX.VISITEUR.mentorshipRuleLabel}</span>
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 text-[#141413] dark:text-[#FEF8E6] font-semibold">
+                <Lock className="w-3 h-3" />
+                <span>{PROFILE_ACCESS_MATRIX.VISITEUR.careersRuleLabel}</span>
+              </span>
+            </div>
+          </div>
+          <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
+            {PROFILE_ACCESS_MATRIX.VISITEUR.description}
           </p>
         </div>
 
@@ -1167,18 +1278,28 @@ export const AdminAccessManager: React.FC = () => {
             return (
               <div
                 key={roleKey}
-                className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 space-y-3"
+                className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-3"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-black dark:text-white">{rule.label}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-500/15 text-yellow-900 dark:text-[#E5B824] font-semibold">
+                    <span className="font-bold text-[#141413] dark:text-white">{rule.label}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-[#FEF8E6] border border-[#F2B705]/40 font-semibold">
                       {rule.scopeLabel}
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-600 dark:text-zinc-400 mt-1">
+                  <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 mt-1">
                     {rule.description}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[10px] font-semibold text-[#141413] dark:text-[#F2B705]">
+                      <ShieldCheck className="w-3 h-3 shrink-0 text-[#F2B705]" />
+                      <span>{rule.mentorshipRuleLabel}</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[10px] font-semibold text-[#141413] dark:text-zinc-200">
+                      <ShieldCheck className="w-3 h-3 shrink-0 text-[#F2B705]" />
+                      <span>{rule.careersRuleLabel}</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
@@ -1190,12 +1311,12 @@ export const AdminAccessManager: React.FC = () => {
                         type="button"
                         disabled={menu.tab === 'accueil'}
                         onClick={() => handleToggleDefaultRoleMenu(roleKey, menu.tab)}
-                        className={`px-2 py-1 rounded text-[10px] font-semibold border transition-colors ${
+                        className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition-colors ${
                           menu.tab === 'accueil'
-                            ? 'bg-gray-200 dark:bg-zinc-800 border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 cursor-not-allowed'
+                            ? 'bg-[#F8F8F6] dark:bg-[#1e1e1c] border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-400 cursor-not-allowed'
                             : active
-                            ? 'bg-[#E5B824]/20 border-[#E5B824] text-black dark:text-[#E5B824] cursor-pointer'
-                            : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 cursor-pointer'
+                            ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-[#FEF8E6] cursor-pointer'
+                            : 'bg-white dark:bg-[#1e1e1c] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-400 cursor-pointer'
                         }`}
                       >
                         {menu.label}

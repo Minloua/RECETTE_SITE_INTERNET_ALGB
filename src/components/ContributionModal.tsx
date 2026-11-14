@@ -75,26 +75,27 @@ export const ContributionModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#141413]/70 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-xl bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden my-8">
         {/* Header */}
-        <div className="bg-gray-50 dark:bg-zinc-950 px-6 py-4 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between">
+        <div className="bg-[#134E4A] px-6 py-4 border-b-2 border-[#F2B705] flex items-center justify-between text-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-yellow-100 dark:bg-yellow-500/15 border border-[#E5B824] flex items-center justify-center text-[#B8860B] dark:text-[#E5B824]">
+            <div className="w-10 h-10 rounded-lg bg-[#F2B705] text-[#141413] flex items-center justify-center shrink-0">
               <HeartHandshake className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-black dark:text-white font-heading">
+              <h3 className="text-base font-bold text-white font-heading">
                 Soutenir ce projet
               </h3>
-              <p className="text-xs text-gray-600 dark:text-zinc-400 truncate max-w-md">
+              <p className="text-xs text-emerald-100/85 truncate max-w-md">
                 {contributionModalProject.title}
               </p>
             </div>
           </div>
           <button
             onClick={() => setContributionModalProject(null)}
-            className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+            aria-label="Fermer"
+            className="p-1.5 text-emerald-100/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -106,7 +107,7 @@ export const ContributionModal: React.FC = () => {
             <form onSubmit={handleProceedToOtp} className="space-y-5">
               {/* Amount Selection */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-[#141413] dark:text-zinc-300 uppercase tracking-wider mb-2">
                   Montant de la contribution (FCFA)
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -117,8 +118,8 @@ export const ContributionModal: React.FC = () => {
                       onClick={() => handleSelectAmount(preset)}
                       className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
                         !isCustom && amount === preset
-                          ? 'bg-[#E5B824] text-black border-[#E5B824] shadow-xs'
-                          : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 text-gray-800 dark:text-zinc-200 hover:border-gray-400 dark:hover:border-zinc-600'
+                          ? 'bg-[#F2B705] text-[#141413] border-[#F2B705] shadow-xs'
+                          : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/15 dark:border-white/15 text-[#141413] dark:text-zinc-200 hover:border-[#134E4A] dark:hover:border-[#F2B705]'
                       }`}
                     >
                       {preset.toLocaleString('fr-FR')} FCFA
@@ -132,14 +133,14 @@ export const ContributionModal: React.FC = () => {
                     placeholder="Ou saisissez un montant libre..."
                     value={customAmount}
                     onChange={handleCustomChange}
-                    className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-900 rounded-lg px-3.5 py-2 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none"
+                    className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg px-3.5 py-2 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Payment Methods */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-[#141413] dark:text-zinc-300 uppercase tracking-wider mb-2">
                   Mode de règlement sécurisé
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
@@ -148,14 +149,14 @@ export const ContributionModal: React.FC = () => {
                     onClick={() => setMethod('ORANGE_MONEY')}
                     className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
                       method === 'ORANGE_MONEY'
-                        ? 'border-[#ff7900] bg-orange-50 dark:bg-orange-500/15 text-black dark:text-white'
-                        : 'border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-600'
+                        ? 'border-[#ff7900] bg-orange-50 dark:bg-orange-500/15 text-[#141413] dark:text-white'
+                        : 'border-[#141413]/15 dark:border-white/15 bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
                     }`}
                   >
                     <Smartphone className="w-4 h-4 text-[#ff7900] shrink-0" />
                     <div>
-                      <div className="font-bold text-gray-900 dark:text-white">Orange Money</div>
-                      <div className="text-[10px] text-gray-500 dark:text-zinc-400">Côte d’Ivoire</div>
+                      <div className="font-bold text-[#141413] dark:text-white">Orange Money</div>
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">Côte d’Ivoire</div>
                     </div>
                   </button>
 
@@ -164,14 +165,14 @@ export const ContributionModal: React.FC = () => {
                     onClick={() => setMethod('MTN_MOMO')}
                     className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
                       method === 'MTN_MOMO'
-                        ? 'border-[#E5B824] bg-yellow-50 dark:bg-yellow-500/15 text-black dark:text-white'
-                        : 'border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-600'
+                        ? 'border-[#F2B705] bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-white'
+                        : 'border-[#141413]/15 dark:border-white/15 bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
                     }`}
                   >
-                    <Smartphone className="w-4 h-4 text-[#E5B824] shrink-0" />
+                    <Smartphone className="w-4 h-4 text-[#F2B705] shrink-0" />
                     <div>
-                      <div className="font-bold text-gray-900 dark:text-white">MTN MoMo</div>
-                      <div className="text-[10px] text-gray-500 dark:text-zinc-400">Côte d’Ivoire</div>
+                      <div className="font-bold text-[#141413] dark:text-white">MTN MoMo</div>
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">Côte d’Ivoire</div>
                     </div>
                   </button>
 
@@ -180,14 +181,14 @@ export const ContributionModal: React.FC = () => {
                     onClick={() => setMethod('MOOV_MONEY')}
                     className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
                       method === 'MOOV_MONEY'
-                        ? 'border-[#0082c3] bg-blue-50 dark:bg-blue-500/15 text-black dark:text-white'
-                        : 'border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-600'
+                        ? 'border-[#0082c3] bg-blue-50 dark:bg-blue-500/15 text-[#141413] dark:text-white'
+                        : 'border-[#141413]/15 dark:border-white/15 bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
                     }`}
                   >
                     <Smartphone className="w-4 h-4 text-[#0082c3] shrink-0" />
                     <div>
-                      <div className="font-bold text-gray-900 dark:text-white">Moov Money</div>
-                      <div className="text-[10px] text-gray-500 dark:text-zinc-400">Côte d’Ivoire</div>
+                      <div className="font-bold text-[#141413] dark:text-white">Moov Money</div>
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">Côte d’Ivoire</div>
                     </div>
                   </button>
 
@@ -196,14 +197,14 @@ export const ContributionModal: React.FC = () => {
                     onClick={() => setMethod('CARTE_BANCAIRE')}
                     className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
                       method === 'CARTE_BANCAIRE'
-                        ? 'border-[#E5B824] bg-yellow-50 dark:bg-yellow-500/15 text-black dark:text-white'
-                        : 'border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-600'
+                        ? 'border-[#F2B705] bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-white'
+                        : 'border-[#141413]/15 dark:border-white/15 bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
                     }`}
                   >
-                    <CreditCard className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824] shrink-0" />
+                    <CreditCard className="w-4 h-4 text-[#134E4A] dark:text-[#F2B705] shrink-0" />
                     <div>
-                      <div className="font-bold text-gray-900 dark:text-white">Carte Bancaire</div>
-                      <div className="text-[10px] text-gray-500 dark:text-zinc-400">Visa / Mastercard</div>
+                      <div className="font-bold text-[#141413] dark:text-white">Carte Bancaire</div>
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">Visa / Mastercard</div>
                     </div>
                   </button>
 
@@ -212,14 +213,14 @@ export const ContributionModal: React.FC = () => {
                     onClick={() => setMethod('VIREMENT')}
                     className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
                       method === 'VIREMENT'
-                        ? 'border-[#E5B824] bg-yellow-50 dark:bg-yellow-500/15 text-black dark:text-white'
-                        : 'border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 hover:border-gray-300 dark:hover:border-zinc-600'
+                        ? 'border-[#F2B705] bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-white'
+                        : 'border-[#141413]/15 dark:border-white/15 bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
                     }`}
                   >
-                    <Building2 className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824] shrink-0" />
+                    <Building2 className="w-4 h-4 text-[#134E4A] dark:text-[#F2B705] shrink-0" />
                     <div>
-                      <div className="font-bold text-gray-900 dark:text-white">Virement</div>
-                      <div className="text-[10px] text-gray-500 dark:text-zinc-400">RIB SGBCI / Ecobank</div>
+                      <div className="font-bold text-[#141413] dark:text-white">Virement</div>
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">RIB SGBCI / Ecobank</div>
                     </div>
                   </button>
                 </div>
@@ -228,7 +229,7 @@ export const ContributionModal: React.FC = () => {
               {/* Contributor Information */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-zinc-300 mb-1">
+                  <label className="block font-bold text-[#141413] dark:text-zinc-300 mb-1">
                     Nom & Prénom(s)
                   </label>
                   <input
@@ -238,12 +239,12 @@ export const ContributionModal: React.FC = () => {
                     disabled={isAnonymous}
                     onChange={(e) => setContributorName(e.target.value)}
                     placeholder="Ex: Jean Kouassi"
-                    className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-900 rounded-lg px-3 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none disabled:opacity-50"
+                    className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg px-3 py-2 text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none disabled:opacity-50"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 dark:text-zinc-300 mb-1">
+                  <label className="block font-bold text-[#141413] dark:text-zinc-300 mb-1">
                     Promotion / Année de sortie
                   </label>
                   <input
@@ -254,7 +255,7 @@ export const ContributionModal: React.FC = () => {
                     disabled={isAnonymous}
                     onChange={(e) => setPromotionYear(parseInt(e.target.value) || undefined)}
                     placeholder="Ex: 2002"
-                    className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-900 rounded-lg px-3 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none disabled:opacity-50"
+                    className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg px-3 py-2 text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -262,7 +263,7 @@ export const ContributionModal: React.FC = () => {
               {/* Mobile Phone for Mobile Money */}
               {(method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') && (
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1">
+                  <label className="block text-xs font-bold text-[#141413] dark:text-zinc-300 mb-1">
                     Numéro Mobile Money débité
                   </label>
                   <input
@@ -271,14 +272,14 @@ export const ContributionModal: React.FC = () => {
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     placeholder="+225 07 XX XX XX XX"
-                    className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-900 rounded-lg px-3 py-2 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none font-mono"
+                    className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg px-3 py-2 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none font-mono"
                   />
                 </div>
               )}
 
               {/* Message of support */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300 mb-1">
+                <label className="block text-xs font-bold text-[#141413] dark:text-zinc-300 mb-1">
                   Message fraternel d’encouragement (optionnel)
                 </label>
                 <textarea
@@ -286,26 +287,26 @@ export const ContributionModal: React.FC = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Un mot pour la postérité, les élèves ou vos camarades de promotion..."
-                  className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-900 rounded-lg px-3 py-2 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none"
+                  className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg px-3 py-2 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none"
                 />
               </div>
 
               {/* Anonymity Checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 dark:text-zinc-300">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-[#4A4A48] dark:text-zinc-300">
                 <input
                   type="checkbox"
                   checked={isAnonymous}
                   onChange={(e) => setIsAnonymous(e.target.checked)}
-                  className="rounded border-gray-300 dark:border-zinc-600 text-[#E5B824] focus:ring-0"
+                  className="rounded border-[#141413]/20 dark:border-white/20 accent-[#F2B705] focus:ring-0"
                 />
                 <span>Contribuer anonymement (seul le montant apparaîtra publiquement)</span>
               </label>
 
               {/* Notice Requirement */}
-              <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 rounded-lg p-3 text-[11px] text-gray-800 dark:text-zinc-200 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824] shrink-0 mt-0.5" />
+              <div className="bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 rounded-lg p-3 text-[11px] text-[#141413] dark:text-[#FEF8E6] flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-[#141413] dark:text-[#F2B705] shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold block text-black dark:text-white">
+                  <span className="font-bold block text-[#141413] dark:text-white">
                     Environnement de Démonstration ALGB Conforme
                   </span>
                   <span>
@@ -317,7 +318,7 @@ export const ContributionModal: React.FC = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-xl font-bold text-sm text-black bg-[#E5B824] hover:bg-[#dcae1f] transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3 px-4 rounded-lg font-bold text-sm text-[#141413] bg-[#F2B705] hover:bg-[#dfa704] transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
                 <span>
@@ -328,22 +329,22 @@ export const ContributionModal: React.FC = () => {
           ) : (
             /* OTP Confirmation Step */
             <div className="space-y-5 text-center py-4">
-              <div className="w-14 h-14 rounded-full bg-yellow-100 dark:bg-yellow-500/15 border border-[#E5B824] flex items-center justify-center text-[#B8860B] dark:text-[#E5B824] mx-auto">
+              <div className="w-14 h-14 rounded-xl bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705] flex items-center justify-center text-[#141413] dark:text-[#F2B705] mx-auto">
                 <Smartphone className="w-7 h-7" />
               </div>
 
               <div>
-                <h4 className="text-base font-bold text-black dark:text-white font-heading">
+                <h4 className="text-base font-bold text-[#141413] dark:text-white font-heading">
                   Autorisation de prélèvement Mobile Money
                 </h4>
-                <p className="text-xs text-gray-600 dark:text-zinc-400 max-w-sm mx-auto mt-1">
+                <p className="text-xs text-[#4A4A48] dark:text-zinc-400 max-w-sm mx-auto mt-1">
                   Une notification de validation de {amount.toLocaleString('fr-FR')} FCFA a été envoyée vers le{' '}
-                  <span className="font-mono font-bold text-black dark:text-white">{phoneNumber}</span> ({method.replace('_', ' ')}).
+                  <span className="font-mono font-bold text-[#141413] dark:text-white">{phoneNumber}</span> ({method.replace('_', ' ')}).
                 </p>
               </div>
 
-              <div className="max-w-xs mx-auto bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl p-4">
-                <label className="block text-[11px] font-bold text-gray-600 dark:text-zinc-400 uppercase tracking-wider mb-2">
+              <div className="max-w-xs mx-auto bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-xl p-4">
+                <label className="block text-[11px] font-bold text-[#4A4A48] dark:text-zinc-400 uppercase tracking-wider mb-2">
                   Code de sécurité / PIN Démo
                 </label>
                 <input
@@ -351,16 +352,16 @@ export const ContributionModal: React.FC = () => {
                   maxLength={4}
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
-                  className="w-full text-center text-xl font-mono tracking-widest bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg py-2 text-black dark:text-white font-bold focus:border-[#E5B824] focus:outline-none"
+                  className="w-full text-center text-xl font-mono tracking-widest bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-lg py-2 text-[#141413] dark:text-white font-bold focus:border-[#F2B705] focus:outline-none"
                 />
-                <span className="text-[10px] text-gray-500 dark:text-zinc-400 block mt-1">Code simulateur pré-rempli pour test</span>
+                <span className="text-[10px] text-[#4A4A48] dark:text-zinc-400 block mt-1">Code simulateur pré-rempli pour test</span>
               </div>
 
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setStep('FORM')}
-                  className="w-1/2 py-2.5 text-xs font-semibold rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 cursor-pointer"
+                  className="w-1/2 py-2.5 text-xs font-semibold rounded-lg border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300 hover:bg-[#F8F8F6] dark:hover:bg-white/10 cursor-pointer"
                 >
                   Modifier
                 </button>
@@ -368,7 +369,7 @@ export const ContributionModal: React.FC = () => {
                   type="button"
                   onClick={executeContribution}
                   disabled={isProcessing}
-                  className="w-1/2 py-2.5 text-xs font-bold rounded-lg bg-[#E5B824] text-black hover:bg-[#dcae1f] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="w-1/2 py-2.5 text-xs font-bold rounded-lg bg-[#F2B705] text-[#141413] hover:bg-[#dfa704] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   {isProcessing ? (
                     <span>Traitement...</span>

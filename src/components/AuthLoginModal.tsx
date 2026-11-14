@@ -66,20 +66,20 @@ export const AuthLoginModal: React.FC = () => {
       role="dialog"
       aria-modal="true"
       aria-labelledby="algb-auth-modal-title"
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-sm overflow-y-auto no-print"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-[#141413]/70 backdrop-blur-sm overflow-y-auto no-print"
     >
-      <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-8 text-gray-900 dark:text-zinc-100">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden my-8 text-[#141413] dark:text-zinc-100">
         {/* Header */}
-        <div className="bg-black dark:bg-zinc-950 px-6 py-4 flex items-center justify-between text-white border-b-2 border-[#E5B824]">
+        <div className="bg-[#141413] px-6 py-4 flex items-center justify-between text-white border-b-2 border-[#F2B705]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#E5B824] text-black flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-[#F2B705] text-[#141413] flex items-center justify-center shrink-0">
               <Lock className="w-4 h-4" />
             </div>
             <div>
               <h2 id="algb-auth-modal-title" className="text-sm sm:text-base font-heading font-bold text-white">
                 Connexion par Credential ALGB
               </h2>
-              <p className="text-[11px] text-gray-300">
+              <p className="text-[11px] text-zinc-300">
                 {authRedirectTab === 'admin'
                   ? 'Accès protégé : Console d’Administration'
                   : authRedirectTab === 'espace-membre'
@@ -93,20 +93,20 @@ export const AuthLoginModal: React.FC = () => {
             type="button"
             onClick={closeAuthModal}
             aria-label="Fermer la fenêtre de connexion"
-            className="p-1.5 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-zinc-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-6 space-y-5 text-xs">
-          <p className="text-gray-600 dark:text-zinc-400 leading-relaxed">
+          <p className="text-[#4A4A48] dark:text-zinc-400 leading-relaxed">
             La consultation des rubriques publiques reste libre sans credential. Saisissez les accès créés depuis l’Administration pour ouvrir votre espace dédié.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-bold text-gray-800 dark:text-zinc-200 mb-1.5">
+              <label className="block text-[11px] font-bold text-[#141413] dark:text-zinc-200 mb-1.5">
                 Identifiant (e-mail, matricule ou login fonction)
               </label>
               <input
@@ -119,12 +119,12 @@ export const AuthLoginModal: React.FC = () => {
                   setErrorMsg(null);
                 }}
                 placeholder="ex: amadou.toure@algb-alumni.ci ou admin@algb.ci"
-                className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-xl px-3.5 py-2.5 text-xs text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none"
+                className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg px-3.5 py-2.5 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-gray-800 dark:text-zinc-200 mb-1.5">
+              <label className="block text-[11px] font-bold text-[#141413] dark:text-zinc-200 mb-1.5">
                 Code d’accès / Credential secret
               </label>
               <div className="relative">
@@ -137,13 +137,13 @@ export const AuthLoginModal: React.FC = () => {
                     setErrorMsg(null);
                   }}
                   placeholder="Saisissez votre code d’accès..."
-                  className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-xl pl-3.5 pr-10 py-2.5 text-xs font-mono text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none"
+                  className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg pl-3.5 pr-10 py-2.5 text-xs font-mono text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setShowSecret((prev) => !prev)}
                   aria-label={showSecret ? 'Masquer le code' : 'Afficher le code'}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                 >
                   {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -159,7 +159,7 @@ export const AuthLoginModal: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 px-4 rounded-xl bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               <KeyRound className="w-4 h-4" />
               <span>Valider & Ouvrir ma session</span>
@@ -168,14 +168,14 @@ export const AuthLoginModal: React.FC = () => {
 
           {/* Initial seeded accounts helper (disappears for modified/custom credentials) */}
           {seededDefaults.length > 0 && (
-            <div className="border-t border-gray-200 dark:border-zinc-800 pt-4">
+            <div className="border-t border-[#141413]/10 dark:border-white/10 pt-4">
               <button
                 type="button"
                 onClick={() => setShowSeededDefaults((prev) => !prev)}
-                className="w-full flex items-center justify-between text-[11px] font-semibold text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                className="w-full flex items-center justify-between text-[11px] font-semibold text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
               >
                 <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
                   <span>Comptes initiaux de configuration (à modifier en Admin)</span>
                 </span>
                 <ChevronDown
@@ -194,17 +194,17 @@ export const AuthLoginModal: React.FC = () => {
                         setSecretCode(cred.secretCode);
                         setErrorMsg(null);
                       }}
-                      className="w-full text-left p-2.5 rounded-xl bg-gray-50 dark:bg-zinc-950 hover:bg-yellow-50 dark:hover:bg-zinc-800 border border-gray-200 dark:border-zinc-800 hover:border-[#E5B824] transition-colors cursor-pointer"
+                      className="w-full text-left p-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#FEF8E6] dark:hover:bg-[#2a2719] border border-[#141413]/10 dark:border-white/10 hover:border-[#F2B705] transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-black dark:text-white truncate">
+                        <span className="font-bold text-[#141413] dark:text-white truncate">
                           {PROFILE_ACCESS_MATRIX[cred.role].label}
                         </span>
-                        <span className="text-[10px] font-mono text-[#B8860B] dark:text-[#E5B824] shrink-0">
+                        <span className="text-[10px] font-mono text-[#141413] dark:text-[#F2B705] font-semibold shrink-0">
                           {cred.secretCode}
                         </span>
                       </div>
-                      <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-mono truncate mt-0.5">
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400 font-mono truncate mt-0.5">
                         {cred.identifier}
                       </div>
                     </button>
@@ -214,12 +214,12 @@ export const AuthLoginModal: React.FC = () => {
             </div>
           )}
 
-          <div className="border-t border-gray-200 dark:border-zinc-800 pt-3 flex items-center justify-between text-[11px] text-gray-600 dark:text-zinc-400">
+          <div className="border-t border-[#141413]/10 dark:border-white/10 pt-3 flex items-center justify-between text-[11px] text-[#4A4A48] dark:text-zinc-400">
             <span>Pas encore enregistré ?</span>
             <button
               type="button"
               onClick={handleGoAdhesion}
-              className="inline-flex items-center gap-1 font-bold text-[#B8860B] dark:text-[#E5B824] hover:underline cursor-pointer"
+              className="inline-flex items-center gap-1 font-bold text-[#141413] dark:text-[#F2B705] hover:underline cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Rejoindre l’ALGB</span>

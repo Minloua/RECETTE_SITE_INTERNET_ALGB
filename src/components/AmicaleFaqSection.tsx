@@ -253,22 +253,22 @@ export const AmicaleFaqSection: React.FC = () => {
     <section
       id="faq-amicale"
       aria-labelledby="faq-amicale-heading"
-      className="border-t border-gray-200 dark:border-zinc-800 pt-10 space-y-6"
+      className="border-t border-[#141413]/10 dark:border-white/10 pt-10 space-y-6"
     >
       {/* Editorial Section Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div className="space-y-1.5 max-w-2xl">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-[#B8860B] dark:text-[#E5B824]">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-[#16324F] dark:text-[#F2B705]">
             <HelpCircle className="w-3.5 h-3.5 shrink-0" />
             <span>Centre d’Information & Guide Pratique</span>
           </div>
           <h2
             id="faq-amicale-heading"
-            className="text-xl sm:text-2xl font-bold font-heading text-black dark:text-white"
+            className="text-xl sm:text-2xl font-bold font-heading text-[#141413] dark:text-white"
           >
             Foire aux Questions de l’Amicale
           </h2>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-400 leading-relaxed">
             Retrouvez rapidement les réponses essentielles concernant votre adhésion, les projets soutenus au lycée et les services du réseau ALGB.
           </p>
         </div>
@@ -277,7 +277,7 @@ export const AmicaleFaqSection: React.FC = () => {
         <div
           role="tablist"
           aria-label="Filtrer les questions par thématique"
-          className="flex flex-wrap items-center gap-1 p-1 bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl w-fit"
+          className="flex flex-wrap items-center gap-1 p-1 bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-lg shadow-editorial w-fit"
         >
           {TOPIC_OPTIONS.map((topic) => {
             const isActive = selectedTopic === topic.id;
@@ -288,16 +288,16 @@ export const AmicaleFaqSection: React.FC = () => {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => handleTopicChange(topic.id)}
-                className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5 focus-visible:outline-2 focus-visible:outline-[#B8860B] ${
+                className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5 focus-visible:outline-2 focus-visible:outline-[#F2B705] ${
                   isActive
-                    ? 'bg-[#E5B824] text-black shadow-xs'
-                    : 'text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                    ? 'bg-[#F2B705] text-[#141413] shadow-xs'
+                    : 'text-[#4A4A48] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white'
                 }`}
               >
                 <span>{topic.label}</span>
                 <span
                   className={`font-mono text-[11px] tabular-nums ${
-                    isActive ? 'text-black/80' : 'text-gray-500 dark:text-zinc-400'
+                    isActive ? 'text-[#141413]/80' : 'text-[#4A4A48] dark:text-zinc-400'
                   }`}
                 >
                   ({topicCounts[topic.id]})
@@ -309,23 +309,23 @@ export const AmicaleFaqSection: React.FC = () => {
       </div>
 
       {/* Search & Bulk Expand Controls */}
-      <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl shadow-editorial p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-gray-400 dark:text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-[#4A4A48] dark:text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Rechercher une question, un mot-clé (ex: cotisation, QR code, mentorat, BDR)..."
             aria-label="Rechercher dans la foire aux questions"
-            className="w-full bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-xl pl-10 pr-9 py-2.5 text-xs text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none"
+            className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg pl-10 pr-9 py-2.5 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none"
           />
           {searchTerm && (
             <button
               type="button"
               onClick={() => setSearchTerm('')}
               aria-label="Effacer la recherche"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black dark:hover:text-white cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A4A48] hover:text-[#141413] dark:hover:text-white cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -333,8 +333,8 @@ export const AmicaleFaqSection: React.FC = () => {
         </div>
 
         <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-          <span className="text-xs text-gray-600 dark:text-zinc-400 tabular-nums">
-            <strong className="font-mono text-black dark:text-white">{filteredFaq.length}</strong> question
+          <span className="text-xs text-[#4A4A48] dark:text-zinc-400 tabular-nums">
+            <strong className="font-mono text-[#141413] dark:text-white">{filteredFaq.length}</strong> question
             {filteredFaq.length > 1 ? 's' : ''}
           </span>
 
@@ -342,7 +342,7 @@ export const AmicaleFaqSection: React.FC = () => {
             <button
               type="button"
               onClick={handleToggleAll}
-              className="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:border-black dark:hover:border-zinc-500 text-xs font-semibold text-black dark:text-white transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-lg border border-[#141413]/15 dark:border-white/15 bg-[#F8F8F6] dark:bg-[#141413] hover:border-[#16324F] dark:hover:border-[#F2B705] text-xs font-semibold text-[#141413] dark:text-white transition-colors whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5"
             >
               {allVisibleExpanded ? (
                 <>
@@ -362,11 +362,11 @@ export const AmicaleFaqSection: React.FC = () => {
 
       {/* FAQ Accordion List */}
       {filteredFaq.length === 0 ? (
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
-          <p className="text-sm font-semibold text-black dark:text-white font-heading">
+        <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl shadow-editorial p-8 text-center space-y-3">
+          <p className="text-sm font-semibold text-[#141413] dark:text-white font-heading">
             Aucune question ne correspond à votre recherche.
           </p>
-          <p className="text-xs text-gray-600 dark:text-zinc-400 max-w-md mx-auto">
+          <p className="text-xs text-[#4A4A48] dark:text-zinc-400 max-w-md mx-auto">
             Essayez un autre mot-clé ou réinitialisez le filtre thématique pour consulter l’ensemble de la base d’informations de l’Amicale.
           </p>
           <button
@@ -375,43 +375,43 @@ export const AmicaleFaqSection: React.FC = () => {
               setSelectedTopic('TOUTES');
               setSearchTerm('');
             }}
-            className="px-4 py-2 rounded-lg bg-[#E5B824] hover:bg-[#dcae1f] text-black text-xs font-bold transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs font-bold transition-colors cursor-pointer"
           >
             Afficher toutes les questions
           </button>
         </div>
       ) : (
-        <div className="divide-y divide-gray-200 dark:divide-zinc-800 border border-gray-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 overflow-hidden">
+        <div className="divide-y divide-[#141413]/10 dark:divide-white/10 border border-[#141413]/10 dark:border-white/10 rounded-xl bg-white dark:bg-[#1e1e1c] shadow-editorial overflow-hidden">
           {filteredFaq.map((item) => {
             const isOpen = openIds.includes(item.id);
             const panelId = `${item.id}-panel`;
             const buttonId = `${item.id}-button`;
 
             return (
-              <article key={item.id} className={isOpen ? 'bg-gray-50/60 dark:bg-zinc-800/40' : 'bg-white dark:bg-zinc-900'}>
+              <article key={item.id} className={isOpen ? 'bg-[#FEF8E6]/50 dark:bg-[#2a2719]/40' : 'bg-white dark:bg-[#1e1e1c]'}>
                 <button
                   id={buttonId}
                   type="button"
                   aria-expanded={isOpen}
                   aria-controls={panelId}
                   onClick={() => toggleItem(item.id)}
-                  className="w-full text-left px-5 sm:px-6 py-4 sm:py-5 flex items-start justify-between gap-4 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#B8860B]"
+                  className="w-full text-left px-5 sm:px-6 py-4 sm:py-5 flex items-start justify-between gap-4 hover:bg-[#F8F8F6] dark:hover:bg-white/5 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#F2B705]"
                 >
                   <div className="space-y-1.5 min-w-0">
                     {/* Clean unboxed typographic metadata (zero-pill discipline) */}
-                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-zinc-400">
-                      <span className="font-mono font-bold text-[#B8860B] dark:text-[#E5B824] tabular-nums">
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#4A4A48] dark:text-zinc-400">
+                      <span className="font-mono font-bold text-[#16324F] dark:text-[#F2B705] tabular-nums">
                         {item.number}
                       </span>
                       <span aria-hidden="true">·</span>
-                      <span className="font-semibold uppercase tracking-wider text-gray-800 dark:text-zinc-200">
+                      <span className="font-semibold uppercase tracking-wider text-[#141413] dark:text-zinc-200">
                         {item.topicLabel}
                       </span>
                       <span aria-hidden="true">·</span>
                       <span>{item.reference}</span>
                     </div>
 
-                    <h3 className="text-sm sm:text-base font-bold font-heading text-black dark:text-white leading-snug">
+                    <h3 className="text-sm sm:text-base font-bold font-heading text-[#141413] dark:text-white leading-snug">
                       {item.question}
                     </h3>
                   </div>
@@ -419,8 +419,8 @@ export const AmicaleFaqSection: React.FC = () => {
                   <span
                     className={`mt-1 w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
                       isOpen
-                        ? 'bg-[#E5B824] border-[#E5B824] text-black'
-                        : 'bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-400'
+                        ? 'bg-[#F2B705] border-[#F2B705] text-[#141413]'
+                        : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-400'
                     }`}
                   >
                     <ChevronDown
@@ -438,12 +438,12 @@ export const AmicaleFaqSection: React.FC = () => {
                     aria-labelledby={buttonId}
                     className="px-5 sm:px-6 pb-5 sm:pb-6 pt-1 space-y-4 max-w-4xl"
                   >
-                    <p className="text-xs sm:text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
                       {item.answer}
                     </p>
 
                     {item.details && item.details.length > 0 && (
-                      <ul className="space-y-1.5 text-xs text-gray-600 dark:text-zinc-400 pl-4 list-disc marker:text-[#B8860B] dark:marker:text-[#E5B824]">
+                      <ul className="space-y-1.5 text-xs text-[#4A4A48] dark:text-zinc-400 pl-4 list-disc marker:text-[#16324F] dark:marker:text-[#F2B705]">
                         {item.details.map((detail, idx) => (
                           <li key={idx} className="leading-relaxed">
                             {detail}
@@ -457,7 +457,7 @@ export const AmicaleFaqSection: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleActionTrigger(item.action!.onTrigger)}
-                          className="inline-flex items-center gap-2 text-xs font-bold text-black dark:text-white hover:text-[#B8860B] dark:hover:text-[#E5B824] underline underline-offset-4 decoration-[#E5B824] decoration-2 cursor-pointer transition-colors"
+                          className="inline-flex items-center gap-2 text-xs font-bold text-[#16324F] dark:text-[#F2B705] hover:text-[#141413] dark:hover:text-white underline underline-offset-4 decoration-[#F2B705] decoration-2 cursor-pointer transition-colors"
                         >
                           <span>{item.action.label}</span>
                           <ArrowRight className="w-3.5 h-3.5" />

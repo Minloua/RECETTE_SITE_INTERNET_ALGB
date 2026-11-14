@@ -362,12 +362,12 @@ export const QrPaymentSyncModal: React.FC = () => {
   const selectedRule = PROFILE_ACCESS_MATRIX[authRole];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-8 text-gray-900 dark:text-zinc-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#141413]/75 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden my-8 text-[#141413] dark:text-zinc-100">
         {/* Header */}
-        <div className="bg-black dark:bg-zinc-950 px-6 py-4 flex items-center justify-between text-white border-b-2 border-[#E5B824]">
+        <div className="bg-[#141413] px-6 py-4 flex items-center justify-between text-white border-b-2 border-[#F2B705]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#E5B824] text-black flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-[#F2B705] text-[#141413] flex items-center justify-center shrink-0">
               {qrAuthVerified ? <QrCode className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
             </div>
             <div>
@@ -376,7 +376,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                   ? 'Flash QR Code — Paiement & Synchronisation ALGB'
                   : 'Accès Sécurisé — Matrice des Profils ALGB'}
               </h3>
-              <p className="text-[11px] text-gray-300">
+              <p className="text-[11px] text-zinc-300">
                 {qrAuthVerified
                   ? 'Mise à jour instantanée de l’espace de paiement et des tables de trésorerie'
                   : 'Authentification dédiée requise pour accéder au lien QR de paiement'}
@@ -390,7 +390,7 @@ export const QrPaymentSyncModal: React.FC = () => {
               stopCamera();
               closeQrSyncModal();
             }}
-            className="p-1.5 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-zinc-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
             aria-label="Fermer"
           >
             <X className="w-5 h-5" />
@@ -402,16 +402,16 @@ export const QrPaymentSyncModal: React.FC = () => {
           {!qrAuthVerified && (
             <div className="space-y-5 text-xs">
               {qrTargetMember && (
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 flex items-start gap-3">
-                  <QrCode className="w-5 h-5 text-[#B8860B] dark:text-[#E5B824] shrink-0 mt-0.5" />
+                <div className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 flex items-start gap-3">
+                  <QrCode className="w-5 h-5 text-[#16324F] dark:text-[#F2B705] shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-bold text-black dark:text-white">
+                    <div className="font-bold text-[#141413] dark:text-white">
                       Lien QR détecté : Carte N°{' '}
-                      <span className="font-mono text-[#B8860B] dark:text-[#E5B824]">
+                      <span className="font-mono text-[#16324F] dark:text-[#F2B705]">
                         {qrTargetMember.membershipCardId}
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-600 dark:text-zinc-400 mt-0.5">
+                    <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 mt-0.5">
                       Titulaire : {qrTargetMember.firstName} {qrTargetMember.lastName} (Promotion{' '}
                       {qrTargetMember.promotionYear}). Conformément à la matrice des profils en vigueur, veuillez saisir vos accès dédiés pour déverrouiller cet espace.
                     </p>
@@ -421,7 +421,7 @@ export const QrPaymentSyncModal: React.FC = () => {
 
               <form onSubmit={handleAuthSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-700 dark:text-zinc-300 mb-1.5">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-300 mb-1.5">
                     1. Profil habilité selon la matrice en vigueur
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -436,20 +436,20 @@ export const QrPaymentSyncModal: React.FC = () => {
                             setAuthRole(rKey);
                             setAuthError(null);
                           }}
-                          className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                             active
-                              ? 'bg-black dark:bg-zinc-950 text-white border-black dark:border-[#E5B824] shadow-xs'
-                              : 'bg-gray-50 dark:bg-zinc-950 text-gray-800 dark:text-zinc-200 border-gray-200 dark:border-zinc-800 hover:border-gray-400 dark:hover:border-zinc-600'
+                              ? 'bg-[#141413] text-white border-[#141413] dark:border-[#F2B705] shadow-xs'
+                              : 'bg-[#F8F8F6] dark:bg-[#141413] text-[#141413] dark:text-zinc-200 border-[#141413]/10 dark:border-white/10 hover:border-[#141413]/30 dark:hover:border-white/30'
                           }`}
                         >
                           <div className="font-bold flex items-center justify-between gap-2">
-                            <span className={active ? 'text-[#E5B824]' : 'text-black dark:text-white'}>
+                            <span className={active ? 'text-[#F2B705]' : 'text-[#141413] dark:text-white'}>
                               {rule.label}
                             </span>
                           </div>
                           <div
                             className={`text-[10px] mt-0.5 ${
-                              active ? 'text-gray-300' : 'text-gray-500 dark:text-zinc-400'
+                              active ? 'text-zinc-300' : 'text-[#4A4A48] dark:text-zinc-400'
                             }`}
                           >
                             {rule.scopeLabel}
@@ -460,14 +460,14 @@ export const QrPaymentSyncModal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-yellow-50/70 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 text-[11px] text-gray-800 dark:text-zinc-200">
-                  <strong className="text-black dark:text-white">Périmètre du profil sélectionné :</strong>{' '}
+                <div className="p-3 rounded-xl bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 text-[11px] text-[#141413] dark:text-zinc-200">
+                  <strong className="text-[#141413] dark:text-[#F2B705]">Périmètre du profil sélectionné :</strong>{' '}
                   {selectedRule.description}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-700 dark:text-zinc-300 font-bold mb-1">
+                    <label className="block text-[#141413] dark:text-zinc-300 font-bold mb-1">
                       Identifiant dédié (E-mail ou Matricule)
                     </label>
                     <input
@@ -482,12 +482,12 @@ export const QrPaymentSyncModal: React.FC = () => {
                           ? 'admin@algb.ci ou matricule'
                           : 'ex: ALGB-2002-0001 ou email'
                       }
-                      className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-900 rounded-xl px-3 py-2.5 text-black dark:text-white font-mono text-xs focus:outline-none"
+                      className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg px-3 py-2.5 text-[#141413] dark:text-white font-mono text-xs focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 dark:text-zinc-300 font-bold mb-1">
+                    <label className="block text-[#141413] dark:text-zinc-300 font-bold mb-1">
                       Code d’accès dédié du profil
                     </label>
                     <div className="relative">
@@ -497,12 +497,12 @@ export const QrPaymentSyncModal: React.FC = () => {
                         value={authCode}
                         onChange={(e) => setAuthCode(e.target.value)}
                         placeholder="Saisissez le code d’accès..."
-                        className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-900 rounded-xl pl-3 pr-9 py-2.5 text-black dark:text-white font-mono text-xs focus:outline-none"
+                        className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg pl-3 pr-9 py-2.5 text-[#141413] dark:text-white font-mono text-xs focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => setShowAuthCode(!showAuthCode)}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                         aria-label="Afficher ou masquer le code"
                       >
                         {showAuthCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -512,8 +512,8 @@ export const QrPaymentSyncModal: React.FC = () => {
                 </div>
 
                 {authError && (
-                  <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-800 dark:text-red-300 flex items-start gap-2 text-xs">
-                    <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                  <div className="p-3 rounded-xl bg-[#FFF7ED] dark:bg-[#1a1310] border border-[#C2410C]/35 text-[#C2410C] dark:text-orange-300 flex items-start gap-2 text-xs">
+                    <AlertTriangle className="w-4 h-4 text-[#C2410C] dark:text-orange-400 shrink-0 mt-0.5" />
                     <span>{authError}</span>
                   </div>
                 )}
@@ -522,7 +522,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowMatrixDetails(!showMatrixDetails)}
-                    className="text-[11px] font-semibold text-[#B8860B] dark:text-[#E5B824] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] font-semibold text-[#16324F] dark:text-[#F2B705] hover:underline inline-flex items-center gap-1 cursor-pointer"
                   >
                     <KeyRound className="w-3.5 h-3.5" />
                     <span>
@@ -534,7 +534,7 @@ export const QrPaymentSyncModal: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold text-xs rounded-xl inline-flex items-center gap-2 shadow-sm cursor-pointer"
+                    className="px-5 py-2.5 bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold text-xs rounded-lg inline-flex items-center gap-2 shadow-sm cursor-pointer transition-colors"
                   >
                     <Lock className="w-4 h-4" />
                     <span>Valider mes accès & Ouvrir</span>
@@ -543,13 +543,13 @@ export const QrPaymentSyncModal: React.FC = () => {
               </form>
 
               {showMatrixDetails && (
-                <div className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 space-y-2.5">
-                  <div className="text-[10px] font-heading font-bold uppercase tracking-wider text-black dark:text-white">
+                <div className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 space-y-2.5">
+                  <div className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#141413] dark:text-white">
                     Référentiel des Accès Dédiés (Matrice en vigueur)
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-[11px] text-gray-700 dark:text-zinc-300">
-                      <thead className="border-b border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 uppercase text-[9px]">
+                    <table className="w-full text-left text-[11px] text-[#4A4A48] dark:text-zinc-300">
+                      <thead className="border-b border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-400 uppercase text-[9px]">
                         <tr>
                           <th className="py-1.5 pr-2">Profil</th>
                           <th className="py-1.5 pr-2">Périmètre QR & Tables</th>
@@ -557,7 +557,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                           <th className="py-1.5 text-right">Code dédié</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+                      <tbody className="divide-y divide-[#141413]/10 dark:divide-white/10">
                         {AUTH_ROLES.map((rKey) => {
                           const rule = PROFILE_ACCESS_MATRIX[rKey];
                           const sampleId =
@@ -572,11 +572,11 @@ export const QrPaymentSyncModal: React.FC = () => {
                               : qrTargetMember?.membershipCardId || members[0]?.membershipCardId || 'ALGB-2002-0001';
 
                           return (
-                            <tr key={rKey} className="hover:bg-white dark:hover:bg-zinc-900">
-                              <td className="py-2 pr-2 font-bold text-black dark:text-white">{rule.label}</td>
+                            <tr key={rKey} className="hover:bg-white dark:hover:bg-[#1e1e1c]">
+                              <td className="py-2 pr-2 font-bold text-[#141413] dark:text-white">{rule.label}</td>
                               <td className="py-2 pr-2">{rule.scopeLabel}</td>
-                              <td className="py-2 pr-2 font-mono text-gray-600 dark:text-zinc-400">{sampleId}</td>
-                              <td className="py-2 text-right font-mono font-bold text-[#B8860B] dark:text-[#E5B824]">
+                              <td className="py-2 pr-2 font-mono text-[#4A4A48] dark:text-zinc-400">{sampleId}</td>
+                              <td className="py-2 text-right font-mono font-bold text-[#16324F] dark:text-[#F2B705]">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -597,7 +597,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                       </tbody>
                     </table>
                   </div>
-                  <p className="text-[10px] text-gray-500 dark:text-zinc-400">
+                  <p className="text-[10px] text-[#4A4A48] dark:text-zinc-400">
                     Un Membre Adhérent peut également utiliser son propre matricule comme code d’accès personnel pour sa propre carte.
                   </p>
                 </div>
@@ -607,15 +607,15 @@ export const QrPaymentSyncModal: React.FC = () => {
 
           {/* AUTHENTICATED SESSION BADGE */}
           {qrAuthVerified && qrAuthSession && (
-            <div className="px-3.5 py-2 rounded-xl bg-gray-100 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-              <div className="flex items-center gap-2 text-black dark:text-white font-semibold">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <div className="px-3.5 py-2 rounded-lg bg-[#F0FDF9] dark:bg-[#0f2422] border border-[#134E4A]/30 dark:border-emerald-700 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              <div className="flex items-center gap-2 text-[#141413] dark:text-white font-semibold">
+                <ShieldCheck className="w-4 h-4 text-[#134E4A] dark:text-emerald-400 shrink-0" />
                 <span>
                   Habilitation active : <strong>{qrAuthSession.label}</strong> (
                   {qrAuthSession.authenticatedName})
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-bold text-[#B8860B] dark:text-[#E5B824]">
+              <span className="text-[10px] font-mono font-bold text-[#134E4A] dark:text-[#F2B705]">
                 {qrAuthSession.scopeLabel}
               </span>
             </div>
@@ -625,13 +625,13 @@ export const QrPaymentSyncModal: React.FC = () => {
           {qrAuthVerified && !selectedMember && (
             <div className="space-y-5">
               {/* Camera Scanner Box */}
-              <div className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3">
+              <div className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h4 className="text-xs font-heading font-bold text-black dark:text-white uppercase tracking-wider">
+                    <h4 className="text-xs font-heading font-bold text-[#141413] dark:text-white uppercase tracking-wider">
                       1. Scanner le QR Code de la Carte
                     </h4>
-                    <p className="text-[11px] text-gray-600 dark:text-zinc-400">
+                    <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
                       Utilisez la caméra de votre appareil ou collez l’URL/matricule lu par votre lecteur.
                     </p>
                   </div>
@@ -639,7 +639,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleStartCamera}
-                      className="px-3.5 py-2 bg-black dark:bg-zinc-800 text-white hover:bg-[#E5B824] hover:text-black rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3.5 py-2 bg-[#141413] text-white hover:bg-[#F2B705] hover:text-[#141413] rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Camera className="w-4 h-4" />
                       <span>Activer la caméra</span>
@@ -648,7 +648,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={stopCamera}
-                      className="px-3.5 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold cursor-pointer"
+                      className="px-3.5 py-2 bg-[#C2410C] text-white rounded-lg text-xs font-semibold cursor-pointer"
                     >
                       Arrêter la caméra
                     </button>
@@ -656,7 +656,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                 </div>
 
                 {cameraActive && (
-                  <div className="relative rounded-xl overflow-hidden bg-black aspect-video max-h-56 mx-auto border-2 border-[#E5B824]">
+                  <div className="relative rounded-xl overflow-hidden bg-[#141413] aspect-video max-h-56 mx-auto border-2 border-[#F2B705]">
                     <video
                       ref={videoRef}
                       className="w-full h-full object-cover"
@@ -664,13 +664,13 @@ export const QrPaymentSyncModal: React.FC = () => {
                       muted
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-36 h-36 border-2 border-[#E5B824] rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                      <div className="w-36 h-36 border-2 border-[#F2B705] rounded-xl shadow-[0_0_0_9999px_rgba(20,20,19,0.45)]" />
                     </div>
                   </div>
                 )}
 
                 {cameraMessage && (
-                  <p className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                  <p className="text-[11px] text-[#141413] dark:text-amber-200 bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 rounded-lg px-3 py-2">
                     {cameraMessage}
                   </p>
                 )}
@@ -681,35 +681,35 @@ export const QrPaymentSyncModal: React.FC = () => {
                     value={scanInput}
                     onChange={(e) => setScanInput(e.target.value)}
                     placeholder="Coller le lien QR scanné ou saisir le matricule (ex: ALGB-2002-0001)"
-                    className="flex-1 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-xl px-3.5 py-2 text-xs font-mono text-black dark:text-white focus:outline-none"
+                    className="flex-1 bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg px-3.5 py-2 text-xs font-mono text-[#141413] dark:text-white focus:outline-none"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold text-xs rounded-xl cursor-pointer shrink-0"
+                    className="px-4 py-2 bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold text-xs rounded-lg cursor-pointer shrink-0 transition-colors"
                   >
                     Identifier la carte
                   </button>
                 </form>
 
                 {scanError && (
-                  <p className="text-[11px] text-red-700 dark:text-red-400 font-medium">{scanError}</p>
+                  <p className="text-[11px] text-[#C2410C] dark:text-orange-400 font-medium">{scanError}</p>
                 )}
               </div>
 
               {/* Quick Select Member Card to Flash (filtered by profile matrix scope) */}
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h4 className="text-xs font-heading font-bold text-black dark:text-white uppercase tracking-wider">
+                  <h4 className="text-xs font-heading font-bold text-[#141413] dark:text-white uppercase tracking-wider">
                     2. Cartes accessibles selon votre profil ({authorizedDirectoryMembers.length})
                   </h4>
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Search className="w-3.5 h-3.5 text-[#4A4A48] dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={memberSearch}
                       onChange={(e) => setMemberSearch(e.target.value)}
                       placeholder="Nom, promo ou matricule..."
-                      className="pl-8 pr-3 py-1.5 bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg text-xs text-black dark:text-white focus:outline-none focus:border-[#E5B824]"
+                      className="pl-8 pr-3 py-1.5 bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-lg text-xs text-[#141413] dark:text-white focus:outline-none focus:border-[#F2B705]"
                     />
                   </div>
                 </div>
@@ -722,22 +722,22 @@ export const QrPaymentSyncModal: React.FC = () => {
                         key={m.id}
                         type="button"
                         onClick={() => setSelectedMember(m)}
-                        className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 hover:border-[#E5B824] hover:bg-yellow-50/40 dark:hover:bg-yellow-500/10 text-left transition-all cursor-pointer flex items-center justify-between gap-3"
+                        className="p-3 rounded-xl bg-white dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 hover:border-[#F2B705] hover:bg-[#FEF8E6]/50 dark:hover:bg-[#2a2719] text-left transition-all cursor-pointer flex items-center justify-between gap-3"
                       >
                         <div className="min-w-0">
-                          <div className="text-xs font-bold text-black dark:text-white truncate">
+                          <div className="text-xs font-bold text-[#141413] dark:text-white truncate">
                             {m.firstName} {m.lastName}
                           </div>
-                          <div className="text-[10px] font-mono text-gray-500 dark:text-zinc-400">
+                          <div className="text-[10px] font-mono text-[#4A4A48] dark:text-zinc-400">
                             {m.membershipCardId} · Promo {m.promotionYear}
                           </div>
-                          <div className="text-[10px] mt-1 font-semibold text-[#B8860B] dark:text-[#E5B824]">
+                          <div className="text-[10px] mt-1 font-semibold text-[#16324F] dark:text-[#F2B705]">
                             {summary.overdueMonths.length > 0
                               ? `${summary.overdueMonths.length} mois à régulariser`
                               : 'Cotisations à jour'}
                           </div>
                         </div>
-                        <span className="px-2.5 py-1.5 rounded-lg bg-black dark:bg-zinc-800 text-[#E5B824] text-[10px] font-bold shrink-0">
+                        <span className="px-2.5 py-1.5 rounded-lg bg-[#141413] text-[#F2B705] text-[10px] font-bold shrink-0">
                           Flasher →
                         </span>
                       </button>
@@ -752,9 +752,9 @@ export const QrPaymentSyncModal: React.FC = () => {
           {qrAuthVerified && selectedMember && !syncReport && activeMemberSummary && (
             <form onSubmit={handleExecuteSync} className="space-y-5 text-xs">
               {/* Identified Member Card Banner */}
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-black text-[#E5B824] font-heading font-bold flex items-center justify-center overflow-hidden shrink-0 border border-[#E5B824]">
+                  <div className="w-12 h-12 rounded-lg bg-[#141413] text-[#F2B705] font-heading font-bold flex items-center justify-center overflow-hidden shrink-0 border border-[#F2B705]">
                     {selectedMember.avatarUrl ? (
                       <img
                         src={selectedMember.avatarUrl}
@@ -770,23 +770,23 @@ export const QrPaymentSyncModal: React.FC = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-heading font-bold text-black dark:text-white">
+                      <span className="text-sm font-heading font-bold text-[#141413] dark:text-white">
                         {selectedMember.firstName} {selectedMember.lastName}
                       </span>
-                      <span className="text-[10px] font-mono font-bold text-[#B8860B] dark:text-[#E5B824]">
+                      <span className="text-[10px] font-mono font-bold text-[#16324F] dark:text-[#F2B705]">
                         {selectedMember.membershipCardId}
                       </span>
                     </div>
-                    <div className="text-[11px] text-gray-600 dark:text-zinc-400 mt-0.5">
+                    <div className="text-[11px] text-[#4A4A48] dark:text-zinc-400 mt-0.5">
                       Promotion {selectedMember.promotionYear} · {selectedMember.city}, {selectedMember.country}
                     </div>
-                    <div className="text-[11px] font-semibold mt-1 text-black dark:text-white">
+                    <div className="text-[11px] font-semibold mt-1 text-[#141413] dark:text-white">
                       Statut actuel :{' '}
                       <span
                         className={
                           activeMemberSummary.statusFinancial === 'A_JOUR'
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : 'text-[#B8860B] dark:text-[#E5B824]'
+                            ? 'text-[#134E4A] dark:text-emerald-400'
+                            : 'text-[#C2410C] dark:text-[#F2B705]'
                         }
                       >
                         {activeMemberSummary.statusFinancial === 'A_JOUR'
@@ -803,7 +803,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedMember(null)}
-                    className="text-[11px] font-semibold text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white underline cursor-pointer self-start sm:self-center"
+                    className="text-[11px] font-semibold text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white underline cursor-pointer self-start sm:self-center"
                   >
                     Changer de carte
                   </button>
@@ -813,7 +813,7 @@ export const QrPaymentSyncModal: React.FC = () => {
               {/* Pending transactions to validate */}
               {pendingTxs.length > 0 && (
                 <div className="space-y-2">
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-700 dark:text-zinc-300">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-300">
                     Paiements en attente de pointage ({pendingTxs.length})
                   </label>
                   <div className="space-y-1.5">
@@ -824,8 +824,8 @@ export const QrPaymentSyncModal: React.FC = () => {
                           key={tx.id}
                           className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer ${
                             checked
-                              ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824]'
-                              : 'bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-800'
+                              ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705]'
+                              : 'bg-white dark:bg-[#141413] border-[#141413]/10 dark:border-white/10'
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
@@ -833,16 +833,16 @@ export const QrPaymentSyncModal: React.FC = () => {
                               type="checkbox"
                               checked={checked}
                               onChange={() => togglePendingTx(tx.id)}
-                              className="rounded border-gray-300 text-[#E5B824] focus:ring-[#E5B824]"
+                              className="rounded border-[#141413]/25 text-[#F2B705] focus:ring-[#F2B705]"
                             />
                             <div>
-                              <div className="font-bold text-black dark:text-white">{tx.title}</div>
-                              <div className="text-[10px] font-mono text-gray-500 dark:text-zinc-400">
+                              <div className="font-bold text-[#141413] dark:text-white">{tx.title}</div>
+                              <div className="text-[10px] font-mono text-[#4A4A48] dark:text-zinc-400">
                                 Réf. {tx.reference} · {tx.method.replace('_', ' ')}
                               </div>
                             </div>
                           </div>
-                          <span className="font-mono font-bold text-black dark:text-white tabular-nums">
+                          <span className="font-mono font-bold text-[#141413] dark:text-white tabular-nums">
                             {tx.amount.toLocaleString('fr-FR')} {settings.currency}
                           </span>
                         </label>
@@ -854,24 +854,24 @@ export const QrPaymentSyncModal: React.FC = () => {
 
               {/* Adhesion Fee if not paid */}
               {!activeMemberSummary.hasPaidAdhesion && (
-                <label className="flex items-center justify-between p-3.5 rounded-xl bg-yellow-50 dark:bg-yellow-500/15 border border-[#E5B824] cursor-pointer">
+                <label className="flex items-center justify-between p-3.5 rounded-xl bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705] cursor-pointer">
                   <div className="flex items-center gap-2.5">
                     <input
                       type="checkbox"
                       checked={payAdhesion}
                       onChange={(e) => setPayAdhesion(e.target.checked)}
-                      className="rounded border-gray-300 text-[#E5B824] focus:ring-[#E5B824]"
+                      className="rounded border-[#141413]/25 text-[#F2B705] focus:ring-[#F2B705]"
                     />
                     <div>
-                      <div className="font-bold text-black dark:text-white">
+                      <div className="font-bold text-[#141413] dark:text-white">
                         Régulariser les Droits d’Adhésion Statutaires
                       </div>
-                      <div className="text-[10px] text-gray-600 dark:text-zinc-300">
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-300">
                         Active définitivement la carte officielle ALGB du membre
                       </div>
                     </div>
                   </div>
-                  <span className="font-mono font-bold text-[#B8860B] dark:text-[#E5B824] tabular-nums">
+                  <span className="font-mono font-bold text-[#141413] dark:text-[#F2B705] tabular-nums">
                     {settings.droitAdhesionAmount.toLocaleString('fr-FR')} {settings.currency}
                   </span>
                 </label>
@@ -880,7 +880,7 @@ export const QrPaymentSyncModal: React.FC = () => {
               {/* Monthly Dues Selection */}
               <div className="space-y-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <label className="text-[10px] uppercase tracking-wider font-bold text-gray-700 dark:text-zinc-300">
+                  <label className="text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-300">
                     Cotisations Mensuelles {settings.fiscalYear} ({settings.cotisationMensuelleAmount.toLocaleString('fr-FR')} {settings.currency} / mois)
                   </label>
                   <div className="flex items-center gap-2 text-[11px]">
@@ -888,12 +888,12 @@ export const QrPaymentSyncModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedMonths(activeMemberSummary.overdueMonths)}
-                        className="text-[#B8860B] dark:text-[#E5B824] font-bold hover:underline cursor-pointer"
+                        className="text-[#C2410C] dark:text-[#F2B705] font-bold hover:underline cursor-pointer"
                       >
                         Retards ({activeMemberSummary.overdueMonths.length})
                       </button>
                     )}
-                    <span className="text-gray-300 dark:text-zinc-700">·</span>
+                    <span className="text-[#141413]/25 dark:text-white/25">·</span>
                     <button
                       type="button"
                       onClick={() =>
@@ -903,15 +903,15 @@ export const QrPaymentSyncModal: React.FC = () => {
                           ).map((m) => m.key)
                         )
                       }
-                      className="text-black dark:text-white font-semibold hover:underline cursor-pointer"
+                      className="text-[#141413] dark:text-white font-semibold hover:underline cursor-pointer"
                     >
                       Soldes restants
                     </button>
-                    <span className="text-gray-300 dark:text-zinc-700">·</span>
+                    <span className="text-[#141413]/25 dark:text-white/25">·</span>
                     <button
                       type="button"
                       onClick={() => setSelectedMonths([])}
-                      className="text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                      className="text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                     >
                       Effacer
                     </button>
@@ -930,10 +930,10 @@ export const QrPaymentSyncModal: React.FC = () => {
                         onClick={() => toggleMonth(m.key)}
                         className={`p-2 rounded-lg border text-left transition-all ${
                           alreadyPaid
-                            ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 cursor-default opacity-80'
+                            ? 'bg-[#F0FDF9] dark:bg-[#0f2422] border-[#134E4A]/30 dark:border-emerald-700 text-[#134E4A] dark:text-emerald-300 cursor-default opacity-85'
                             : isSelected
-                            ? 'bg-[#E5B824] border-black text-black font-bold cursor-pointer'
-                            : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-zinc-300 hover:border-gray-400 dark:hover:border-zinc-600 cursor-pointer'
+                            ? 'bg-[#F2B705] border-[#141413] text-[#141413] font-bold cursor-pointer'
+                            : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30 cursor-pointer'
                         }`}
                       >
                         <div className="text-[11px] font-bold">{m.short}</div>
@@ -947,16 +947,16 @@ export const QrPaymentSyncModal: React.FC = () => {
               </div>
 
               {/* Optional Project Contribution */}
-              <div className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl p-3.5 space-y-3">
+              <div className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl p-3.5 space-y-3">
                 <label className="flex items-center justify-between cursor-pointer">
-                  <span className="font-bold text-black dark:text-white">
+                  <span className="font-bold text-[#141413] dark:text-white">
                     Ajouter une contribution aux Chantiers & Projets du Lycée
                   </span>
                   <input
                     type="checkbox"
                     checked={includeProjectDonation}
                     onChange={(e) => setIncludeProjectDonation(e.target.checked)}
-                    className="rounded border-gray-300 text-[#E5B824] focus:ring-[#E5B824]"
+                    className="rounded border-[#141413]/25 text-[#F2B705] focus:ring-[#F2B705]"
                   />
                 </label>
 
@@ -966,7 +966,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                       <select
                         value={selectedProjectId}
                         onChange={(e) => setSelectedProjectId(e.target.value)}
-                        className="w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-2 text-xs text-black dark:text-white focus:outline-none focus:border-[#E5B824]"
+                        className="w-full bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-lg p-2 text-xs text-[#141413] dark:text-white focus:outline-none focus:border-[#F2B705]"
                       >
                         {projects.map((p) => (
                           <option key={p.id} value={p.id}>
@@ -982,7 +982,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                         step="1000"
                         value={projectAmount}
                         onChange={(e) => setProjectAmount(Number(e.target.value) || 0)}
-                        className="w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-lg p-2 text-xs font-mono font-bold text-black dark:text-white focus:outline-none focus:border-[#E5B824]"
+                        className="w-full bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-lg p-2 text-xs font-mono font-bold text-[#141413] dark:text-white focus:outline-none focus:border-[#F2B705]"
                       />
                     </div>
                   </div>
@@ -991,7 +991,7 @@ export const QrPaymentSyncModal: React.FC = () => {
 
               {/* Payment Method */}
               <div className="space-y-2">
-                <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-700 dark:text-zinc-300">
+                <label className="block text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-300">
                   Canal de règlement utilisé
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -1008,10 +1008,10 @@ export const QrPaymentSyncModal: React.FC = () => {
                       key={id}
                       type="button"
                       onClick={() => setMethod(id)}
-                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-1.5 ${
+                      className={`p-2 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-1.5 ${
                         method === id
-                          ? 'bg-black dark:bg-zinc-950 text-[#E5B824] border-black dark:border-[#E5B824] font-bold'
-                          : 'bg-gray-50 dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 border-gray-200 dark:border-zinc-800 hover:border-gray-400 dark:hover:border-zinc-600'
+                          ? 'bg-[#141413] text-[#F2B705] border-[#141413] dark:border-[#F2B705] font-bold'
+                          : 'bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 border-[#141413]/10 dark:border-white/10 hover:border-[#141413]/30 dark:hover:border-white/30'
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -1027,17 +1027,17 @@ export const QrPaymentSyncModal: React.FC = () => {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Note / Référence complémentaire (optionnel)"
-                  className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs text-black dark:text-white focus:outline-none focus:border-[#E5B824]"
+                  className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-lg px-3 py-2 text-xs text-[#141413] dark:text-white focus:outline-none focus:border-[#F2B705]"
                 />
               </div>
 
               {/* Summary Footer & CTA */}
-              <div className="pt-3 border-t border-gray-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="pt-3 border-t border-[#141413]/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-zinc-400 block">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-400 block">
                     Total à encaisser & synchroniser
                   </span>
-                  <span className="text-xl font-mono font-bold text-black dark:text-white tabular-nums">
+                  <span className="text-xl font-mono font-bold text-[#141413] dark:text-white tabular-nums">
                     {totalToSync.toLocaleString('fr-FR')} {settings.currency}
                   </span>
                 </div>
@@ -1045,7 +1045,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                 <button
                   type="submit"
                   disabled={totalToSync <= 0}
-                  className="px-5 py-3 bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold text-xs rounded-xl inline-flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-3 bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold text-xs rounded-lg inline-flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span>Valider & Mettre à jour toutes les tables</span>
@@ -1057,19 +1057,19 @@ export const QrPaymentSyncModal: React.FC = () => {
           {/* STEP 3: MULTI-TABLE SYNC CONFIRMATION REPORT */}
           {qrAuthVerified && syncReport && (
             <div className="space-y-5 text-xs">
-              <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-start gap-3.5">
-                <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="p-5 rounded-xl bg-[#F0FDF9] dark:bg-[#0f2422] border border-[#134E4A]/30 dark:border-emerald-700 flex items-start gap-3.5">
+                <CheckCircle2 className="w-6 h-6 text-[#134E4A] dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-base font-heading font-bold text-black dark:text-white">
+                  <h4 className="text-base font-heading font-bold text-[#141413] dark:text-white">
                     Espace de paiement et tables synchronisés
                   </h4>
-                  <p className="text-xs text-gray-700 dark:text-zinc-300 mt-1">
+                  <p className="text-xs text-[#4A4A48] dark:text-zinc-300 mt-1">
                     Règlement de{' '}
-                    <strong className="font-mono text-black dark:text-white">
+                    <strong className="font-mono text-[#141413] dark:text-white">
                       {syncReport.totalProcessedAmount.toLocaleString('fr-FR')} {settings.currency}
                     </strong>{' '}
                     enregistré à {syncReport.timestamp} pour{' '}
-                    <strong className="text-black dark:text-white">
+                    <strong className="text-[#141413] dark:text-white">
                       {syncReport.member.firstName} {syncReport.member.lastName}
                     </strong>{' '}
                     ({syncReport.member.membershipCardId}).
@@ -1078,18 +1078,18 @@ export const QrPaymentSyncModal: React.FC = () => {
               </div>
 
               {/* Updated Tables Checklist */}
-              <div className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 space-y-2.5">
-                <div className="flex items-center gap-2 text-[11px] font-heading font-bold uppercase tracking-wider text-black dark:text-white">
-                  <Database className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+              <div className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 space-y-2.5">
+                <div className="flex items-center gap-2 text-[11px] font-heading font-bold uppercase tracking-wider text-[#141413] dark:text-white">
+                  <Database className="w-4 h-4 text-[#16324F] dark:text-[#F2B705]" />
                   <span>Tables mises à jour sur le portail</span>
                 </div>
                 <ul className="space-y-1.5">
                   {syncReport.updatedTables.map((tbl) => (
                     <li
                       key={tbl}
-                      className="flex items-center gap-2 text-xs text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-3 py-2"
+                      className="flex items-center gap-2 text-xs text-[#141413] dark:text-zinc-200 bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-lg px-3 py-2"
                     >
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#134E4A] dark:text-emerald-400 shrink-0" />
                       <span>{tbl}</span>
                     </li>
                   ))}
@@ -1099,31 +1099,31 @@ export const QrPaymentSyncModal: React.FC = () => {
               {/* Generated Receipts */}
               {syncReport.createdTransactions.length > 0 && (
                 <div className="space-y-2">
-                  <div className="text-[11px] font-heading font-bold uppercase tracking-wider text-gray-700 dark:text-zinc-300">
+                  <div className="text-[11px] font-heading font-bold uppercase tracking-wider text-[#4A4A48] dark:text-zinc-300">
                     Quittances générées ({syncReport.createdTransactions.length})
                   </div>
                   <div className="space-y-1.5">
                     {syncReport.createdTransactions.map((tx) => (
                       <div
                         key={tx.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800"
+                        className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10"
                       >
                         <div>
-                          <div className="font-bold text-black dark:text-white">{tx.title}</div>
-                          <div className="text-[10px] font-mono text-gray-500 dark:text-zinc-400">
+                          <div className="font-bold text-[#141413] dark:text-white">{tx.title}</div>
+                          <div className="text-[10px] font-mono text-[#4A4A48] dark:text-zinc-400">
                             {tx.receiptNumber} · Réf. {tx.reference}
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
+                          <span className="font-mono font-bold text-[#134E4A] dark:text-emerald-400 tabular-nums">
                             {tx.amount.toLocaleString('fr-FR')} {tx.currency}
                           </span>
                           <button
                             type="button"
                             onClick={() => setViewingTransactionReceipt(tx)}
-                            className="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 border border-gray-300 dark:border-zinc-700 text-black dark:text-white font-semibold inline-flex items-center gap-1 cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-[#F8F8F6] dark:bg-[#1e1e1c] hover:bg-[#141413]/5 dark:hover:bg-white/10 border border-[#141413]/15 dark:border-white/15 text-[#141413] dark:text-white font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors"
                           >
-                            <FileText className="w-3 h-3 text-[#B8860B] dark:text-[#E5B824]" />
+                            <FileText className="w-3 h-3 text-[#16324F] dark:text-[#F2B705]" />
                             <span>Reçu</span>
                           </button>
                         </div>
@@ -1134,16 +1134,16 @@ export const QrPaymentSyncModal: React.FC = () => {
               )}
 
               {/* Navigation Actions */}
-              <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2 border-t border-gray-200 dark:border-zinc-800">
+              <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2 border-t border-[#141413]/10 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => {
                     setViewingCardMember(syncReport.member);
                     closeQrSyncModal();
                   }}
-                  className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 border border-gray-300 dark:border-zinc-700 text-black dark:text-white font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#141413]/5 dark:hover:bg-white/10 border border-[#141413]/15 dark:border-white/15 text-[#141413] dark:text-white font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
-                  <Eye className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                  <Eye className="w-3.5 h-3.5 text-[#16324F] dark:text-[#F2B705]" />
                   <span>Voir la Carte actualisée</span>
                 </button>
 
@@ -1154,9 +1154,9 @@ export const QrPaymentSyncModal: React.FC = () => {
                       setActiveTab('admin');
                       closeQrSyncModal();
                     }}
-                    className="px-4 py-2 rounded-xl bg-black dark:bg-zinc-800 hover:bg-gray-800 dark:hover:bg-zinc-700 text-white font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-[#141413] hover:bg-black text-white font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                   >
-                    <Building2 className="w-3.5 h-3.5 text-[#E5B824]" />
+                    <Building2 className="w-3.5 h-3.5 text-[#F2B705]" />
                     <span>Trésorerie Admin</span>
                   </button>
                 )}
@@ -1170,7 +1170,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                     setActiveTab('espace-membre');
                     closeQrSyncModal();
                   }}
-                  className="px-5 py-2 rounded-xl bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  className="px-5 py-2 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
                 >
                   <CreditCard className="w-3.5 h-3.5" />
                   <span>Ouvrir Espace de Paiement</span>

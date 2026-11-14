@@ -154,7 +154,7 @@ export interface Project {
 export interface JobOffer {
   id: string;
   title: string;
-  type: 'CDI' | 'CDD' | 'STAGE' | 'CONSULTANCE' | 'PARTENARIAT';
+  type: 'STAGE' | 'ALTERNANCE' | 'CDI' | 'EXECUTIVE' | 'CDD' | 'CONSULTANCE' | 'PARTENARIAT';
   company: string;
   sector: string;
   location: string;
@@ -165,6 +165,55 @@ export interface JobOffer {
   description: string;
   requirements: string[];
   contactEmail: string;
+}
+
+export interface MentorshipPairTestimonial {
+  id: string;
+  quote: string;
+  mentorName: string;
+  mentorRole: string;
+  mentorPromo: number;
+  mentorAvatar: string;
+  menteeName: string;
+  menteeRole: string;
+  menteePromo: number;
+  programTrack: string;
+}
+
+export interface MajorDonor {
+  id: string;
+  name: string;
+  promotionYear: number;
+  title: string;
+  circle: 'Grand Mécène Fondateur' | 'Cercle Bâtisseurs' | 'Parrain des Bourses';
+  contributionLabel: string;
+  portraitUrl: string;
+}
+
+export interface MentorshipRequestRecord {
+  id: string;
+  mentorId: string;
+  mentorName: string;
+  mentorRole: string;
+  menteeId: string;
+  menteeName: string;
+  menteePromo: number;
+  objective: string;
+  status: 'EN_ATTENTE' | 'ACCEPTEE' | 'PLANIFIEE';
+  createdAt: string;
+}
+
+export interface JobApplicationRecord {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  contractType: JobOffer['type'];
+  applicantId: string;
+  applicantName: string;
+  note: string;
+  status: 'TRANSMISE' | 'EN_EXAMEN' | 'ENTRETIEN';
+  appliedAt: string;
 }
 
 export interface NewsItem {
@@ -194,7 +243,7 @@ export interface EventItem {
   time: string;
   location: string;
   city: string;
-  type: 'GALA' | 'ASSEMBLEE_GENERALE' | 'SPORT' | 'CONFERENCE' | 'RETROUVAILLES';
+  type: 'GALA' | 'ASSEMBLEE_GENERALE' | 'SPORT' | 'CONFERENCE' | 'NETWORKING' | 'RETROUVAILLES';
   summary: string;
   description: string;
   attendeesCount: number;
@@ -481,6 +530,7 @@ export const INITIAL_MEMBERS: AlumniMember[] = [
     isRegistered: true,
     membershipStatus: 'A_JOUR',
     membershipCardId: 'ALGB-2002-0042',
+    avatarUrl: '/assets/images/mentor_portrait_amadou_1794580775565.jpg',
     bio: 'Ancien interne du Lycée de Garçons de Bingerville (1995-2002). Passionné par l’inclusion financière numérique et mentor actif pour les jeunes diplômés en ingénierie.',
     mainFormation: 'Informatique / Génie logiciel',
     skills: ['Informatique / IA', 'Gestion de projets', 'Recherche / Données'],
@@ -524,6 +574,7 @@ export const INITIAL_MEMBERS: AlumniMember[] = [
     isRegistered: true,
     membershipStatus: 'A_JOUR',
     membershipCardId: 'ALGB-1995-0018',
+    avatarUrl: '/assets/images/mentor_portrait_sebastien_1794580775191.jpg',
     bio: 'Diplômé du LGB en 1995. Engagé dans les missions médicales humanitaires de l’Amicale et la rénovation de l’infirmerie du lycée.',
     mainFormation: 'Médecine générale',
     skills: ['Santé / Médecine', 'Recherche / Données', 'Éducation / Formation'],
@@ -567,6 +618,7 @@ export const INITIAL_MEMBERS: AlumniMember[] = [
     isRegistered: true,
     membershipStatus: 'A_JOUR',
     membershipCardId: 'ALGB-1988-0007',
+    avatarUrl: '/assets/images/mentor_portrait_bamba_1794580775816.jpg',
     bio: '30 ans d’expérience dans les infrastructures de transport en Afrique de l’Ouest. Parrain technique du projet de réhabilitation des bâtiments coloniaux du lycée.',
     mainFormation: 'Génie civil / BTP',
     skills: ['BTP / Génie civil', 'Gestion de projets', 'Agriculture / Agro'],
@@ -696,6 +748,7 @@ export const INITIAL_MEMBERS: AlumniMember[] = [
     isRegistered: true,
     membershipStatus: 'A_JOUR',
     membershipCardId: 'ALGB-2010-0033',
+    avatarUrl: '/assets/images/mentor_portrait_idriss_1794580775491.jpg',
     bio: 'Spécialiste de la conformité financière et de la levée de fonds pour projets associatifs et éducatifs.',
     mainFormation: 'Finance / Comptabilité / Audit',
     skills: ['Finance / Compta', 'Gestion de projets', 'Entrepreneuriat'],
@@ -1197,11 +1250,11 @@ export const INITIAL_JOB_OFFERS: JobOffer[] = [
     type: 'CDI',
     company: 'Fintech West Africa',
     sector: 'Technologie & Numérique',
-    location: 'Abidjan (Plateau / Télétravail hybride)',
+    location: 'Abidjan (Plateau / Hybride)',
     postedBy: 'Amadou Touré (CTO)',
     postedByPromo: 2002,
-    postedDate: '2026-11-02',
-    deadline: '2026-12-15',
+    postedDate: '2026-11-10',
+    deadline: '2026-12-20',
     description: 'Nous recrutons un ingénieur DevOps pour accompagner la mise à l’échelle de notre plateforme de paiement interbancaire en zone UEMOA.',
     requirements: [
       'Formation ingénieur bac+5 (INP-HB, ESATIC ou équivalent)',
@@ -1212,7 +1265,62 @@ export const INITIAL_JOB_OFFERS: JobOffer[] = [
   },
   {
     id: 'job-002',
-    title: 'Auditeur Financier Junior & Gestion de Risques',
+    title: 'Directeur des Opérations Bancaires & Risques (H/F)',
+    type: 'EXECUTIVE',
+    company: 'BOAD Capital & Investissements',
+    sector: 'Banque & Finance',
+    location: 'Abidjan / Dakar (Régional)',
+    postedBy: 'Cheikh Tidiane Bâ',
+    postedByPromo: 2004,
+    postedDate: '2026-11-09',
+    deadline: '2026-12-28',
+    description: 'Poste de direction exécutive rattaché au Comité Exécutif pour piloter le déploiement des financements structurés et des opérations de marché en Afrique de l’Ouest.',
+    requirements: [
+      '10+ ans d’expérience managériale en banque d’investissement ou cabinet de conseil',
+      'Maîtrise approfondie des normes Bâle III, IFRS et gouvernance UEMOA',
+      'Leadership fédérateur et forte dimension internationale',
+    ],
+    contactEmail: 'direction.talents@boad-capital.sn',
+  },
+  {
+    id: 'job-003',
+    title: 'Alternance Analyste Cybersécurité & SOC',
+    type: 'ALTERNANCE',
+    company: 'OCP Digital Solutions',
+    sector: 'Informatique & Cybersécurité',
+    location: 'Casablanca / Abidjan (Hybride)',
+    postedBy: 'Yannick Gnahoré',
+    postedByPromo: 2016,
+    postedDate: '2026-11-08',
+    deadline: '2026-12-30',
+    description: 'Contrat d’alternance de 12 à 24 mois au sein de notre centre opérationnel de sécurité pour participer à la détection des menaces et aux tests d’intrusion.',
+    requirements: [
+      'Étudiant(e) en Master 1 ou Master 2 Réseaux & Cybersécurité',
+      'Bases solides sous Linux, SIEM et scripting Python',
+    ],
+    contactEmail: 'soc.alternance@ocp-digital.ma',
+  },
+  {
+    id: 'job-004',
+    title: 'Stage de fin d’études - Data Science & Modélisation IA',
+    type: 'STAGE',
+    company: 'Lab Innovation BCP / Banque Atlantique',
+    sector: 'Banque & Finance',
+    location: 'Abidjan (Marcory)',
+    postedBy: 'Stéphane Kassi',
+    postedByPromo: 2018,
+    postedDate: '2026-11-06',
+    deadline: '2026-12-30',
+    description: 'Opportunité de pré-embauche réservée en priorité aux élèves ingénieurs ou masters issus du LGB pour concevoir des modèles de scoring de crédit inclusif.',
+    requirements: [
+      'Dernière année d’école d’ingénieur ou université scientifique',
+      'Compétences démontrées en Python (pandas, scikit-learn, PyTorch)',
+    ],
+    contactEmail: 'innovation@banque-atlantique.ci',
+  },
+  {
+    id: 'job-005',
+    title: 'Auditeur Financier & Contrôle Interne Senior',
     type: 'CDI',
     company: 'Cabinet BDO Côte d’Ivoire',
     sector: 'Finance & Audit',
@@ -1220,8 +1328,8 @@ export const INITIAL_JOB_OFFERS: JobOffer[] = [
     postedBy: 'Idriss Coulibaly',
     postedByPromo: 2010,
     postedDate: '2026-10-28',
-    deadline: '2026-12-01',
-    description: 'Intégrez le pôle Banque & Institutions Financières pour réaliser des missions d’audit légal et d’évaluation des contrôles internes.',
+    deadline: '2026-12-15',
+    description: 'Intégrez le pôle Banque & Institutions Financières pour piloter des missions d’audit légal et d’évaluation des contrôles internes.',
     requirements: [
       'Master en Finance, Comptabilité, Contrôle de Gestion ou DSCG',
       'Bonne maîtrise des normes IFRS et SYSCOHADA révisé',
@@ -1229,9 +1337,9 @@ export const INITIAL_JOB_OFFERS: JobOffer[] = [
     contactEmail: 'carrieres@bdo-ci.com',
   },
   {
-    id: 'job-003',
+    id: 'job-006',
     title: 'Conducteur de Travaux BTP & Ouvrages d’Art',
-    type: 'CDD',
+    type: 'CDI',
     company: 'Consortium BTP Grands Travaux',
     sector: 'BTP & Ingénierie Civile',
     location: 'Yamoussoukro / Bouaké',
@@ -1246,23 +1354,152 @@ export const INITIAL_JOB_OFFERS: JobOffer[] = [
     ],
     contactEmail: 'rh@btp-ci.com',
   },
+];
+
+export const INITIAL_MENTORSHIP_TESTIMONIALS: MentorshipPairTestimonial[] = [
   {
-    id: 'job-004',
-    title: 'Stage de fin d’études - Data Science & Modélisation IA',
-    type: 'STAGE',
+    id: 'mp-01',
+    quote:
+      'Grâce aux sessions mensuelles avec Amadou, j’ai restructuré ma préparation aux entretiens d’architecture cloud et décroché mon premier poste d’ingénieur en moins de trois mois.',
+    mentorName: 'Amadou Touré',
+    mentorRole: 'CTO · Fintech West Africa Group',
+    mentorPromo: 2002,
+    mentorAvatar: '/assets/images/mentor_portrait_amadou_1794580775565.jpg',
+    menteeName: 'Franck N’Goran',
+    menteeRole: 'Élève Ingénieur INP-HB',
+    menteePromo: 2024,
+    programTrack: 'Parcours Numérique & Ingénierie',
+  },
+  {
+    id: 'mp-02',
+    quote:
+      'Parrainer un jeune frère de Bingerville, c’est lui épargner dix années d’hésitation en lui ouvrant immédiatement nos réseaux et nos exigences d’excellence.',
+    mentorName: 'Jean-Luc Bamba',
+    mentorRole: 'Directeur des Grands Travaux BTP',
+    mentorPromo: 1988,
+    mentorAvatar: '/assets/images/mentor_portrait_bamba_1794580775816.jpg',
+    menteeName: 'Yannick Gnahoré',
+    menteeRole: 'Lead Security Engineer',
+    menteePromo: 2016,
+    programTrack: 'Parcours Direction & Grands Projets',
+  },
+  {
+    id: 'mp-03',
+    quote:
+      'L’accompagnement d’Idriss Coulibaly m’a permis de maîtriser les codes de l’audit financier SYSCOHADA et d’intégrer un cabinet de premier plan dès la sortie de Master.',
+    mentorName: 'Idriss Coulibaly',
+    mentorRole: 'Directeur Administratif & Financier',
+    mentorPromo: 2010,
+    mentorAvatar: '/assets/images/mentor_portrait_idriss_1794580775491.jpg',
+    menteeName: 'Stéphane Kassi',
+    menteeRole: 'Senior Data Scientist',
+    menteePromo: 2018,
+    programTrack: 'Parcours Finance & Stratégie Exécutive',
+  },
+];
+
+export const INITIAL_MAJOR_DONORS: MajorDonor[] = [
+  {
+    id: 'donor-01',
+    name: 'Jean-Luc Bamba',
+    promotionYear: 1988,
+    title: 'Directeur des Grands Travaux BTP',
+    circle: 'Grand Mécène Fondateur',
+    contributionLabel: 'Mécénat Infrastructures',
+    portraitUrl: '/assets/images/mentor_portrait_bamba_1794580775816.jpg',
+  },
+  {
+    id: 'donor-02',
+    name: 'Dr. Sébastien Yapi',
+    promotionYear: 1995,
+    title: 'Chef de Service Adjoint, CHU Treichville',
+    circle: 'Parrain des Bourses',
+    contributionLabel: 'Fonds Médical & Bourses',
+    portraitUrl: '/assets/images/mentor_portrait_sebastien_1794580775191.jpg',
+  },
+  {
+    id: 'donor-03',
+    name: 'Amadou Touré',
+    promotionYear: 2002,
+    title: 'Chief Technology Officer (CTO)',
+    circle: 'Cercle Bâtisseurs',
+    contributionLabel: 'Numérisation Bibliothèque',
+    portraitUrl: '/assets/images/mentor_portrait_amadou_1794580775565.jpg',
+  },
+  {
+    id: 'donor-04',
+    name: 'Idriss Coulibaly',
+    promotionYear: 2010,
+    title: 'Directeur Administratif et Financier',
+    circle: 'Cercle Bâtisseurs',
+    contributionLabel: 'Bourses d’Excellence',
+    portraitUrl: '/assets/images/mentor_portrait_idriss_1794580775491.jpg',
+  },
+];
+
+export const INITIAL_MENTORSHIP_REQUESTS: MentorshipRequestRecord[] = [
+  {
+    id: 'mreq-01',
+    mentorId: 'mem-001',
+    mentorName: 'Amadou Touré',
+    mentorRole: 'Chief Technology Officer (CTO)',
+    menteeId: 'mem-007',
+    menteeName: 'Franck N’Goran',
+    menteePromo: 2024,
+    objective: 'Préparation aux concours d’écoles d’ingénieurs européennes et architecture Cloud.',
+    status: 'EN_ATTENTE',
+    createdAt: '2026-11-10',
+  },
+  {
+    id: 'mreq-02',
+    mentorId: 'mem-001',
+    mentorName: 'Amadou Touré',
+    mentorRole: 'Chief Technology Officer (CTO)',
+    menteeId: 'mem-005',
+    menteeName: 'Stéphane Kassi',
+    menteePromo: 2018,
+    objective: 'Transition vers un poste de direction technique Fintech en Afrique de l’Ouest.',
+    status: 'ACCEPTEE',
+    createdAt: '2026-10-29',
+  },
+  {
+    id: 'mreq-03',
+    mentorId: 'mem-002',
+    mentorName: 'Dr. Sébastien Yapi',
+    mentorRole: 'Chef de Service Adjoint CHU',
+    menteeId: 'mem-007',
+    menteeName: 'Franck N’Goran',
+    menteePromo: 2024,
+    objective: 'Orientation sur les filières scientifiques d’excellence et recherche biomédicale.',
+    status: 'PLANIFIEE',
+    createdAt: '2026-11-04',
+  },
+];
+
+export const INITIAL_JOB_APPLICATIONS: JobApplicationRecord[] = [
+  {
+    id: 'japp-01',
+    jobId: 'job-004',
+    jobTitle: 'Stage de fin d’études - Data Science & Modélisation IA',
     company: 'Lab Innovation BCP / Banque Atlantique',
-    sector: 'Banque & Finance',
-    location: 'Abidjan (Marcory)',
-    postedBy: 'Stéphane Kassi',
-    postedByPromo: 2018,
-    postedDate: '2026-11-08',
-    deadline: '2026-12-30',
-    description: 'Opportunité de pré-embauche réservée en priorité aux élèves ingénieurs ou masters issus du LGB.',
-    requirements: [
-      'Dernière année d’école d’ingénieur ou université scientifique',
-      'Compétences démontrées en Python (pandas, scikit-learn, PyTorch)',
-    ],
-    contactEmail: 'innovation@banque-atlantique.ci',
+    contractType: 'STAGE',
+    applicantId: 'mem-007',
+    applicantName: 'Franck N’Goran',
+    note: 'Major de promotion 2024 intéressé par le scoring de crédit inclusif.',
+    status: 'EN_EXAMEN',
+    appliedAt: '2026-11-09',
+  },
+  {
+    id: 'japp-02',
+    jobId: 'job-001',
+    jobTitle: 'Ingénieur DevOps & Cloud Azure / AWS',
+    company: 'Fintech West Africa',
+    contractType: 'CDI',
+    applicantId: 'mem-005',
+    applicantName: 'Stéphane Kassi',
+    note: 'Expérience solide sur Azure et pipelines CI/CD au sein du groupe BCP.',
+    status: 'ENTRETIEN',
+    appliedAt: '2026-11-11',
   },
 ];
 
@@ -1344,47 +1581,62 @@ export const INITIAL_NEWS: NewsItem[] = [
 export const INITIAL_EVENTS: EventItem[] = [
   {
     id: 'ev-001',
-    title: 'Assemblée Générale Ordinaire et Élective 2026',
+    title: 'Grand Gala Annuel & Nuit de l’Excellence ALGB',
     date: '19 Décembre 2026',
-    time: '09h00 - 14h00',
-    location: 'Grand Amphithéâtre, Lycée de Garçons de Bingerville',
-    city: 'Bingerville',
-    type: 'ASSEMBLEE_GENERALE',
-    summary: 'Bilan de mandat, quitus financier, vote du plan d’action et élection du Bureau.',
-    description: 'Moment statutaire majeur de notre Amicale. La participation physique ou par procuration est réservée aux membres à jour de cotisation.',
-    attendeesCount: 215,
-    maxCapacity: 350,
-    imageUrl: '/assets/images/bingerville_lycee_campus_1794382827777.jpg',
+    time: '19h00 - 23h30',
+    location: 'Sofitel Abidjan Hôtel Ivoire',
+    city: 'Abidjan',
+    type: 'GALA',
+    summary: 'Soirée de prestige réunissant 500 dirigeants, mécènes et jeunes diplômés autour du fonds de bourses d’excellence.',
+    description: 'Dîner de gala annuel, remise des distinctions aux doyens, vente caritative pour les bourses du Lycée de Bingerville et networking intergénérationnel.',
+    attendeesCount: 342,
+    maxCapacity: 500,
+    imageUrl: '/assets/images/alumni_gala_networking_1794580776213.jpg',
     isRegistrationOpen: true,
   },
   {
     id: 'ev-002',
-    title: 'Journée Sportive & Tournoi Inter-Promotions « Coupe du Proviseur »',
-    date: '16 Janvier 2027',
-    time: '08h30 - 18h00',
-    location: 'Complexe Sportif du Lycée',
-    city: 'Bingerville',
-    type: 'SPORT',
-    summary: 'Tournoi de football, basketball et athlétisme réunissant 16 promotions dans un esprit fraternel.',
-    description: 'Une journée de détente et de compétition saine suivie d’un grand barbecue de communion sous les arbres centenaires du lycée.',
-    attendeesCount: 380,
-    maxCapacity: 500,
+    title: 'Afterwork Exécutif & Networking Carrières Abidjan',
+    date: '28 Novembre 2026',
+    time: '18h30 - 21h30',
+    location: 'Club House Plateau',
+    city: 'Abidjan',
+    type: 'NETWORKING',
+    summary: 'Rencontre conviviale entre jeunes diplômés et cadres dirigeants pour favoriser le parrainage et les opportunités.',
+    description: 'Sessions rapides de mise en relation entre mentors, recruteurs alumni et jeunes diplômés autour d’un cocktail.',
+    attendeesCount: 128,
+    maxCapacity: 180,
     imageUrl: '/assets/images/alumni_reunion_ceremony_1794382829849.jpg',
     isRegistrationOpen: true,
   },
   {
     id: 'ev-003',
-    title: 'Forum des Métiers & de l’Orientation des Élèves du LGB',
+    title: 'Forum des Métiers & Conférence Souveraineté Numérique',
     date: '06 Février 2027',
     time: '09h00 - 16h00',
-    location: 'Salles polyvalentes du Lycée',
+    location: 'Grand Amphithéâtre du Lycée',
     city: 'Bingerville',
     type: 'CONFERENCE',
-    summary: '60 professionnels anciens élèves viennent guider et inspirer les élèves de 2nde, 1ère et Tle.',
-    description: 'Ateliers thématiques : filières scientifiques, carrières juridiques, métiers du numérique, entrepreneuriat et études à l’étranger.',
+    summary: '60 professionnels anciens élèves guident et inspirent les lycéens et jeunes diplômés sur les filières d’avenir.',
+    description: 'Conférences plénières et tables rondes : ingénierie, intelligence artificielle, finance durable et gouvernance publique.',
     attendeesCount: 160,
-    maxCapacity: 200,
+    maxCapacity: 240,
     imageUrl: '/assets/images/school_library_excellence_1794382830305.jpg',
+    isRegistrationOpen: true,
+  },
+  {
+    id: 'ev-004',
+    title: 'Journée Sportive & Retrouvailles Inter-Promotions',
+    date: '16 Janvier 2027',
+    time: '08h30 - 18h00',
+    location: 'Complexe Sportif du Lycée',
+    city: 'Bingerville',
+    type: 'RETROUVAILLES',
+    summary: 'Tournoi de football, basketball et athlétisme réunissant 16 promotions dans un esprit fraternel.',
+    description: 'Une journée de détente et de retrouvailles suivie d’un grand déjeuner de communion sous les palmiers royaux du lycée.',
+    attendeesCount: 380,
+    maxCapacity: 500,
+    imageUrl: '/assets/images/bingerville_lycee_campus_1794382827777.jpg',
     isRegistrationOpen: true,
   },
 ];

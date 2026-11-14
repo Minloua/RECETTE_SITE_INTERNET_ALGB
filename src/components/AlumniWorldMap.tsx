@@ -296,8 +296,9 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
       .append('path')
       .datum({ type: 'Sphere' } as d3.GeoPermissibleObjects)
       .attr('d', pathGenerator)
-      .attr('fill', isDark ? '#09090b' : '#FFFFFF')
-      .attr('stroke', isDark ? '#27272a' : '#E5E7EB')
+      .attr('fill', isDark ? '#141413' : '#FFFFFF')
+      .attr('stroke', isDark ? '#2c2c29' : '#141413')
+      .attr('stroke-opacity', isDark ? 1 : 0.12)
       .attr('stroke-width', 1.2);
 
     // Subtle graticule grid
@@ -306,7 +307,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
       .datum(graticule)
       .attr('d', pathGenerator)
       .attr('fill', 'none')
-      .attr('stroke', isDark ? '#18181b' : '#F3F4F6')
+      .attr('stroke', isDark ? '#1e1e1c' : '#EFEFEA')
       .attr('stroke-width', 0.7);
 
     // Parse world countries GeoJSON from bundled world-atlas TopoJSON
@@ -318,7 +319,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
     const countryColorScale = d3
       .scaleLinear<string>()
       .domain([1, Math.max(2, maxCountryCount)])
-      .range(isDark ? ['#854d0e', '#E5B824'] : ['#FEF08A', '#E5B824']);
+      .range(isDark ? ['#16324F', '#F2B705'] : ['#C7D5E5', '#16324F']);
 
     // Country polygons
     rootG
@@ -334,13 +335,13 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
         if (stats && stats.count > 0) {
           return countryColorScale(stats.count);
         }
-        return isDark ? '#27272a' : '#F3F4F6';
+        return isDark ? '#262624' : '#EFEFEA';
       })
       .attr('stroke', (d) => {
         const idStr = String(d.id || '');
-        if (selectedIsoId === idStr) return isDark ? '#FFFFFF' : '#000000';
+        if (selectedIsoId === idStr) return isDark ? '#F2B705' : '#141413';
         const stats = countryMap.get(idStr);
-        return stats ? (isDark ? '#E5B824' : '#B8860B') : (isDark ? '#3f3f46' : '#D1D5DB');
+        return stats ? (isDark ? '#F2B705' : '#16324F') : (isDark ? '#3a3a37' : '#D4D4CE');
       })
       .attr('stroke-width', (d) => {
         const idStr = String(d.id || '');
@@ -354,7 +355,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
           stats?.label || String((d.properties as { name?: string })?.name || 'Territoire');
 
         if (stats) {
-          d3.select(this).attr('stroke', isDark ? '#FFFFFF' : '#000000').attr('stroke-width', 1.4);
+          d3.select(this).attr('stroke', isDark ? '#FFFFFF' : '#141413').attr('stroke-width', 1.4);
         }
 
         const rect = svgEl.getBoundingClientRect();
@@ -384,7 +385,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
         const idStr = String(d.id || '');
         const stats = countryMap.get(idStr);
         d3.select(this)
-          .attr('stroke', selectedIsoId === idStr ? (isDark ? '#FFFFFF' : '#000000') : stats ? (isDark ? '#E5B824' : '#B8860B') : (isDark ? '#3f3f46' : '#D1D5DB'))
+          .attr('stroke', selectedIsoId === idStr ? (isDark ? '#F2B705' : '#141413') : stats ? (isDark ? '#F2B705' : '#16324F') : (isDark ? '#3a3a37' : '#D4D4CE'))
           .attr('stroke-width', selectedIsoId === idStr ? 1.5 : 0.6);
         setTooltip(null);
       })
@@ -416,7 +417,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
           .datum(lineFeature)
           .attr('d', (d) => pathGenerator(d as d3.GeoPermissibleObjects) || '')
           .attr('fill', 'none')
-          .attr('stroke', isDark ? '#E5B824' : '#B8860B')
+          .attr('stroke', isDark ? '#F2B705' : '#16324F')
           .attr('stroke-width', 1.1)
           .attr('stroke-dasharray', '4,3')
           .attr('stroke-opacity', isDark ? 0.65 : 0.55)
@@ -488,7 +489,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
       .append('circle')
       .attr('r', (d) => radiusScale(d.members.length) + 5)
       .attr('fill', 'none')
-      .attr('stroke', '#E5B824')
+      .attr('stroke', '#F2B705')
       .attr('stroke-width', 2)
       .attr('stroke-opacity', 0.85);
 
@@ -496,10 +497,10 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
       .append('circle')
       .attr('class', 'hub-circle')
       .attr('r', (d) => radiusScale(d.members.length))
-      .attr('fill', (d) => (selectedCityKey === d.key ? (isDark ? '#FFFFFF' : '#000000') : '#E5B824'))
-      .attr('stroke', (d) => (selectedCityKey === d.key ? '#E5B824' : (isDark ? '#18181b' : '#000000')))
+      .attr('fill', (d) => (selectedCityKey === d.key ? (isDark ? '#FFFFFF' : '#16324F') : '#F2B705'))
+      .attr('stroke', (d) => (selectedCityKey === d.key ? '#F2B705' : (isDark ? '#141413' : '#16324F')))
       .attr('stroke-width', (d) => (selectedCityKey === d.key ? 2.8 : 1.8))
-      .attr('fill-opacity', 0.92);
+      .attr('fill-opacity', 0.94);
 
     hubNodes
       .append('text')
@@ -508,7 +509,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
       .attr('font-size', (d) => (d.members.length >= 2 ? '9px' : '8px'))
       .attr('font-weight', '700')
       .attr('font-family', 'ui-monospace, SFMono-Regular, monospace')
-      .attr('fill', (d) => (selectedCityKey === d.key ? (isDark ? '#000000' : '#E5B824') : '#000000'))
+      .attr('fill', (d) => (selectedCityKey === d.key ? (isDark ? '#141413' : '#F2B705') : '#141413'))
       .style('pointer-events', 'none')
       .text((d) => d.members.length);
 
@@ -565,55 +566,55 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
     <div className="space-y-6">
       {/* KPI Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-zinc-400 block">
+        <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 shadow-editorial">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-400 block">
             Anciens localisés
           </span>
-          <div className="text-2xl font-heading font-bold text-black dark:text-white mt-1 tabular-nums">
+          <div className="text-2xl font-heading font-bold text-[#141413] dark:text-white mt-1 tabular-nums">
             {filteredMembers.length}
           </div>
-          <span className="text-[11px] text-gray-500 dark:text-zinc-400">Fiches annuaire actives</span>
+          <span className="text-[11px] text-[#4A4A48] dark:text-zinc-400">Fiches annuaire actives</span>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-zinc-400 block">
+        <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 shadow-editorial">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-400 block">
             Pays représentés
           </span>
-          <div className="text-2xl font-heading font-bold text-[#B8860B] dark:text-[#E5B824] mt-1 tabular-nums">
+          <div className="text-2xl font-heading font-bold text-[#16324F] dark:text-[#F2B705] mt-1 tabular-nums">
             {countryStatsList.length}
           </div>
-          <span className="text-[11px] text-gray-500 dark:text-zinc-400">Sur l’ensemble des continents</span>
+          <span className="text-[11px] text-[#4A4A48] dark:text-zinc-400">Sur l’ensemble des continents</span>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-zinc-400 block">
+        <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 shadow-editorial">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-400 block">
             Villes & Pôles Alumni
           </span>
-          <div className="text-2xl font-heading font-bold text-black dark:text-white mt-1 tabular-nums">
+          <div className="text-2xl font-heading font-bold text-[#141413] dark:text-white mt-1 tabular-nums">
             {cityHubs.length}
           </div>
-          <span className="text-[11px] text-gray-500 dark:text-zinc-400">Foyers géographiques</span>
+          <span className="text-[11px] text-[#4A4A48] dark:text-zinc-400">Foyers géographiques</span>
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-zinc-400 block">
+        <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 shadow-editorial">
+          <span className="text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-400 block">
             Diaspora Internationale
           </span>
-          <div className="text-2xl font-heading font-bold text-black dark:text-white mt-1 tabular-nums">
+          <div className="text-2xl font-heading font-bold text-[#141413] dark:text-white mt-1 tabular-nums">
             {diasporaCount}
           </div>
-          <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+          <span className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
             Hors Côte d’Ivoire ({filteredMembers.length > 0 ? Math.round((diasporaCount / filteredMembers.length) * 100) : 0}%)
           </span>
         </div>
       </div>
 
       {/* Filters & Region Bar */}
-      <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 space-y-4">
+      <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 sm:p-5 space-y-4 shadow-editorial">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-black dark:text-white mr-1 inline-flex items-center gap-1.5">
-              <Globe className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+            <span className="text-xs font-bold text-[#141413] dark:text-white mr-1 inline-flex items-center gap-1.5">
+              <Globe className="w-4 h-4 text-[#16324F] dark:text-[#F2B705]" />
               <span>Vue régionale :</span>
             </span>
             {(['WORLD', 'WEST_AFRICA', 'EUROPE', 'NORTH_AMERICA'] as RegionPreset[]).map((region) => (
@@ -623,8 +624,8 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
                 onClick={() => setActiveRegion(region)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   activeRegion === region
-                    ? 'bg-[#E5B824] text-black shadow-xs'
-                    : 'bg-white dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-zinc-800'
+                    ? 'bg-[#16324F] dark:bg-[#F2B705] text-white dark:text-[#141413]'
+                    : 'bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white border border-[#141413]/15 dark:border-white/15'
                 }`}
               >
                 {REGION_TRANSFORMS[region].label}
@@ -637,7 +638,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
               value={promoDecadeFilter}
               onChange={(e) => setPromoDecadeFilter(e.target.value as typeof promoDecadeFilter)}
               aria-label="Filtrer par génération"
-              className="bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-black dark:text-white focus:outline-none focus:border-[#E5B824]"
+              className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-lg px-3 py-1.5 text-[#141413] dark:text-white focus:outline-none focus:border-[#F2B705]"
             >
               <option value="ALL">Toutes les générations</option>
               <option value="DOYENS">Doyens (Promos &lt; 1995)</option>
@@ -649,7 +650,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
               value={sectorFilter}
               onChange={(e) => setSectorFilter(e.target.value)}
               aria-label="Filtrer par secteur"
-              className="bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-black dark:text-white focus:outline-none focus:border-[#E5B824]"
+              className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-lg px-3 py-1.5 text-[#141413] dark:text-white focus:outline-none focus:border-[#F2B705]"
             >
               {sectors.map((sec) => (
                 <option key={sec} value={sec}>
@@ -658,12 +659,12 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
               ))}
             </select>
 
-            <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 rounded-lg text-xs text-black dark:text-white cursor-pointer select-none">
+            <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 rounded-lg text-xs text-[#141413] dark:text-white cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={showArcs}
                 onChange={(e) => setShowArcs(e.target.checked)}
-                className="rounded border-gray-300 text-[#E5B824] focus:ring-[#E5B824]"
+                className="rounded border-[#141413]/25 accent-[#16324F] dark:accent-[#F2B705]"
               />
               <span>Flux Diaspora</span>
             </label>
@@ -674,14 +675,14 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
       {/* Main Split: D3 World Map + Interactive Territory Details */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: D3 SVG Interactive Map */}
-        <div className="lg:col-span-8 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-200 dark:border-zinc-800">
+        <div className="lg:col-span-8 bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 sm:p-5 shadow-editorial space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#141413]/10 dark:border-white/10">
             <div>
-              <h3 className="text-sm font-heading font-bold text-black dark:text-white flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+              <h3 className="text-sm font-heading font-bold text-[#141413] dark:text-white flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#16324F] dark:text-[#F2B705]" />
                 <span>Carte Interactive D3 — Répartition Mondiale ALGB</span>
               </h3>
-              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+              <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
                 Cliquez sur un pays ou une bulle de ville pour filtrer les anciens élèves correspondants. Zoomez avec la molette ou les boutons.
               </p>
             </div>
@@ -691,7 +692,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
                 type="button"
                 onClick={handleZoomIn}
                 aria-label="Zoomer"
-                className="p-2 rounded-lg bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-black dark:text-white border border-gray-200 dark:border-zinc-700 cursor-pointer"
+                className="p-2 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#16324F] hover:text-white dark:hover:bg-[#F2B705] dark:hover:text-[#141413] text-[#141413] dark:text-white border border-[#141413]/15 dark:border-white/15 transition-colors cursor-pointer"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
               </button>
@@ -699,14 +700,14 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
                 type="button"
                 onClick={handleZoomOut}
                 aria-label="Dézoomer"
-                className="p-2 rounded-lg bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-black dark:text-white border border-gray-200 dark:border-zinc-700 cursor-pointer"
+                className="p-2 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#16324F] hover:text-white dark:hover:bg-[#F2B705] dark:hover:text-[#141413] text-[#141413] dark:text-white border border-[#141413]/15 dark:border-white/15 transition-colors cursor-pointer"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
                 onClick={handleResetView}
-                className="inline-flex items-center gap-1 px-2.5 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-black dark:text-white border border-gray-200 dark:border-zinc-700 text-[11px] font-semibold cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-2 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#16324F] hover:text-white dark:hover:bg-[#F2B705] dark:hover:text-[#141413] text-[#141413] dark:text-white border border-[#141413]/15 dark:border-white/15 text-[11px] font-semibold transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>Réinitialiser</span>
@@ -714,7 +715,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
             </div>
           </div>
 
-          <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950">
+          <div className="relative w-full overflow-hidden rounded-xl border border-[#141413]/10 dark:border-white/10 bg-[#F8F8F6] dark:bg-[#141413]">
             <svg
               ref={svgRef}
               viewBox="0 0 960 500"
@@ -725,36 +726,36 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
 
             {tooltip && (
               <div
-                className="pointer-events-none absolute z-20 px-3 py-2 rounded-xl bg-black dark:bg-zinc-950 text-white shadow-xl border border-[#E5B824]/50 text-xs max-w-[230px]"
+                className="pointer-events-none absolute z-20 px-3 py-2 rounded-xl bg-[#141413] text-white shadow-xl border border-[#F2B705]/50 text-xs max-w-[230px]"
                 style={{
                   left: Math.min(tooltip.x + 14, 520),
                   top: Math.max(tooltip.y - 12, 8),
                 }}
               >
-                <div className="font-heading font-bold text-[#E5B824]">{tooltip.title}</div>
+                <div className="font-heading font-bold text-[#F2B705]">{tooltip.title}</div>
                 <div className="text-[11px] text-white font-mono mt-0.5">
                   {tooltip.count} ancien{tooltip.count > 1 ? 's' : ''} élève{tooltip.count > 1 ? 's' : ''}
                 </div>
                 {tooltip.subtitle && (
-                  <div className="text-[10px] text-gray-300 mt-0.5">{tooltip.subtitle}</div>
+                  <div className="text-[10px] text-zinc-300 mt-0.5">{tooltip.subtitle}</div>
                 )}
               </div>
             )}
           </div>
 
           {/* Map Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-gray-600 dark:text-zinc-400 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#4A4A48] dark:text-zinc-400 pt-1">
             <div className="flex flex-wrap items-center gap-4">
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-[#E5B824] border border-[#B8860B] inline-block" />
+                <span className="w-3 h-3 rounded-sm bg-[#16324F] dark:bg-[#F2B705] border border-[#141413]/20 inline-block" />
                 <span>Pays avec présence ALGB</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-[#E5B824] border-2 border-black dark:border-white inline-block" />
+                <span className="w-3 h-3 rounded-full bg-[#F2B705] border-2 border-[#16324F] dark:border-[#141413] inline-block" />
                 <span>Pôle / Ville (taille proportionnelle)</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-4 border-t-2 border-dashed border-[#B8860B] dark:border-[#E5B824] inline-block" />
+                <span className="w-4 border-t-2 border-dashed border-[#16324F] dark:border-[#F2B705] inline-block" />
                 <span>Liens depuis Bingerville</span>
               </span>
             </div>
@@ -765,7 +766,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
                   setSelectedIsoId(null);
                   setSelectedCityKey(null);
                 }}
-                className="text-xs font-bold text-[#B8860B] dark:text-[#E5B824] hover:underline cursor-pointer"
+                className="text-xs font-bold text-[#16324F] dark:text-[#F2B705] hover:underline cursor-pointer"
               >
                 Afficher tous les pays
               </button>
@@ -776,12 +777,12 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
         {/* Right: Selected Territory Alumni List & Country Ranking */}
         <div className="lg:col-span-4 space-y-5">
           {/* Country Ranking */}
-          <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 pb-2.5">
-              <h4 className="text-xs font-heading font-bold uppercase tracking-wider text-black dark:text-white">
+          <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 shadow-editorial space-y-3">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 dark:border-white/10 pb-2.5">
+              <h4 className="text-xs font-heading font-bold uppercase tracking-wider text-[#141413] dark:text-white">
                 Répartition par Pays
               </h4>
-              <span className="text-[11px] font-mono text-gray-500 dark:text-zinc-400">
+              <span className="text-[11px] font-mono text-[#4A4A48] dark:text-zinc-400">
                 {countryStatsList.length} pays
               </span>
             </div>
@@ -804,19 +805,19 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
                     }}
                     className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
                       isSelected
-                        ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824]'
-                        : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-800 hover:border-gray-300 dark:hover:border-zinc-600'
+                        ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705]'
+                        : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 hover:bg-white dark:hover:bg-[#1e1e1c] hover:border-[#16324F]/40 dark:hover:border-[#F2B705]/40'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-black dark:text-white">{stat.label}</span>
-                      <span className="font-mono font-bold text-[#B8860B] dark:text-[#E5B824] tabular-nums">
+                      <span className="font-bold text-[#141413] dark:text-white">{stat.label}</span>
+                      <span className="font-mono font-bold text-[#16324F] dark:text-[#F2B705] tabular-nums">
                         {stat.count} ({pct}%)
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-gray-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-[#141413]/10 dark:bg-white/10 rounded-sm overflow-hidden">
                       <div
-                        className="h-full bg-[#E5B824] rounded-full"
+                        className="h-full bg-[#16324F] dark:bg-[#F2B705] rounded-sm"
                         style={{ width: `${Math.max(8, pct)}%` }}
                       />
                     </div>
@@ -827,24 +828,24 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
           </div>
 
           {/* Selected Territory Members List */}
-          <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-zinc-800 pb-2.5">
+          <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 shadow-editorial space-y-3">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 dark:border-white/10 pb-2.5">
               <div className="min-w-0">
-                <span className="text-[10px] uppercase tracking-wider font-bold text-[#B8860B] dark:text-[#E5B824] block">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-[#16324F] dark:text-[#F2B705] block">
                   Territoire affiché
                 </span>
-                <h4 className="text-sm font-heading font-bold text-black dark:text-white truncate">
+                <h4 className="text-sm font-heading font-bold text-[#141413] dark:text-white truncate">
                   {selectedTerritoryLabel}
                 </h4>
               </div>
-              <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-xs font-mono font-bold text-black dark:text-white shrink-0 tabular-nums">
+              <span className="px-2 py-0.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 text-xs font-mono font-bold text-[#141413] dark:text-white shrink-0 tabular-nums">
                 {selectedMembers.length}
               </span>
             </div>
 
             {selectedMembers.length === 0 ? (
-              <div className="py-6 text-center text-xs text-gray-500 dark:text-zinc-400 space-y-2">
-                <Users className="w-7 h-7 text-gray-300 dark:text-zinc-700 mx-auto" />
+              <div className="py-6 text-center text-xs text-[#4A4A48] dark:text-zinc-400 space-y-2">
+                <Users className="w-7 h-7 text-[#4A4A48]/40 dark:text-zinc-600 mx-auto" />
                 <p>Aucun ancien élève ne correspond aux filtres dans cette zone.</p>
               </div>
             ) : (
@@ -852,25 +853,25 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
                 {selectedMembers.map((member) => (
                   <div
                     key={member.id}
-                    className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 space-y-2"
+                    className="p-3 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-2"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-black dark:text-white truncate">
+                        <div className="text-xs font-bold text-[#141413] dark:text-white truncate">
                           {member.firstName} {member.lastName}
                         </div>
-                        <div className="text-[11px] text-gray-600 dark:text-zinc-400 truncate">
+                        <div className="text-[11px] text-[#4A4A48] dark:text-zinc-400 truncate">
                           {member.currentRole} · {member.company}
                         </div>
                       </div>
-                      <span className="text-[10px] font-mono font-bold text-[#B8860B] dark:text-[#E5B824] shrink-0">
+                      <span className="text-[10px] font-mono font-bold text-[#16324F] dark:text-[#F2B705] shrink-0">
                         Promo {member.promotionYear}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1.5 border-t border-gray-200 dark:border-zinc-800 text-[11px]">
-                      <span className="text-gray-500 dark:text-zinc-400 inline-flex items-center gap-1 truncate pr-2">
-                        <MapPin className="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" />
+                    <div className="flex items-center justify-between pt-1.5 border-t border-[#141413]/10 dark:border-white/10 text-[11px]">
+                      <span className="text-[#4A4A48] dark:text-zinc-400 inline-flex items-center gap-1 truncate pr-2">
+                        <MapPin className="w-3 h-3 text-[#16324F] dark:text-[#F2B705] shrink-0" />
                         <span className="truncate">
                           {member.city}, {member.country}
                         </span>
@@ -880,7 +881,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
                         <button
                           type="button"
                           onClick={() => onViewCard(member)}
-                          className="text-[#B8860B] dark:text-[#E5B824] hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          className="text-[#16324F] dark:text-[#F2B705] hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
                         >
                           <Eye className="w-3 h-3" />
                           <span>Carte</span>
@@ -888,7 +889,7 @@ export const AlumniWorldMap: React.FC<AlumniWorldMapProps> = ({
                         <button
                           type="button"
                           onClick={() => onContact(member)}
-                          className="px-2 py-1 rounded bg-black dark:bg-zinc-800 hover:bg-[#E5B824] dark:hover:bg-[#E5B824] text-white hover:text-black font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-[#16324F] dark:bg-[#F2B705] hover:bg-[#1e4268] dark:hover:bg-[#dfa704] text-white dark:text-[#141413] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
                         >
                           <MessageCircle className="w-3 h-3" />
                           <span>Contacter</span>

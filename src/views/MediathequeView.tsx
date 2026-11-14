@@ -141,57 +141,64 @@ export const MediathequeView: React.FC = () => {
   };
 
   const inputClass =
-    'w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950 rounded-lg p-2.5 text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none';
+    'w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#C2410C] dark:focus:border-[#F2B705] rounded-lg p-2.5 text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none transition-colors';
 
   return (
-    <div className="bg-white dark:bg-zinc-950 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-        {/* Editorial Header */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 pb-8 flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
-          <div>
-            <span className="text-xs uppercase tracking-widest font-bold text-[#B8860B] dark:text-[#E5B824] flex items-center gap-1.5">
-              <Film className="w-3.5 h-3.5" />
-              <span>Médiathèque Officielle ALGB</span>
-            </span>
-            <h1 className="text-2xl sm:text-4xl font-bold font-heading text-black dark:text-white mt-1">
-              Médiathèque & Chaîne ALGB TV
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-zinc-400 font-editorial italic max-w-2xl mt-1">
-              « Documentaires historiques, reportages des grandes retrouvailles et archives photographiques centenaires du Lycée de Garçons de Bingerville. »
-            </p>
-          </div>
+    <div className="bg-[#F8F8F6] dark:bg-[#141413] min-h-screen text-[#141413] dark:text-[#F8F8F6] transition-colors">
+      {/* Soft Terracotta Editorial Header */}
+      <section className="bg-[#FFF7ED] dark:bg-[#1a1310] border-b border-[#C2410C]/15 dark:border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
+            <div>
+              <span className="text-xs uppercase tracking-[0.16em] font-semibold text-[#C2410C] dark:text-[#F2B705] flex items-center gap-1.5">
+                <Film className="w-3.5 h-3.5" />
+                <span>Médiathèque Officielle ALGB</span>
+              </span>
+              <h1 className="text-2xl sm:text-4xl font-bold font-heading text-[#141413] dark:text-white mt-1">
+                Médiathèque & Chaîne ALGB TV
+              </h1>
+              <p className="text-sm text-[#4A4A48] dark:text-zinc-300 font-editorial italic max-w-2xl mt-2">
+                « Documentaires historiques, reportages des grandes retrouvailles et archives photographiques centenaires du Lycée de Garçons de Bingerville. »
+              </p>
+            </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            {canManageMedia && (
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              {canManageMedia && (
+                <button
+                  type="button"
+                  onClick={() => setVideoUploadModalOpen(true)}
+                  className="px-4 py-2.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#1e1e1c] text-[#141413] dark:text-white border border-[#141413]/15 dark:border-white/15 hover:border-[#C2410C] transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-[#C2410C] dark:text-[#F2B705]" />
+                  <span>Ajouter une vidéo YouTube</span>
+                </button>
+              )}
+
               <button
-                onClick={() => setVideoUploadModalOpen(true)}
-                className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-zinc-900 hover:bg-gray-200 dark:hover:bg-zinc-800 text-black dark:text-white border border-gray-300 dark:border-zinc-700 transition-all flex items-center gap-1.5 cursor-pointer"
+                type="button"
+                onClick={() => setPhotoUploadModalOpen(true)}
+                className="px-4 py-2.5 rounded-lg text-xs font-semibold bg-[#F2B705] text-[#141413] hover:bg-[#dfa704] transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap"
               >
-                <PlusCircle className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
-                <span>Ajouter une vidéo YouTube</span>
+                <Camera className="w-4 h-4 text-[#141413]" />
+                <span>Proposer une photo d’époque</span>
               </button>
-            )}
-
-            <button
-              onClick={() => setPhotoUploadModalOpen(true)}
-              className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#E5B824] text-black hover:bg-[#dcae1f] transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-            >
-              <Camera className="w-4 h-4" />
-              <span>Proposer une photo d'époque</span>
-            </button>
+            </div>
           </div>
         </div>
+      </section>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
         {/* Main Switcher */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 p-2 sm:p-3 rounded-2xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 p-2.5 sm:p-3 rounded-xl shadow-editorial">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
+              type="button"
               onClick={() => setActiveMediaTab('VIDEOS')}
-              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeMediaTab === 'VIDEOS'
-                  ? 'bg-[#FF0000] text-white shadow-sm'
-                  : 'bg-white dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-zinc-800'
+                  ? 'bg-[#C2410C] text-white'
+                  : 'bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white border border-[#141413]/10 dark:border-white/10'
               }`}
             >
               <Video className="w-4 h-4" />
@@ -199,11 +206,12 @@ export const MediathequeView: React.FC = () => {
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveMediaTab('PHOTOS')}
-              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeMediaTab === 'PHOTOS'
-                  ? 'bg-[#E5B824] text-black shadow-sm'
-                  : 'bg-white dark:bg-zinc-950 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-zinc-800'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white border border-[#141413]/10 dark:border-white/10'
               }`}
             >
               <ImageIcon className="w-4 h-4" />
@@ -212,13 +220,13 @@ export const MediathequeView: React.FC = () => {
           </div>
 
           <div className="relative w-full sm:w-72">
-            <Search className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#4A4A48] dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder={activeMediaTab === 'VIDEOS' ? 'Rechercher une vidéo...' : 'Rechercher une photo...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-xl pl-8 pr-3 py-2 text-xs text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none"
+              className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#C2410C] dark:focus:border-[#F2B705] rounded-lg pl-8 pr-3 py-2 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none"
             />
           </div>
         </div>
@@ -227,19 +235,19 @@ export const MediathequeView: React.FC = () => {
         {activeMediaTab === 'VIDEOS' && (
           <div className="space-y-10">
             {/* Official YouTube Channel Card */}
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
-              <div className="relative h-36 sm:h-52 bg-gray-900 overflow-hidden border-b border-gray-200 dark:border-zinc-800">
+            <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl overflow-hidden shadow-editorial">
+              <div className="relative h-36 sm:h-52 bg-[#141413] overflow-hidden border-b border-[#141413]/10 dark:border-white/10">
                 <img
                   src="/assets/images/bingerville_lycee_campus_1794382827777.jpg"
                   alt="Bannière Chaîne YouTube ALGB"
                   className="w-full h-full object-cover opacity-55"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#141413]/85 via-[#141413]/30 to-transparent" />
 
-                <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1 bg-black/80 rounded-full text-[11px] text-white">
+                <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1 bg-[#141413]/85 rounded-lg text-[11px] text-white border border-white/15">
                   <span className="font-semibold">YouTube Officiel</span>
-                  <span className="text-gray-400">|</span>
-                  <span className="font-mono text-[#E5B824]">@ALGB_Officiel</span>
+                  <span className="text-zinc-500">|</span>
+                  <span className="font-mono text-[#F2B705]">@ALGB_Officiel</span>
                 </div>
               </div>
 
@@ -250,34 +258,34 @@ export const MediathequeView: React.FC = () => {
                       <img
                         src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
                         alt="Logo Officiel de l'Amicale ALGB"
-                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-contain bg-white border-2 border-[#E5B824] shadow-md p-1.5 shrink-0"
+                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-contain bg-white border-2 border-[#F2B705] shadow-md p-1.5 shrink-0"
                       />
-                      <div className="absolute -bottom-1 -right-1 bg-[#FF0000] text-white p-1 rounded-full shadow-md" title="Chaîne YouTube Vérifiée">
+                      <div className="absolute -bottom-1 -right-1 bg-[#FF0000] text-white p-1.5 rounded-lg shadow-md" title="Chaîne YouTube Vérifiée">
                         <Play className="w-3 h-3 fill-current" />
                       </div>
                     </div>
 
                     <div className="space-y-1 pt-12 md:pt-0">
                       <div className="flex items-center gap-2">
-                        <h2 className="text-lg sm:text-2xl font-bold font-heading text-black dark:text-white leading-tight">
+                        <h2 className="text-lg sm:text-2xl font-bold font-heading text-[#141413] dark:text-white leading-tight">
                           Amicale LGB · Chaîne Officielle
                         </h2>
-                        <span className="w-4 h-4 rounded-full bg-black dark:bg-[#E5B824] text-[#E5B824] dark:text-black flex items-center justify-center text-[10px] font-bold" title="Chaîne Officielle Vérifiée">
+                        <span className="w-4 h-4 rounded-lg bg-[#141413] dark:bg-[#F2B705] text-[#F2B705] dark:text-[#141413] flex items-center justify-center text-[10px] font-bold" title="Chaîne Officielle Vérifiée">
                           ✓
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-600 dark:text-zinc-400 font-mono">
-                        <span className="text-black dark:text-white font-semibold">@ALGB_Officiel</span>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-[#4A4A48] dark:text-zinc-400 font-mono tabular-nums">
+                        <span className="text-[#141413] dark:text-white font-semibold">@ALGB_Officiel</span>
                         <span>·</span>
-                        <span className="text-[#B8860B] dark:text-[#E5B824] font-semibold">3,85 k abonnés</span>
+                        <span className="text-[#C2410C] dark:text-[#F2B705] font-semibold">3,85 k abonnés</span>
                         <span>·</span>
                         <span>24 vidéos</span>
                         <span>·</span>
                         <span>148 k vues</span>
                       </div>
 
-                      <p className="text-xs text-gray-600 dark:text-zinc-400 max-w-2xl font-editorial italic pt-1 hidden sm:block">
+                      <p className="text-xs text-[#4A4A48] dark:text-zinc-400 max-w-2xl font-editorial italic pt-1 hidden sm:block">
                         « Documentaires historiques, assemblées générales, galas annuels, chantiers de rénovation et portraits de nos illustres anciens du Lycée de Garçons de Bingerville. »
                       </p>
                     </div>
@@ -285,10 +293,11 @@ export const MediathequeView: React.FC = () => {
 
                   <div className="flex items-center gap-2.5 w-full md:w-auto">
                     <button
+                      type="button"
                       onClick={handleSubscribeToggle}
-                      className={`flex-1 md:flex-initial px-5 py-2.5 rounded-full font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm ${
+                      className={`flex-1 md:flex-initial px-5 py-2.5 rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer ${
                         isSubscribed
-                          ? 'bg-gray-200 dark:bg-zinc-800 text-black dark:text-white border border-gray-300 dark:border-zinc-700 hover:bg-gray-300 dark:hover:bg-zinc-700'
+                          ? 'bg-[#F8F8F6] dark:bg-[#141413] text-[#141413] dark:text-white border border-[#141413]/20 dark:border-white/20'
                           : 'bg-[#FF0000] hover:bg-[#d90000] text-white'
                       }`}
                     >
@@ -297,12 +306,13 @@ export const MediathequeView: React.FC = () => {
                     </button>
 
                     <button
+                      type="button"
                       onClick={handleNotificationToggle}
                       title="Activer la cloche de notification"
-                      className={`p-2.5 rounded-full border transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-lg border transition-colors cursor-pointer ${
                         notificationsActive
-                          ? 'bg-[#E5B824] text-black border-[#E5B824]'
-                          : 'bg-gray-100 dark:bg-zinc-800 border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                          ? 'bg-[#F2B705] text-[#141413] border-[#F2B705]'
+                          : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white'
                       }`}
                     >
                       <Bell className={`w-4 h-4 ${notificationsActive ? 'fill-current' : ''}`} />
@@ -312,7 +322,7 @@ export const MediathequeView: React.FC = () => {
                       href="https://www.youtube.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2.5 rounded-full bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-all"
+                      className="p-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white transition-colors"
                       title="Ouvrir la chaîne sur YouTube"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -324,14 +334,14 @@ export const MediathequeView: React.FC = () => {
 
             {/* Featured Video Player */}
             {featuredVideo && (
-              <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-zinc-800">
-                  <span className="text-xs uppercase tracking-widest font-bold text-[#B8860B] dark:text-[#E5B824] flex items-center gap-2">
+              <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-6 shadow-editorial">
+                <div className="flex items-center justify-between pb-4 border-b border-[#141413]/10 dark:border-white/10">
+                  <span className="text-xs uppercase tracking-[0.14em] font-semibold text-[#C2410C] dark:text-[#F2B705] flex items-center gap-2">
                     <Sparkles className="w-4 h-4" />
                     <span>Grand Documentaire à la Une · Recommandé</span>
                   </span>
-                  <span className="text-xs font-mono text-gray-600 dark:text-zinc-400 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-500" />
+                  <span className="text-xs font-mono text-[#4A4A48] dark:text-zinc-400 flex items-center gap-1.5 tabular-nums">
+                    <Clock className="w-3.5 h-3.5" />
                     <span>Durée : {featuredVideo.duration}</span>
                   </span>
                 </div>
@@ -339,14 +349,14 @@ export const MediathequeView: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                   <div
                     onClick={() => setSelectedVideo(featuredVideo)}
-                    className="lg:col-span-7 group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border border-gray-300 dark:border-zinc-700 hover:border-[#E5B824] transition-all shadow-md bg-black"
+                    className="lg:col-span-7 group relative aspect-video rounded-xl overflow-hidden cursor-pointer border border-[#141413]/15 dark:border-white/15 hover:border-[#C2410C] transition-all bg-[#141413]"
                   >
                     <img
                       src={featuredVideo.thumbnailUrl}
                       alt={featuredVideo.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#141413]/80 via-[#141413]/20 to-transparent" />
 
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FF0000] text-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
@@ -354,43 +364,45 @@ export const MediathequeView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/85 text-white text-xs font-mono font-semibold rounded-md">
+                    <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-[#141413]/85 text-white text-xs font-mono font-semibold rounded-lg tabular-nums">
                       {featuredVideo.duration}
                     </div>
 
-                    <div className="absolute top-3 left-3 px-3 py-1 bg-black/80 text-[#E5B824] text-[10px] font-mono font-bold tracking-wider uppercase rounded">
+                    <div className="absolute top-3 left-3 px-3 py-1 bg-[#FFF7ED] text-[#C2410C] text-[10px] font-semibold tracking-wider uppercase rounded-lg">
                       {featuredVideo.category}
                     </div>
                   </div>
 
                   <div className="lg:col-span-5 space-y-4">
-                    <div className="flex items-center gap-2 text-xs font-mono text-gray-600 dark:text-zinc-400">
-                      <span className="text-emerald-700 dark:text-emerald-400 font-semibold">{featuredVideo.viewsCount}</span>
+                    <div className="flex items-center gap-2 text-xs font-mono text-[#4A4A48] dark:text-zinc-400 tabular-nums">
+                      <span className="text-[#C2410C] dark:text-[#F2B705] font-semibold">{featuredVideo.viewsCount}</span>
                       <span>·</span>
                       <span>{featuredVideo.publishedDate}</span>
                     </div>
 
                     <h3
                       onClick={() => setSelectedVideo(featuredVideo)}
-                      className="text-xl sm:text-2xl font-bold font-heading text-black dark:text-white hover:text-[#B8860B] dark:hover:text-[#E5B824] cursor-pointer transition-colors leading-snug"
+                      className="text-xl sm:text-2xl font-bold font-heading text-[#141413] dark:text-white hover:text-[#C2410C] dark:hover:text-[#F2B705] cursor-pointer transition-colors leading-snug"
                     >
                       {featuredVideo.title}
                     </h3>
 
-                    <p className="text-xs sm:text-sm text-gray-700 dark:text-zinc-300 font-editorial italic leading-relaxed">
+                    <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-300 font-editorial italic leading-relaxed">
                       {featuredVideo.description}
                     </p>
 
                     <div className="pt-2 flex items-center gap-3">
                       <button
+                        type="button"
                         onClick={() => setSelectedVideo(featuredVideo)}
-                        className="px-5 py-2.5 bg-[#E5B824] text-black font-semibold text-xs rounded-xl hover:bg-[#dcae1f] transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                        className="px-5 py-2.5 bg-[#F2B705] text-[#141413] font-semibold text-xs rounded-lg hover:bg-[#dfa704] transition-colors flex items-center gap-2 cursor-pointer"
                       >
-                        <Play className="w-4 h-4 fill-current" />
+                        <Play className="w-4 h-4 fill-current text-[#141413]" />
                         <span>Visionner le Documentaire</span>
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => {
                           if (navigator.share) {
                             navigator.share({ title: featuredVideo.title, text: featuredVideo.description, url: window.location.href });
@@ -398,7 +410,7 @@ export const MediathequeView: React.FC = () => {
                             addToast('info', 'Lien copié', 'Le lien du documentaire a été copié dans le presse-papier.');
                           }
                         }}
-                        className="p-2.5 bg-white dark:bg-zinc-950 hover:bg-gray-100 dark:hover:bg-zinc-800 text-black dark:text-white rounded-xl border border-gray-300 dark:border-zinc-700 transition-colors cursor-pointer"
+                        className="p-2.5 bg-[#F8F8F6] dark:bg-[#141413] hover:border-[#141413] text-[#141413] dark:text-white rounded-lg border border-[#141413]/15 dark:border-white/15 transition-colors cursor-pointer"
                         title="Partager cette vidéo"
                       >
                         <Share2 className="w-4 h-4" />
@@ -410,7 +422,7 @@ export const MediathequeView: React.FC = () => {
             )}
 
             {/* Video Category Filter Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-gray-200 dark:border-zinc-800 text-xs">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#141413]/10 dark:border-white/10 text-xs">
               {[
                 { id: 'ALL', label: 'Toutes les vidéos' },
                 { id: 'DOCUMENTAIRE', label: 'Documentaires & Histoire' },
@@ -421,11 +433,12 @@ export const MediathequeView: React.FC = () => {
               ].map((tab) => (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setVideoCategory(tab.id)}
-                  className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     videoCategory === tab.id
-                      ? 'bg-[#E5B824] text-black shadow-xs'
-                      : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-zinc-800'
+                      ? 'bg-[#C2410C] text-white'
+                      : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white border border-[#141413]/10 dark:border-white/10'
                   }`}
                 >
                   {tab.label}
@@ -439,44 +452,44 @@ export const MediathequeView: React.FC = () => {
                 <div
                   key={video.id}
                   onClick={() => setSelectedVideo(video)}
-                  className="group bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 rounded-2xl overflow-hidden cursor-pointer transition-all shadow-sm flex flex-col justify-between"
+                  className="group bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 hover:border-[#C2410C]/40 dark:hover:border-[#F2B705]/40 rounded-xl overflow-hidden cursor-pointer transition-all shadow-editorial flex flex-col justify-between"
                 >
                   <div>
-                    <div className="relative aspect-video overflow-hidden bg-black">
+                    <div className="relative aspect-video overflow-hidden bg-[#141413]">
                       <img
                         src={video.thumbnailUrl}
                         alt={video.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#141413]/75 via-transparent to-transparent" />
 
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#141413]/30">
                         <div className="w-12 h-12 rounded-full bg-[#FF0000] text-white flex items-center justify-center shadow-lg">
                           <Play className="w-5 h-5 fill-current ml-0.5" />
                         </div>
                       </div>
 
-                      <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-black/85 text-white text-[11px] font-mono font-semibold rounded">
+                      <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 bg-[#141413]/85 text-white text-[11px] font-mono font-semibold rounded-lg tabular-nums">
                         {video.duration}
                       </div>
 
-                      <div className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-black/80 text-[#E5B824] text-[9px] font-mono font-bold uppercase rounded">
+                      <div className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#FFF7ED] text-[#C2410C] text-[9px] font-semibold uppercase rounded-lg">
                         {video.category}
                       </div>
                     </div>
 
                     <div className="p-4 space-y-2">
-                      <h4 className="text-sm font-bold font-heading text-black dark:text-white group-hover:text-[#B8860B] dark:group-hover:text-[#E5B824] transition-colors line-clamp-2 leading-snug">
+                      <h4 className="text-sm font-bold font-heading text-[#141413] dark:text-white group-hover:text-[#C2410C] dark:group-hover:text-[#F2B705] transition-colors line-clamp-2 leading-snug">
                         {video.title}
                       </h4>
-                      <p className="text-xs text-gray-600 dark:text-zinc-400 font-editorial italic line-clamp-2">
+                      <p className="text-xs text-[#4A4A48] dark:text-zinc-400 font-editorial italic line-clamp-2">
                         {video.description}
                       </p>
                     </div>
                   </div>
 
-                  <div className="px-4 py-3 bg-gray-50 dark:bg-zinc-950 flex items-center justify-between text-[11px] font-mono text-gray-500 dark:text-zinc-400 border-t border-gray-200 dark:border-zinc-800">
-                    <span className="text-gray-700 dark:text-zinc-300 font-semibold">{video.viewsCount}</span>
+                  <div className="px-4 py-3 bg-[#F8F8F6] dark:bg-[#141413] flex items-center justify-between text-[11px] font-mono text-[#4A4A48] dark:text-zinc-400 border-t border-[#141413]/10 dark:border-white/10 tabular-nums">
+                    <span className="text-[#141413] dark:text-zinc-300 font-semibold">{video.viewsCount}</span>
                     <span>{video.publishedDate}</span>
                   </div>
                 </div>
@@ -488,7 +501,7 @@ export const MediathequeView: React.FC = () => {
         {/* SECTION 2 : GALERIE PHOTOS & ARCHIVES */}
         {activeMediaTab === 'PHOTOS' && (
           <div className="space-y-8">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-gray-200 dark:border-zinc-800 text-xs">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#141413]/10 dark:border-white/10 text-xs">
               {[
                 { id: 'ALL', label: 'Toutes les archives photographiques' },
                 { id: 'HISTOIRE', label: 'Histoire & Patrimoine Colonial' },
@@ -498,11 +511,12 @@ export const MediathequeView: React.FC = () => {
               ].map((tab) => (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => setPhotoCategory(tab.id)}
-                  className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     photoCategory === tab.id
-                      ? 'bg-[#E5B824] text-black shadow-xs'
-                      : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-zinc-800'
+                      ? 'bg-[#F2B705] text-[#141413]'
+                      : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white border border-[#141413]/10 dark:border-white/10'
                   }`}
                 >
                   {tab.label}
@@ -515,30 +529,30 @@ export const MediathequeView: React.FC = () => {
                 <div
                   key={photo.id}
                   onClick={() => setSelectedPhoto(photo)}
-                  className="group relative bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden cursor-pointer hover:border-gray-300 dark:hover:border-zinc-700 transition-all shadow-sm flex flex-col justify-between"
+                  className="group relative bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-[#C2410C]/40 dark:hover:border-[#F2B705]/40 transition-all shadow-editorial flex flex-col justify-between"
                 >
-                  <div className="aspect-[16/11] overflow-hidden relative bg-gray-100 dark:bg-zinc-800">
+                  <div className="aspect-[16/11] overflow-hidden relative bg-[#F8F8F6] dark:bg-[#141413]">
                     <img
                       src={photo.imageUrl}
                       alt={photo.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <div className="p-2.5 rounded-full bg-white dark:bg-zinc-900 text-black dark:text-white shadow-md">
+                    <div className="absolute inset-0 bg-[#141413]/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="p-2.5 rounded-lg bg-white dark:bg-[#1e1e1c] text-[#141413] dark:text-white shadow-md">
                         <Maximize2 className="w-5 h-5" />
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-5 space-y-1.5 bg-white dark:bg-zinc-900">
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
-                      <span className="text-[#B8860B] dark:text-[#E5B824] font-bold">{photo.category}</span>
-                      <span className="font-mono text-gray-600 dark:text-zinc-400">{photo.year}</span>
+                  <div className="p-5 space-y-1.5 bg-white dark:bg-[#1e1e1c]">
+                    <div className="flex items-center justify-between text-xs text-[#4A4A48] dark:text-zinc-400">
+                      <span className="text-[#C2410C] dark:text-[#F2B705] font-semibold">{photo.category}</span>
+                      <span className="font-mono text-[#4A4A48] dark:text-zinc-400">{photo.year}</span>
                     </div>
-                    <h3 className="text-base font-bold font-heading text-black dark:text-white group-hover:text-[#B8860B] dark:group-hover:text-[#E5B824] transition-colors leading-snug">
+                    <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white group-hover:text-[#C2410C] dark:group-hover:text-[#F2B705] transition-colors leading-snug">
                       {photo.title}
                     </h3>
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 font-editorial italic line-clamp-2">
+                    <p className="text-xs text-[#4A4A48] dark:text-zinc-400 font-editorial italic line-clamp-2">
                       {photo.caption}
                     </p>
                   </div>
@@ -550,24 +564,25 @@ export const MediathequeView: React.FC = () => {
 
         {/* MODAL 1: LECTEUR VIDEO YOUTUBE INTERACTIF */}
         {selectedVideo && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
-            <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-2xl my-6">
-              <div className="flex items-center justify-between p-4 px-6 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950">
-                <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-zinc-300">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FF0000]"></span>
-                  <span className="text-black dark:text-white font-bold">ALGB TV · Lecteur Officiel</span>
-                  <span className="text-gray-400 dark:text-zinc-600">·</span>
-                  <span className="text-[#B8860B] dark:text-[#E5B824] font-mono">{selectedVideo.category}</span>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#141413]/75 backdrop-blur-sm overflow-y-auto">
+            <div className="relative w-full max-w-4xl bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl overflow-hidden shadow-2xl my-6">
+              <div className="flex items-center justify-between p-4 px-6 border-b border-[#141413]/10 dark:border-white/10 bg-[#F8F8F6] dark:bg-[#141413]">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[#4A4A48] dark:text-zinc-300">
+                  <Play className="w-3.5 h-3.5 text-[#FF0000] fill-current" />
+                  <span className="text-[#141413] dark:text-white font-bold">ALGB TV · Lecteur Officiel</span>
+                  <span className="text-zinc-400">·</span>
+                  <span className="text-[#C2410C] dark:text-[#F2B705] font-mono">{selectedVideo.category}</span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSelectedVideo(null)}
-                  className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-800 cursor-pointer"
+                  className="p-1.5 text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white rounded-lg hover:bg-white dark:hover:bg-[#1e1e1c] cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="relative aspect-video bg-black">
+              <div className="relative aspect-video bg-[#141413]">
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
                   title={selectedVideo.title}
@@ -577,39 +592,40 @@ export const MediathequeView: React.FC = () => {
                 ></iframe>
               </div>
 
-              <div className="p-6 sm:p-8 space-y-5 bg-white dark:bg-zinc-900">
+              <div className="p-6 sm:p-8 space-y-5 bg-white dark:bg-[#1e1e1c]">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-4 text-xs font-mono text-gray-500 dark:text-zinc-400">
-                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold">{selectedVideo.viewsCount}</span>
+                  <div className="flex items-center justify-between gap-4 text-xs font-mono text-[#4A4A48] dark:text-zinc-400 tabular-nums">
+                    <span className="text-[#C2410C] dark:text-[#F2B705] font-semibold">{selectedVideo.viewsCount}</span>
                     <span>Mise en ligne : {selectedVideo.publishedDate}</span>
                   </div>
-                  <h2 className="text-lg sm:text-2xl font-bold font-heading text-black dark:text-white">
+                  <h2 className="text-lg sm:text-2xl font-bold font-heading text-[#141413] dark:text-white">
                     {selectedVideo.title}
                   </h2>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-y border-gray-200 dark:border-zinc-800">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-y border-[#141413]/10 dark:border-white/10">
                   <div className="flex items-center gap-3">
                     <img
                       src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
                       alt="Logo ALGB"
-                      className="w-11 h-11 rounded-xl object-contain bg-white border border-[#E5B824] p-0.5 shrink-0 shadow-xs"
+                      className="w-11 h-11 rounded-lg object-contain bg-white border border-[#F2B705] p-0.5 shrink-0"
                     />
                     <div>
-                      <div className="flex items-center gap-1.5 font-bold text-black dark:text-white text-sm">
+                      <div className="flex items-center gap-1.5 font-bold text-[#141413] dark:text-white text-sm">
                         <span>ALGB Officiel</span>
-                        <span className="w-3.5 h-3.5 rounded-full bg-black dark:bg-[#E5B824] text-[#E5B824] dark:text-black flex items-center justify-center text-[8px]">✓</span>
+                        <span className="w-3.5 h-3.5 rounded bg-[#141413] dark:bg-[#F2B705] text-[#F2B705] dark:text-[#141413] flex items-center justify-center text-[8px]">✓</span>
                       </div>
-                      <div className="text-[11px] text-gray-500 dark:text-zinc-400 font-mono">3,85 k abonnés</div>
+                      <div className="text-[11px] text-[#4A4A48] dark:text-zinc-400 font-mono">3,85 k abonnés</div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={handleSubscribeToggle}
-                      className={`px-4 py-2 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-4 py-2 rounded-lg font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
                         isSubscribed
-                          ? 'bg-gray-200 dark:bg-zinc-800 text-black dark:text-white border border-gray-300 dark:border-zinc-700'
+                          ? 'bg-[#F8F8F6] dark:bg-[#141413] text-[#141413] dark:text-white border border-[#141413]/20 dark:border-white/20'
                           : 'bg-[#FF0000] text-white hover:bg-[#d90000]'
                       }`}
                     >
@@ -620,7 +636,7 @@ export const MediathequeView: React.FC = () => {
                       href={`https://www.youtube.com/watch?v=${selectedVideo.youtubeId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-2 rounded-full bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-black dark:text-white border border-gray-300 dark:border-zinc-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                      className="px-4 py-2 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:border-[#141413] text-[#141413] dark:text-white border border-[#141413]/15 dark:border-white/15 text-xs font-semibold flex items-center gap-1.5 transition-colors"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       <span>Regarder sur YouTube</span>
@@ -628,11 +644,11 @@ export const MediathequeView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-zinc-950 p-4 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-2">
-                  <h4 className="text-xs font-bold text-black dark:text-white uppercase tracking-wider">
+                <div className="bg-[#F8F8F6] dark:bg-[#141413] p-4 rounded-xl border border-[#141413]/10 dark:border-white/10 space-y-2">
+                  <h4 className="text-xs font-semibold text-[#141413] dark:text-white uppercase tracking-wider">
                     Description du reportage
                   </h4>
-                  <p className="text-xs sm:text-sm text-gray-700 dark:text-zinc-300 font-editorial italic leading-relaxed whitespace-pre-line">
+                  <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-300 font-editorial italic leading-relaxed whitespace-pre-line">
                     {selectedVideo.description}
                   </p>
                 </div>
@@ -643,21 +659,22 @@ export const MediathequeView: React.FC = () => {
 
         {/* MODAL 2: LIGHTBOX PHOTO PLEIN ÉCRAN */}
         {selectedPhoto && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
-            <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-2xl my-6">
-              <div className="flex items-center justify-between p-4 px-6 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950">
-                <span className="text-xs font-bold text-[#B8860B] dark:text-[#E5B824] uppercase tracking-wider font-mono">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#141413]/75 backdrop-blur-sm overflow-y-auto">
+            <div className="relative w-full max-w-4xl bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl overflow-hidden shadow-2xl my-6">
+              <div className="flex items-center justify-between p-4 px-6 border-b border-[#141413]/10 dark:border-white/10 bg-[#F8F8F6] dark:bg-[#141413]">
+                <span className="text-xs font-semibold text-[#C2410C] dark:text-[#F2B705] uppercase tracking-wider font-mono">
                   {selectedPhoto.category} · {selectedPhoto.year}
                 </span>
                 <button
+                  type="button"
                   onClick={() => setSelectedPhoto(null)}
-                  className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-800 cursor-pointer"
+                  className="p-1.5 text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white rounded-lg hover:bg-white dark:hover:bg-[#1e1e1c] cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="max-h-[70vh] bg-black flex items-center justify-center overflow-hidden">
+              <div className="max-h-[70vh] bg-[#141413] flex items-center justify-center overflow-hidden">
                 <img
                   src={selectedPhoto.imageUrl}
                   alt={selectedPhoto.title}
@@ -665,23 +682,24 @@ export const MediathequeView: React.FC = () => {
                 />
               </div>
 
-              <div className="p-6 sm:p-8 space-y-3 bg-white dark:bg-zinc-900">
-                <h3 className="text-lg sm:text-2xl font-bold font-heading text-black dark:text-white">
+              <div className="p-6 sm:p-8 space-y-3 bg-white dark:bg-[#1e1e1c]">
+                <h3 className="text-lg sm:text-2xl font-bold font-heading text-[#141413] dark:text-white">
                   {selectedPhoto.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-700 dark:text-zinc-300 font-editorial italic leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-300 font-editorial italic leading-relaxed">
                   {selectedPhoto.caption}
                 </p>
-                <div className="pt-3 flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400 border-t border-gray-200 dark:border-zinc-800">
+                <div className="pt-3 flex items-center justify-between text-xs text-[#4A4A48] dark:text-zinc-400 border-t border-[#141413]/10 dark:border-white/10">
                   <span>Archives Officielles ALGB · Lycée de Garçons de Bingerville</span>
                   <button
+                    type="button"
                     onClick={() => {
                       addToast('info', 'Téléchargement', 'L’image haute résolution a été préparée.');
                     }}
-                    className="text-[#B8860B] dark:text-[#E5B824] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-[#C2410C] dark:text-[#F2B705] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Télécharger l'archive</span>
+                    <span>Télécharger l’archive</span>
                   </button>
                 </div>
               </div>
@@ -691,16 +709,17 @@ export const MediathequeView: React.FC = () => {
 
         {/* MODAL 3: PROPOSER UNE PHOTO D'ARCHIVE */}
         {photoUploadModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 text-xs">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-zinc-800">
-                <h3 className="text-base font-bold font-heading text-black dark:text-white flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-[#B8860B] dark:text-[#E5B824]" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#141413]/70 backdrop-blur-sm">
+            <div className="relative w-full max-w-lg bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl p-6 sm:p-8 shadow-2xl space-y-5 text-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-[#141413]/10 dark:border-white/10">
+                <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-[#C2410C] dark:text-[#F2B705]" />
                   <span>Contribuer aux Archives Photographiques</span>
                 </h3>
                 <button
+                  type="button"
                   onClick={() => setPhotoUploadModalOpen(false)}
-                  className="text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                  className="text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                 >
                   ✕
                 </button>
@@ -708,7 +727,7 @@ export const MediathequeView: React.FC = () => {
 
               <form onSubmit={handlePhotoUploadSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Titre de la photographie</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Titre de la photographie</label>
                   <input
                     type="text"
                     required
@@ -721,7 +740,7 @@ export const MediathequeView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Catégorie</label>
+                    <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Catégorie</label>
                     <select
                       value={newPhotoCategory}
                       onChange={(e) => setNewPhotoCategory(e.target.value as any)}
@@ -736,7 +755,7 @@ export const MediathequeView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Année / Époque</label>
+                    <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Année / Époque</label>
                     <input
                       type="text"
                       required
@@ -749,7 +768,7 @@ export const MediathequeView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Légende & Contexte historique</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Légende & Contexte historique</label>
                   <textarea
                     rows={3}
                     required
@@ -764,13 +783,13 @@ export const MediathequeView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPhotoUploadModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                    className="px-4 py-2 rounded-lg text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-[#E5B824] text-black font-semibold rounded-xl hover:bg-[#dcae1f] cursor-pointer"
+                    className="px-5 py-2.5 bg-[#F2B705] text-[#141413] font-semibold rounded-lg hover:bg-[#dfa704] cursor-pointer"
                   >
                     Transmettre aux Archives
                   </button>
@@ -782,16 +801,17 @@ export const MediathequeView: React.FC = () => {
 
         {/* MODAL 4: AJOUTER UNE VIDÉO YOUTUBE */}
         {videoUploadModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 text-xs">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-zinc-800">
-                <h3 className="text-base font-bold font-heading text-black dark:text-white flex items-center gap-2">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#141413]/70 backdrop-blur-sm">
+            <div className="relative w-full max-w-lg bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl p-6 sm:p-8 shadow-2xl space-y-5 text-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-[#141413]/10 dark:border-white/10">
+                <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white flex items-center gap-2">
                   <Video className="w-5 h-5 text-[#FF0000]" />
                   <span>Publier une Vidéo sur la Chaîne ALGB TV</span>
                 </h3>
                 <button
+                  type="button"
                   onClick={() => setVideoUploadModalOpen(false)}
-                  className="text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                  className="text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                 >
                   ✕
                 </button>
@@ -799,7 +819,7 @@ export const MediathequeView: React.FC = () => {
 
               <form onSubmit={handleVideoUploadSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Titre de la vidéo</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Titre de la vidéo</label>
                   <input
                     type="text"
                     required
@@ -812,7 +832,7 @@ export const MediathequeView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Catégorie</label>
+                    <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Catégorie</label>
                     <select
                       value={newVideoCategory}
                       onChange={(e) => setNewVideoCategory(e.target.value as any)}
@@ -827,7 +847,7 @@ export const MediathequeView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Durée (ex: 18:40)</label>
+                    <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Durée (ex: 18:40)</label>
                     <input
                       type="text"
                       required
@@ -840,7 +860,7 @@ export const MediathequeView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                     Lien ou Identifiant YouTube
                   </label>
                   <input
@@ -854,7 +874,7 @@ export const MediathequeView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Description & Résumé de la vidéo</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Description & Résumé de la vidéo</label>
                   <textarea
                     rows={3}
                     required
@@ -869,13 +889,13 @@ export const MediathequeView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setVideoUploadModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                    className="px-4 py-2 rounded-lg text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-[#FF0000] text-white font-semibold rounded-xl hover:bg-[#d90000] cursor-pointer"
+                    className="px-5 py-2.5 bg-[#FF0000] text-white font-semibold rounded-lg hover:bg-[#d90000] cursor-pointer"
                   >
                     Publier sur ALGB TV
                   </button>

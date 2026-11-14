@@ -88,12 +88,14 @@ export const MembershipCardModal: React.FC = () => {
   const cleanMotto = settings.associationMessage.replace(/[«»]/g, '').trim();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 dark:bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#141413]/75 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-3xl bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden my-6">
         {/* Modal Controls */}
-        <div className="no-print bg-gray-50 dark:bg-zinc-950 px-5 sm:px-6 py-3.5 border-b border-gray-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-gray-900 dark:text-zinc-100">
-          <div className="flex items-center gap-2 text-xs font-bold text-black dark:text-white">
-            <ShieldCheck className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+        <div className="no-print bg-[#16324F] px-5 sm:px-6 py-3.5 border-b border-[#F2B705]/40 flex flex-wrap items-center justify-between gap-3 text-white">
+          <div className="flex items-center gap-2.5 text-xs font-bold text-white">
+            <div className="w-7 h-7 rounded-lg bg-[#F2B705] text-[#141413] flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
             <span>Carte Officielle d’Adhérent ALGB</span>
           </div>
 
@@ -101,7 +103,7 @@ export const MembershipCardModal: React.FC = () => {
             <button
               type="button"
               onClick={handleFlashQr}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-black dark:bg-zinc-800 text-[#E5B824] rounded-lg text-xs font-bold hover:bg-gray-900 dark:hover:bg-zinc-700 transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141413] text-[#F2B705] border border-[#F2B705]/40 rounded-lg text-xs font-bold hover:bg-black transition-all cursor-pointer shadow-xs"
             >
               <QrCode className="w-3.5 h-3.5" />
               <span>Flasher QR (Paiement)</span>
@@ -111,9 +113,9 @@ export const MembershipCardModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleDownloadQr}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-black dark:text-white rounded-lg text-xs font-semibold hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 border border-white/25 text-white rounded-lg text-xs font-semibold hover:bg-white/20 transition-all cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                <Download className="w-3.5 h-3.5 text-[#F2B705]" />
                 <span>QR PNG</span>
               </button>
             )}
@@ -121,7 +123,7 @@ export const MembershipCardModal: React.FC = () => {
             <button
               type="button"
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E5B824] text-black rounded-lg text-xs font-bold hover:bg-[#dcae1f] transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F2B705] text-[#141413] rounded-lg text-xs font-bold hover:bg-[#dfa704] transition-all cursor-pointer shadow-xs"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Imprimer</span>
@@ -131,7 +133,7 @@ export const MembershipCardModal: React.FC = () => {
               type="button"
               onClick={() => setViewingCardMember(null)}
               aria-label="Fermer la carte"
-              className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-white/80 hover:text-white hover:bg-white/15 rounded-lg transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -139,9 +141,9 @@ export const MembershipCardModal: React.FC = () => {
         </div>
 
         {/* Card Stage */}
-        <div className="p-4 sm:p-8 flex flex-col items-center justify-center bg-gray-100 dark:bg-zinc-950">
-          {/* Official ALGB Membership Card (White / Light Gray / Black / Yellow Charter) */}
-          <div className="w-full max-w-[660px] rounded-2xl bg-white border-2 border-black shadow-2xl overflow-hidden relative text-black">
+        <div className="p-4 sm:p-8 flex flex-col items-center justify-center bg-[#F8F8F6] dark:bg-[#141413]">
+          {/* Official ALGB Membership Card (Pure White / Alabaster / Carbon Black / Solar Yellow Charter) */}
+          <div className="w-full max-w-[660px] rounded-xl bg-white border-2 border-[#141413] shadow-editorial overflow-hidden relative text-[#141413]">
             {/* Top-right subtle campus architectural backdrop (faded cleanly into white) */}
             <div className="absolute top-0 right-0 w-[62%] h-[155px] pointer-events-none overflow-hidden">
               <img
@@ -157,7 +159,7 @@ export const MembershipCardModal: React.FC = () => {
             {/* Header Row: Circular Crest + Vertical Hairline + Title Block */}
             <div className="relative z-10 px-5 sm:px-7 pt-4 sm:pt-5 pb-2 flex items-center gap-3.5 sm:gap-5">
               {/* Circular Emblem */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white border-[2.5px] border-black ring-2 ring-[#E5B824]/80 p-1 shadow-md shrink-0 flex items-center justify-center overflow-hidden">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white border-[2.5px] border-[#141413] ring-2 ring-[#F2B705]/90 p-1 shadow-md shrink-0 flex items-center justify-center overflow-hidden">
                 <img
                   src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
                   alt="Logo Officiel ALGB"
@@ -167,23 +169,23 @@ export const MembershipCardModal: React.FC = () => {
               </div>
 
               {/* Vertical Divider */}
-              <div className="w-[1.5px] h-14 sm:h-16 bg-black/25 shrink-0" />
+              <div className="w-[1.5px] h-14 sm:h-16 bg-[#141413]/25 shrink-0" />
 
               {/* Institutional Header Typography */}
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] sm:text-xs font-heading font-bold uppercase tracking-wider text-black leading-tight">
+                <div className="text-[10px] sm:text-xs font-heading font-bold uppercase tracking-wider text-[#141413] leading-tight">
                   Amicale des Anciens Élèves
                 </div>
-                <div className="text-lg sm:text-[23px] font-heading font-extrabold uppercase tracking-tight text-black leading-none mt-0.5">
+                <div className="text-lg sm:text-[23px] font-heading font-extrabold uppercase tracking-tight text-[#141413] leading-none mt-0.5">
                   Lycée de Bingerville
                 </div>
-                <div className="text-[10px] sm:text-[11px] font-editorial italic font-semibold text-[#B8860B] mt-1 truncate">
+                <div className="text-[10px] sm:text-[11px] font-editorial italic font-semibold text-[#16324F] mt-1 truncate">
                   {cleanSignature}
                 </div>
               </div>
             </div>
 
-            {/* Top Sweeping Dual-Ribbon Curve (Yellow + Black) */}
+            {/* Top Sweeping Dual-Ribbon Curve (Solar Yellow + Carbon Black) */}
             <div className="relative z-10 w-full -mt-1 pointer-events-none select-none">
               <svg
                 viewBox="0 0 660 34"
@@ -193,11 +195,11 @@ export const MembershipCardModal: React.FC = () => {
               >
                 <path
                   d="M 240,29 C 390,28 530,18 660,0 L 660,11 C 530,27 390,32 240,30 Z"
-                  fill="#E5B824"
+                  fill="#F2B705"
                 />
                 <path
                   d="M 190,31 C 370,31 530,24 660,7 L 660,17 C 530,31 370,33 190,32 Z"
-                  fill="#0A0A0A"
+                  fill="#141413"
                 />
               </svg>
             </div>
@@ -206,7 +208,7 @@ export const MembershipCardModal: React.FC = () => {
             <div className="relative z-10 px-5 sm:px-7 pt-1 pb-4 flex flex-col sm:flex-row items-center sm:items-stretch gap-4 sm:gap-5">
               {/* Left Column: Portrait Photo */}
               <div className="w-28 sm:w-[134px] shrink-0">
-                <div className="aspect-[3/4] w-full rounded-xl bg-gray-100 border-2 border-black shadow-sm overflow-hidden flex flex-col items-center justify-center relative">
+                <div className="aspect-[3/4] w-full rounded-xl bg-[#F8F8F6] border-2 border-[#141413] shadow-sm overflow-hidden flex flex-col items-center justify-center relative">
                   {viewingCardMember.avatarUrl && !avatarError ? (
                     <img
                       src={viewingCardMember.avatarUrl}
@@ -216,12 +218,12 @@ export const MembershipCardModal: React.FC = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-b from-gray-100 to-gray-200 flex flex-col items-center justify-center p-2 text-center">
-                      <span className="text-2xl sm:text-3xl font-heading font-bold text-black">
+                    <div className="w-full h-full bg-gradient-to-b from-[#F8F8F6] to-[#141413]/10 flex flex-col items-center justify-center p-2 text-center">
+                      <span className="text-2xl sm:text-3xl font-heading font-bold text-[#141413]">
                         {viewingCardMember.firstName[0]}
                         {viewingCardMember.lastName[0]}
                       </span>
-                      <span className="text-[8px] uppercase tracking-widest font-semibold text-gray-500 mt-1">
+                      <span className="text-[8px] uppercase tracking-widest font-semibold text-[#4A4A48] mt-1">
                         Photo Officielle
                       </span>
                     </div>
@@ -232,18 +234,18 @@ export const MembershipCardModal: React.FC = () => {
               {/* Center Column: Member Information & Active Capsule */}
               <div className="flex-1 min-w-0 flex flex-col justify-between w-full">
                 <div>
-                  <h2 className="text-lg sm:text-[20px] font-bold text-black tracking-tight leading-snug truncate">
+                  <h2 className="text-lg sm:text-[20px] font-heading font-bold text-[#141413] tracking-tight leading-snug truncate">
                     {viewingCardMember.firstName} {viewingCardMember.lastName}
                     {viewingCardMember.nickname && (
-                      <span className="text-xs font-semibold text-[#B8860B] ml-1.5">
+                      <span className="text-xs font-semibold text-[#16324F] ml-1.5">
                         « {viewingCardMember.nickname} »
                       </span>
                     )}
                   </h2>
 
-                  <ul className="mt-2 space-y-1.5 text-xs text-gray-800">
+                  <ul className="mt-2 space-y-1.5 text-xs text-[#4A4A48]">
                     <li className="flex items-center gap-2.5">
-                      <GraduationCap className="w-3.5 h-3.5 text-black shrink-0" />
+                      <GraduationCap className="w-3.5 h-3.5 text-[#141413] shrink-0" />
                       <span className="truncate">
                         Ancien Élève
                         {viewingCardMember.bacSeries ? ` · ${viewingCardMember.bacSeries}` : ''}
@@ -251,21 +253,21 @@ export const MembershipCardModal: React.FC = () => {
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <Calendar className="w-3.5 h-3.5 text-black shrink-0" />
-                      <span className="truncate font-medium">
+                      <Calendar className="w-3.5 h-3.5 text-[#141413] shrink-0" />
+                      <span className="truncate font-medium text-[#141413]">
                         Promotion : {viewingCardMember.promotionYear}
                         {viewingCardMember.studyLevel ? ` · ${viewingCardMember.studyLevel}` : ''}
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <Briefcase className="w-3.5 h-3.5 text-black shrink-0" />
+                      <Briefcase className="w-3.5 h-3.5 text-[#141413] shrink-0" />
                       <span className="truncate">
                         Profession : {viewingCardMember.currentRole}
                         {viewingCardMember.company ? ` — ${viewingCardMember.company}` : ''}
                       </span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <MapPin className="w-3.5 h-3.5 text-black shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-[#141413] shrink-0" />
                       <span className="truncate">
                         {viewingCardMember.city}
                         {viewingCardMember.commune ? ` (${viewingCardMember.commune})` : ''} –{' '}
@@ -276,15 +278,15 @@ export const MembershipCardModal: React.FC = () => {
                 </div>
 
                 {/* Hairline Divider & Status Capsule */}
-                <div className="pt-2.5 mt-2.5 border-t border-gray-200">
-                  <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-black text-white border border-[#E5B824] shadow-xs max-w-full">
-                    <Users className="w-5 h-5 text-[#E5B824] shrink-0" />
+                <div className="pt-2.5 mt-2.5 border-t border-[#141413]/10">
+                  <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[#141413] text-white border border-[#F2B705] shadow-xs max-w-full">
+                    <Users className="w-5 h-5 text-[#F2B705] shrink-0" />
                     <div className="w-px h-6 bg-white/25 shrink-0" />
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-white leading-tight truncate">
                         {statusLabel}
                       </div>
-                      <div className="text-[10px] font-mono font-semibold text-[#E5B824] tracking-wider leading-tight mt-0.5 truncate">
+                      <div className="text-[10px] font-mono font-semibold text-[#F2B705] tracking-wider leading-tight mt-0.5 truncate">
                         N° {viewingCardMember.membershipCardId}
                       </div>
                     </div>
@@ -298,7 +300,7 @@ export const MembershipCardModal: React.FC = () => {
                   type="button"
                   onClick={handleFlashQr}
                   title="Cliquer ou flasher pour mettre à jour l'espace de paiement"
-                  className="w-24 h-24 sm:w-[106px] sm:h-[106px] p-1.5 bg-white rounded-xl border-2 border-black hover:border-[#E5B824] shadow-sm transition-all cursor-pointer flex items-center justify-center group"
+                  className="w-24 h-24 sm:w-[106px] sm:h-[106px] p-1.5 bg-white rounded-lg border-2 border-[#141413] hover:border-[#F2B705] shadow-sm transition-all cursor-pointer flex items-center justify-center group"
                 >
                   {qrDataUrl ? (
                     <img
@@ -307,10 +309,10 @@ export const MembershipCardModal: React.FC = () => {
                       className="w-full h-full object-contain"
                     />
                   ) : (
-                    <QrCode className="w-10 h-10 text-black animate-pulse" />
+                    <QrCode className="w-10 h-10 text-[#141413] animate-pulse" />
                   )}
                 </button>
-                <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-gray-600 mt-1">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[#4A4A48] mt-1">
                   Scan Paiement
                 </span>
               </div>
@@ -327,11 +329,11 @@ export const MembershipCardModal: React.FC = () => {
               >
                 <path
                   d="M 0,4 C 130,30 265,40 420,45 L 0,46 Z"
-                  fill="#E5B824"
+                  fill="#F2B705"
                 />
                 <path
                   d="M 0,14 C 115,36 235,43 375,46 L 0,46 Z"
-                  fill="#0A0A0A"
+                  fill="#141413"
                 />
               </svg>
 
@@ -339,31 +341,31 @@ export const MembershipCardModal: React.FC = () => {
                 {settings.fiscalYear}–{settings.fiscalYear + 1}
               </div>
 
-              <div className="relative z-10 text-[11px] sm:text-xs font-editorial italic font-bold text-black text-center bg-white/80 sm:bg-transparent px-2 rounded">
+              <div className="relative z-10 text-[11px] sm:text-xs font-editorial italic font-bold text-[#141413] text-center bg-white/85 sm:bg-transparent px-2 rounded">
                 « {cleanMotto} »
               </div>
 
               <div className="relative z-10 flex items-center gap-1.5 shrink-0">
-                <span className="w-6 sm:w-8 h-[1.5px] bg-black" />
-                <span className="text-black text-[11px] tracking-widest leading-none">★★★</span>
-                <span className="w-6 sm:w-8 h-[1.5px] bg-black" />
+                <span className="w-6 sm:w-8 h-[1.5px] bg-[#141413]" />
+                <span className="text-[#141413] text-[11px] tracking-widest leading-none">★★★</span>
+                <span className="w-6 sm:w-8 h-[1.5px] bg-[#141413]" />
               </div>
             </div>
           </div>
 
           {/* Non-Printable Interactive Financial & QR Sync Strip */}
-          <div className="no-print mt-5 w-full max-w-[660px] bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="no-print mt-5 w-full max-w-[660px] bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl shadow-editorial p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="space-y-0.5">
-              <div className="font-bold text-black dark:text-white">
+              <div className="font-bold text-[#141413] dark:text-white">
                 QR Code connecté à l’Espace Paiement & à la Trésorerie
               </div>
-              <p className="text-[11px] text-gray-600 dark:text-zinc-400">
+              <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
                 Situation actuelle :{' '}
-                <strong className="font-mono text-black dark:text-white">
+                <strong className="font-mono text-[#141413] dark:text-white">
                   {financialSummary.paidMonths.length}/12 mois acquittés
                 </strong>{' '}
                 · Total encaissé :{' '}
-                <strong className="font-mono text-[#B8860B] dark:text-[#E5B824]">
+                <strong className="font-mono text-[#16324F] dark:text-[#F2B705]">
                   {financialSummary.totalPaid.toLocaleString('fr-FR')} {settings.currency}
                 </strong>
                 . Flashez ce QR code pour mettre à jour les cotisations et toutes les tables du site.
@@ -372,7 +374,7 @@ export const MembershipCardModal: React.FC = () => {
             <button
               type="button"
               onClick={handleFlashQr}
-              className="px-4 py-2 bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold text-xs rounded-xl inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
+              className="px-4 py-2 bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold text-xs rounded-lg inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition-colors"
             >
               <QrCode className="w-4 h-4" />
               <span>Simuler le flash QR</span>

@@ -4,6 +4,7 @@ import { PROFILE_ACCESS_MATRIX } from '../utils/accessMatrix';
 import {
   Shield,
   User,
+  UserCheck,
   LogIn,
   LogOut,
   ChevronDown,
@@ -15,6 +16,7 @@ export const RoleSwitcherBar: React.FC = () => {
   const {
     currentRole,
     activeCredential,
+    isCurrentMemberUpToDate,
     openAuthModal,
     logoutSession,
     setActiveTab,
@@ -30,10 +32,10 @@ export const RoleSwitcherBar: React.FC = () => {
     <div className="fixed bottom-4 right-4 z-50 no-print">
       <div className="relative">
         {isOpen && (
-          <div className="absolute bottom-full right-0 mb-2 w-80 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-2xl p-3.5 text-gray-800 dark:text-zinc-200 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-zinc-800 text-xs font-bold text-gray-900 dark:text-white">
-              <span className="flex items-center gap-1.5 text-[#B8860B] dark:text-[#E5B824]">
-                <Shield className="w-3.5 h-3.5" />
+          <div className="absolute bottom-full right-0 mb-2 w-80 bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl shadow-2xl p-3.5 text-[#141413] dark:text-zinc-200 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#141413]/10 dark:border-white/10 text-xs font-bold text-[#141413] dark:text-white">
+              <span className="flex items-center gap-1.5 text-[#141413] dark:text-[#F2B705]">
+                <Shield className="w-3.5 h-3.5 text-[#F2B705]" />
                 <span>Contrôle d’Accès ALGB</span>
               </span>
               <button
@@ -43,7 +45,7 @@ export const RoleSwitcherBar: React.FC = () => {
                   resetAllData();
                 }}
                 title="Réinitialiser les données et les accès par défaut"
-                className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                className="flex items-center gap-1 text-[11px] text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>Reset</span>
@@ -52,15 +54,27 @@ export const RoleSwitcherBar: React.FC = () => {
 
             {isAuthenticated ? (
               <div className="space-y-2.5 text-xs">
-                <div className="p-2.5 rounded-lg bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 space-y-1">
-                  <div className="font-bold text-black dark:text-white">
+                <div className="p-2.5 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-1">
+                  <div className="font-bold text-[#141413] dark:text-white">
                     {activeCredential.displayName}
                   </div>
-                  <div className="text-[11px] text-[#B8860B] dark:text-[#E5B824] font-semibold">
+                  <div className="text-[11px] text-[#141413] dark:text-[#F2B705] font-semibold">
                     Profil : {roleRule.label}
                   </div>
-                  <div className="text-[10px] font-mono text-gray-500 dark:text-zinc-400">
+                  <div className="text-[10px] font-mono text-[#4A4A48] dark:text-zinc-400">
                     ID : {activeCredential.identifier}
+                  </div>
+                  <div
+                    className={`text-[10px] font-semibold pt-0.5 ${
+                      isCurrentMemberUpToDate
+                        ? 'text-[#134E4A] dark:text-emerald-400'
+                        : 'text-[#C2410C] dark:text-amber-300'
+                    }`}
+                  >
+                    Mentorat, Parrains & Carrières :{' '}
+                    {isCurrentMemberUpToDate
+                      ? 'Débloqués (cotisation à jour)'
+                      : 'Verrouillés (cotisation requise)'}
                   </div>
                 </div>
 
@@ -72,9 +86,9 @@ export const RoleSwitcherBar: React.FC = () => {
                         setIsOpen(false);
                         setActiveTab('espace-membre');
                       }}
-                      className="w-full py-2 px-3 rounded-lg bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-black dark:text-white font-semibold text-left flex items-center gap-2 cursor-pointer"
+                      className="w-full py-2 px-3 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#FEF8E6] dark:hover:bg-white/10 text-[#141413] dark:text-white font-semibold text-left flex items-center gap-2 cursor-pointer"
                     >
-                      <User className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                      <User className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
                       <span>Ouvrir mon Espace Membre</span>
                     </button>
                   )}
@@ -86,9 +100,9 @@ export const RoleSwitcherBar: React.FC = () => {
                         setIsOpen(false);
                         setActiveTab('admin');
                       }}
-                      className="w-full py-2 px-3 rounded-lg bg-yellow-50 dark:bg-yellow-500/15 border border-yellow-200 dark:border-[#E5B824]/40 hover:bg-yellow-100 dark:hover:bg-yellow-500/25 text-yellow-900 dark:text-[#E5B824] font-semibold text-left flex items-center gap-2 cursor-pointer"
+                      className="w-full py-2 px-3 rounded-lg bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 hover:bg-[#F2B705]/25 text-[#141413] dark:text-[#FEF8E6] font-semibold text-left flex items-center gap-2 cursor-pointer"
                     >
-                      <Shield className="w-3.5 h-3.5" />
+                      <Shield className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
                       <span>Console Administration & Credentials</span>
                     </button>
                   )}
@@ -99,9 +113,9 @@ export const RoleSwitcherBar: React.FC = () => {
                       setIsOpen(false);
                       openAuthModal();
                     }}
-                    className="w-full py-2 px-3 rounded-lg border border-gray-300 dark:border-zinc-700 hover:border-[#E5B824] text-gray-800 dark:text-zinc-200 font-semibold text-left flex items-center gap-2 cursor-pointer"
+                    className="w-full py-2 px-3 rounded-lg border border-[#141413]/15 dark:border-white/15 hover:border-[#F2B705] text-[#141413] dark:text-zinc-200 font-semibold text-left flex items-center gap-2 cursor-pointer"
                   >
-                    <KeyRound className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
+                    <KeyRound className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
                     <span>Changer de compte (Credential)</span>
                   </button>
 
@@ -120,8 +134,8 @@ export const RoleSwitcherBar: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-3 text-xs">
-                <p className="text-[11px] text-gray-600 dark:text-zinc-400 leading-relaxed">
-                  Vous naviguez en <strong className="text-black dark:text-white">Visiteur public</strong> : les menus visiteurs sont ouverts librement sans credential. Pour l’Espace Membre ou l’Administration, connectez-vous avec les accès délivrés par l’Administration.
+                <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 leading-relaxed">
+                  Vous naviguez en <strong className="text-[#141413] dark:text-white">Visiteur public</strong> : toutes les informations présentant l’Amicale et ses activités sont ouvertes librement sans credential. Pour l’Espace Membre, Carrières au cœur du réseau ou le Collège des Parrains, connectez-vous avec votre credential.
                 </p>
                 <button
                   type="button"
@@ -129,7 +143,7 @@ export const RoleSwitcherBar: React.FC = () => {
                     setIsOpen(false);
                     openAuthModal();
                   }}
-                  className="w-full py-2.5 px-3 rounded-xl bg-[#E5B824] hover:bg-[#dcae1f] text-black font-bold flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-2.5 px-3 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Se connecter par Credential</span>
@@ -142,13 +156,13 @@ export const RoleSwitcherBar: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-zinc-900 border border-gray-800 dark:border-zinc-700 hover:border-[#E5B824] text-white rounded-full shadow-lg transition-all cursor-pointer text-xs"
+          className="flex items-center gap-2 px-4 py-2 bg-[#141413] border border-white/15 hover:border-[#F2B705] text-white rounded-lg shadow-lg transition-all cursor-pointer text-xs"
         >
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isAuthenticated ? 'bg-emerald-400' : 'bg-[#E5B824]'
-            }`}
-          ></span>
+          {isAuthenticated ? (
+            <UserCheck className="w-3.5 h-3.5 text-[#F2B705] shrink-0" />
+          ) : (
+            <Shield className="w-3.5 h-3.5 text-[#F2B705] shrink-0" />
+          )}
           <span className="font-semibold">
             {isAuthenticated
               ? `${roleRule.label}`

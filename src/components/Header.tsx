@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp, NavigationTab } from '../context/AppContext';
 import { PROFILE_ACCESS_MATRIX } from '../utils/accessMatrix';
 import {
@@ -6,7 +6,7 @@ import {
   X,
   UserCheck,
   Shield,
-  CreditCard,
+  HeartHandshake,
   ChevronDown,
   Sun,
   Moon,
@@ -27,8 +27,20 @@ export const Header: React.FC = () => {
     theme,
     toggleTheme,
   } = useApp();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setMoreDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleNav = (tab: NavigationTab) => {
     setActiveTab(tab);
@@ -36,19 +48,22 @@ export const Header: React.FC = () => {
     setMoreDropdownOpen(false);
   };
 
+  // Navigation globale persistante : Accueil, Annuaire, Carrières, Mentorat, Événements, Mécénat
   const allPrimaryNavItems: { tab: NavigationTab; label: string }[] = [
     { tab: 'accueil', label: 'Accueil' },
-    { tab: 'amicale', label: 'L’Amicale' },
-    { tab: 'histoire', label: 'Histoire' },
-    { tab: 'anciens', label: 'Promotions' },
-    { tab: 'reseau', label: 'Réseau Pro' },
-    { tab: 'projets', label: 'Projets' },
+    { tab: 'anciens', label: 'Annuaire' },
+    { tab: 'reseau', label: 'Carrières' },
+    { tab: 'mentorat', label: 'Mentorat' },
+    { tab: 'actualites', label: 'Événements' },
+    { tab: 'projets', label: 'Mécénat' },
   ];
   const primaryNavItems = allPrimaryNavItems.filter((item) => canAccessTab(item.tab));
 
   const allSecondaryNavItems: { tab: NavigationTab; label: string }[] = [
-    { tab: 'actualites', label: 'Actualités & Agenda' },
-    { tab: 'mediatheque', label: 'Médiathèque (Photos & Vidéos ALGB TV)' },
+    { tab: 'amicale', label: 'L’Amicale & Gouvernance' },
+    { tab: 'histoire', label: 'Histoire & Patrimoine' },
+    { tab: 'mediatheque', label: 'Médiathèque & ALGB TV' },
+    { tab: 'adhesion', label: 'Adhésion & Enrôlement' },
     { tab: 'contact', label: 'Contact & Partenariats' },
   ];
   const secondaryNavItems = allSecondaryNavItems.filter((item) => canAccessTab(item.tab));
@@ -56,128 +71,81 @@ export const Header: React.FC = () => {
   const isAuthenticated = currentRole !== 'VISITEUR' && activeCredential !== null;
   const canSeeAdmin = isAuthenticated && canAccessTab('admin');
   const canSeeMemberSpace = isAuthenticated && canAccessTab('espace-membre');
-  const canSeeAdhesion = canAccessTab('adhesion');
 
   const sessionDisplayName = currentUser
     ? `${currentUser.firstName} ${currentUser.lastName}`
     : activeCredential?.displayName || '';
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 transition-colors shadow-xs">
-      {/* Top Banner Notice: Signature & Status */}
-      <div className="bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 px-4 py-1.5 text-xs text-gray-600 dark:text-zinc-300 transition-colors">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
-            <span className="text-[#B8860B] dark:text-[#E5B824] font-bold tracking-wide uppercase text-[10px] md:text-xs">
-              Plateforme Officielle ALGB
-            </span>
-            <span className="hidden sm:inline text-gray-300 dark:text-zinc-700">|</span>
-            <span className="hidden sm:inline italic text-gray-700 dark:text-zinc-300 font-medium">
-              « Une histoire, des générations, un même engagement. »
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2.5 shrink-0 text-[11px]">
-            {isAuthenticated ? (
-              <>
-                <span className="flex items-center gap-1.5 text-gray-700 dark:text-zinc-300">
-                  <span className="w-2 h-2 rounded-full bg-[#E5B824]"></span>
-                  <span className="font-semibold text-gray-900 dark:text-white hidden sm:inline">
-                    {sessionDisplayName}
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded bg-gray-200/80 dark:bg-zinc-800 text-[10px] font-semibold text-gray-800 dark:text-[#E5B824]">
-                    {PROFILE_ACCESS_MATRIX[currentRole].label}
-                  </span>
-                </span>
-
-                {canSeeAdmin && (
-                  <button
-                    onClick={() => handleNav('admin')}
-                    className="flex items-center gap-1 px-2.5 py-0.5 bg-yellow-50 dark:bg-yellow-500/15 text-yellow-900 dark:text-[#E5B824] border border-yellow-300 dark:border-[#E5B824]/40 rounded text-[11px] font-semibold hover:bg-yellow-100 dark:hover:bg-yellow-500/25 transition-colors cursor-pointer"
-                  >
-                    <Shield className="w-3 h-3 text-[#B8860B] dark:text-[#E5B824]" />
-                    <span>Administration</span>
-                  </button>
-                )}
-
-                <button
-                  onClick={logoutSession}
-                  title="Se déconnecter et repasser en mode Visiteur public"
-                  className="flex items-center gap-1 px-2 py-0.5 rounded border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white transition-colors cursor-pointer"
-                >
-                  <LogOut className="w-3 h-3" />
-                  <span className="hidden sm:inline">Déconnexion</span>
-                </button>
-              </>
-            ) : (
-              <span className="text-gray-500 dark:text-zinc-400">
-                Bingerville, Côte d’Ivoire · Accès visiteur libre
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
-        {/* Zone 1: Brand mark featuring the original logo */}
+    <header className="sticky top-0 z-40 bg-[#141413] text-white border-b border-white/10 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-4">
+        {/* Zone 1: Brand mark */}
         <button
+          type="button"
           onClick={() => handleNav('accueil')}
           className="flex items-center gap-3 text-left shrink-0 group cursor-pointer"
         >
           <img
             src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
             alt="Logo officiel ALGB"
-            className="w-13 h-13 object-contain rounded-xl bg-white p-0.5 border border-gray-200 dark:border-zinc-700 shadow-sm group-hover:border-[#E5B824] transition-all"
+            className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-[#F2B705]/60 shrink-0"
           />
           <div className="flex flex-col">
-            <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white font-heading leading-tight group-hover:text-[#B8860B] dark:group-hover:text-[#E5B824] transition-colors">
-              ALGB
+            <span className="text-base sm:text-lg font-bold tracking-tight text-white font-heading leading-tight group-hover:text-[#F2B705] transition-colors">
+              ALGB Alumni
             </span>
-            <span className="text-[11px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-medium whitespace-nowrap hidden lg:inline">
+            <span className="text-[10px] uppercase tracking-[0.14em] text-zinc-400 font-medium whitespace-nowrap hidden xl:inline">
               Lycée de Garçons de Bingerville
             </span>
           </div>
         </button>
 
-        {/* Zone 2: Navigation links (automatically aligned with visitorAllowedMenus / credential permissions) */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700 dark:text-zinc-300">
+        {/* Zone 2: Primary Navigation Links */}
+        <nav
+          aria-label="Navigation principale"
+          className="hidden lg:flex items-center gap-6 text-[13px] font-medium text-white"
+        >
           {primaryNavItems.map((item) => {
             const isActive = activeTab === item.tab;
             return (
               <button
                 key={item.tab}
+                type="button"
                 onClick={() => handleNav(item.tab)}
-                className={`transition-colors whitespace-nowrap cursor-pointer py-1 relative ${
-                  isActive
-                    ? 'text-black dark:text-white font-bold'
-                    : 'text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                className={`relative py-2 whitespace-nowrap cursor-pointer transition-colors ${
+                  isActive ? 'text-[#F2B705] font-semibold' : 'text-white hover:text-[#F2B705]'
                 }`}
               >
                 {item.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#E5B824] rounded-full"></span>
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F2B705] rounded-full" />
                 )}
               </button>
             );
           })}
 
           {secondaryNavItems.length > 0 && (
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
+                type="button"
                 onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-                className="flex items-center gap-1 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white py-1 transition-colors whitespace-nowrap cursor-pointer font-medium"
+                className="flex items-center gap-1 py-2 text-zinc-300 hover:text-white transition-colors whitespace-nowrap cursor-pointer font-medium"
               >
-                <span>Plus</span>
+                <span>Institution</span>
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               {moreDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-xl py-2 z-50">
+                <div className="absolute top-full left-0 mt-2 w-60 bg-[#141413] border border-white/15 rounded-xl shadow-2xl py-2 z-50">
                   {secondaryNavItems.map((item) => (
                     <button
                       key={item.tab}
+                      type="button"
                       onClick={() => handleNav(item.tab)}
-                      className="w-full text-left px-4 py-2.5 text-xs text-gray-700 dark:text-zinc-200 hover:bg-yellow-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-[#E5B824] font-medium transition-colors cursor-pointer"
+                      className={`w-full text-left px-4 py-2.5 text-xs font-medium transition-colors cursor-pointer ${
+                        activeTab === item.tab
+                          ? 'text-[#F2B705] bg-white/5 font-semibold'
+                          : 'text-zinc-200 hover:bg-white/10 hover:text-white'
+                      }`}
                     >
                       {item.label}
                     </button>
@@ -188,143 +156,186 @@ export const Header: React.FC = () => {
           )}
         </nav>
 
-        {/* Zone 3: Theme Toggle & Auth / Member Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Zone 3: Actions ("Connexion" outline blanc + "Faire un don" Jaune Solaire + Theme toggle) */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre'}
             title={theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre'}
-            className="p-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 text-gray-700 dark:text-[#E5B824] hover:border-[#E5B824] hover:text-black dark:hover:bg-zinc-800 transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+            className="p-2 rounded-lg border border-white/20 text-zinc-200 hover:text-[#F2B705] hover:border-[#F2B705]/60 transition-colors cursor-pointer"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            <span className="hidden xl:inline text-[11px] font-semibold">
-              {theme === 'dark' ? 'Clair' : 'Sombre'}
-            </span>
           </button>
 
           {isAuthenticated ? (
-            canSeeMemberSpace && (
-              <button
-                onClick={() => handleNav('espace-membre')}
-                className={`px-4 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
-                  activeTab === 'espace-membre'
-                    ? 'bg-[#E5B824] text-black border-[#E5B824] shadow-sm'
-                    : 'bg-gray-100 dark:bg-zinc-900 text-gray-800 dark:text-zinc-100 border-gray-300 dark:border-zinc-700 hover:border-[#E5B824] hover:bg-gray-200 dark:hover:bg-zinc-800'
-                }`}
-              >
-                <UserCheck
-                  className={`w-3.5 h-3.5 ${
-                    activeTab === 'espace-membre' ? 'text-black' : 'text-black dark:text-[#E5B824]'
-                  }`}
-                />
-                <span>Espace Membre</span>
-              </button>
-            )
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => openAuthModal()}
-                className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900 text-gray-800 dark:text-zinc-100 hover:border-[#E5B824] hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5"
-              >
-                <LogIn className="w-3.5 h-3.5 text-[#B8860B] dark:text-[#E5B824]" />
-                <span>Connexion</span>
-              </button>
-
-              {canSeeAdhesion && (
+            <div className="hidden sm:flex items-center gap-2">
+              {canSeeMemberSpace && (
                 <button
-                  onClick={() => handleNav('adhesion')}
-                  className="hidden sm:flex px-4 py-2 text-xs font-bold text-black bg-[#E5B824] hover:bg-[#dcae1f] rounded-lg transition-all shadow-sm cursor-pointer whitespace-nowrap items-center gap-1.5"
+                  type="button"
+                  onClick={() => handleNav('espace-membre')}
+                  className={`px-3.5 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'espace-membre'
+                      ? 'bg-white text-[#141413] border-white'
+                      : 'border-white/60 text-white hover:bg-white hover:text-[#141413]'
+                  }`}
                 >
-                  <CreditCard className="w-3.5 h-3.5" />
-                  <span>Rejoindre l’ALGB</span>
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span className="max-w-[120px] truncate">{sessionDisplayName || 'Espace Membre'}</span>
                 </button>
               )}
-            </>
+
+              {canSeeAdmin && (
+                <button
+                  type="button"
+                  onClick={() => handleNav('admin')}
+                  title={`Console Admin (${PROFILE_ACCESS_MATRIX[currentRole].label})`}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                    activeTab === 'admin'
+                      ? 'bg-[#FEF8E6] text-[#141413] border-[#F2B705]'
+                      : 'border-white/30 text-zinc-200 hover:border-[#F2B705] hover:text-[#F2B705]'
+                  }`}
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span className="hidden xl:inline">Admin</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={logoutSession}
+                title="Se déconnecter"
+                aria-label="Se déconnecter"
+                className="p-2 rounded-lg border border-white/25 text-zinc-300 hover:text-white hover:border-white transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openAuthModal()}
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg border border-white text-white hover:bg-white hover:text-[#141413] transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Connexion</span>
+            </button>
           )}
 
-          {/* Mobile hamburger toggle */}
+          {canAccessTab('projets') && (
+            <button
+              type="button"
+              onClick={() => handleNav('projets')}
+              className="px-4 py-2 text-xs font-semibold text-[#141413] bg-[#F2B705] hover:bg-[#dfa704] rounded-lg transition-colors cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 shadow-xs"
+            >
+              <HeartHandshake className="w-3.5 h-3.5 text-[#141413]" />
+              <span>Faire un don</span>
+            </button>
+          )}
+
+          {/* Mobile Burger Toggle */}
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-600 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
-            aria-label="Menu"
+            className="lg:hidden p-2 text-white hover:text-[#F2B705] rounded-lg border border-white/20 transition-colors cursor-pointer"
+            aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Responsive Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 pt-3 pb-6 space-y-2">
-          <div className="grid grid-cols-2 gap-2 pb-3 border-b border-gray-200 dark:border-zinc-800">
-            {canSeeAdhesion && (
-              <button
-                onClick={() => handleNav('adhesion')}
-                className="w-full text-center py-2 px-3 text-xs font-bold rounded-lg bg-[#E5B824] text-black cursor-pointer"
-              >
-                Adhérer à l’Amicale
-              </button>
-            )}
-
+        <div className="lg:hidden border-t border-white/10 bg-[#141413] px-4 pt-4 pb-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {isAuthenticated ? (
-              canSeeMemberSpace && (
-                <button
-                  onClick={() => handleNav('espace-membre')}
-                  className="w-full text-center py-2 px-3 text-xs font-medium rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-100 bg-gray-50 dark:bg-zinc-900 cursor-pointer"
-                >
-                  Espace Membre
-                </button>
-              )
+              <>
+                {canSeeMemberSpace && (
+                  <button
+                    type="button"
+                    onClick={() => handleNav('espace-membre')}
+                    className="w-full text-center py-2.5 px-3 text-xs font-semibold rounded-lg border border-white text-white hover:bg-white hover:text-[#141413] cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    <span>Espace Membre</span>
+                  </button>
+                )}
+                {canSeeAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => handleNav('admin')}
+                    className="w-full text-center py-2.5 px-3 text-xs font-semibold rounded-lg border border-[#F2B705]/60 text-[#F2B705] cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span>Administration</span>
+                  </button>
+                )}
+              </>
             ) : (
               <button
+                type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   openAuthModal();
                 }}
-                className="w-full text-center py-2 px-3 text-xs font-semibold rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-100 bg-gray-50 dark:bg-zinc-900 cursor-pointer"
+                className="w-full text-center py-2.5 px-3 text-xs font-semibold rounded-lg border border-white text-white hover:bg-white hover:text-[#141413] cursor-pointer flex items-center justify-center gap-2"
               >
-                Connexion Credential
+                <LogIn className="w-4 h-4" />
+                <span>Connexion Membre</span>
               </button>
             )}
           </div>
 
           <div className="space-y-1">
-            {[...primaryNavItems, ...secondaryNavItems].map((item) => (
+            {primaryNavItems.map((item) => (
               <button
                 key={item.tab}
+                type="button"
                 onClick={() => handleNav(item.tab)}
-                className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer ${
+                className={`w-full text-left px-3 py-2.5 text-sm rounded-lg transition-colors cursor-pointer ${
                   activeTab === item.tab
-                    ? 'bg-yellow-50 dark:bg-yellow-500/15 text-black dark:text-[#E5B824] font-bold'
-                    : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-900'
+                    ? 'bg-[#F2B705] text-[#141413] font-semibold'
+                    : 'text-white hover:bg-white/10'
                 }`}
               >
                 {item.label}
               </button>
             ))}
 
-            {canSeeAdmin && (
-              <button
-                onClick={() => handleNav('admin')}
-                className="w-full text-left px-3 py-2 text-sm rounded-lg text-yellow-900 dark:text-[#E5B824] bg-yellow-50 dark:bg-yellow-500/15 font-bold flex items-center gap-2 mt-2 cursor-pointer"
-              >
-                <Shield className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
-                <span>Console d’Administration</span>
-              </button>
+            {secondaryNavItems.length > 0 && (
+              <div className="pt-2 mt-2 border-t border-white/10 space-y-1">
+                <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
+                  Institution & Archives
+                </div>
+                {secondaryNavItems.map((item) => (
+                  <button
+                    key={item.tab}
+                    type="button"
+                    onClick={() => handleNav(item.tab)}
+                    className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer ${
+                      activeTab === item.tab
+                        ? 'text-[#F2B705] bg-white/10 font-semibold'
+                        : 'text-zinc-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             )}
 
             {isAuthenticated && (
               <button
+                type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   logoutSession();
                 }}
-                className="w-full text-left px-3 py-2 text-sm rounded-lg text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 font-semibold flex items-center gap-2 mt-1 cursor-pointer"
+                className="w-full text-left px-3 py-2.5 text-xs rounded-lg text-red-300 hover:bg-red-950/50 font-semibold flex items-center gap-2 mt-2 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Se déconnecter</span>
+                <span>Se déconnecter ({PROFILE_ACCESS_MATRIX[currentRole].label})</span>
               </button>
             )}
           </div>

@@ -3,25 +3,35 @@
 
 @layer base {
   :root {
-    --font-cinzel: 'Cinzel', serif;
-    --font-serif: 'Playfair Display', serif;
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-serif: 'Playfair Display', Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --color-pure-white: #FFFFFF;
+    --color-alabaster: #F8F8F6;
+    --color-carbon: #141413;
+    --color-anthracite: #4A4A48;
+    --color-solar: #F2B705;
+    --color-solar-pale: #FEF8E6;
+    --color-terracotta: #C2410C;
+    --color-terracotta-soft: #FFF7ED;
+    --color-ultramarine: #16324F;
+    --color-emerald-dark: #134E4A;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #ffffff;
-    color: #111827;
+    background-color: #F8F8F6;
+    color: #141413;
     transition: background-color 150ms ease, color 150ms ease;
   }
 
   html.dark body {
-    background-color: #09090b;
-    color: #f4f4f5;
+    background-color: #141413;
+    color: #F8F8F6;
   }
 
   h1, h2, h3, .font-heading {
-    font-family: var(--font-cinzel);
+    font-family: var(--font-serif);
+    text-wrap: balance;
   }
 
   .font-editorial {
@@ -29,25 +39,28 @@
   }
 }
 
-/* Custom styling for official seals, cards, and ALGB crest */
+.shadow-editorial {
+  box-shadow: 0 4px 20px rgba(20, 20, 19, 0.06);
+}
+
 .gold-gradient-text {
-  background: linear-gradient(135deg, #FFF3A8 0%, #E5B824 50%, #C69214 100%);
+  background: linear-gradient(135deg, #FEF8E6 0%, #F2B705 55%, #C69214 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gold-border-glow {
-  box-shadow: 0 0 20px rgba(229, 184, 36, 0.22);
+  box-shadow: 0 0 20px rgba(242, 183, 5, 0.22);
 }
 
 .gold-gradient-bg {
-  background: linear-gradient(135deg, #F3C63F 0%, #E5B824 50%, #B8860B 100%);
+  background: linear-gradient(135deg, #F5C73B 0%, #F2B705 55%, #D9A204 100%);
 }
 
 .algb-crest-badge {
   background-color: #ffffff;
-  border: 1.5px solid rgba(229, 184, 36, 0.45);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 0 12px rgba(229, 184, 36, 0.18);
+  border: 1.5px solid rgba(242, 183, 5, 0.5);
+  box-shadow: 0 4px 14px rgba(20, 20, 19, 0.12);
 }
 
 @media print {

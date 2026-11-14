@@ -28,6 +28,7 @@ import {
   EyeOff,
   MessageSquareText,
   KeyRound,
+  CreditCard,
 } from 'lucide-react';
 import { AdminAccessManager } from '../components/AdminAccessManager';
 
@@ -72,6 +73,9 @@ export const AdminView: React.FC = () => {
     setAiChatOpen,
     openAuthModal,
     accessCredentials,
+    getMemberFinancialSummary,
+    isMemberUpToDate,
+    openPaymentModal,
     addToast,
   } = useApp();
 
@@ -186,19 +190,19 @@ export const AdminView: React.FC = () => {
 
   if (!isAuthorized) {
     return (
-      <div className="bg-white dark:bg-zinc-950 min-h-screen transition-colors">
-        <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-5">
-          <Lock className="w-12 h-12 text-[#B8860B] dark:text-[#E5B824] mx-auto" />
-          <h2 className="text-xl font-bold font-heading text-black dark:text-white">
+      <div className="bg-[#F8F8F6] dark:bg-[#141413] min-h-screen transition-colors py-16 px-4">
+        <div className="max-w-xl mx-auto bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl shadow-editorial px-6 py-14 text-center space-y-5">
+          <Lock className="w-12 h-12 text-[#F2B705] mx-auto" />
+          <h2 className="text-xl font-bold font-heading text-[#141413] dark:text-white">
             Accès Réservé à l'Administration de l'ALGB
           </h2>
-          <p className="text-xs text-gray-600 dark:text-zinc-400 leading-relaxed">
+          <p className="text-xs text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
             Cette console est accessible uniquement via un credential habilité : Responsable Finance, Administrateurs, Super Administrateur ou Responsable Communication.
           </p>
           <button
             type="button"
             onClick={() => openAuthModal('admin')}
-            className="px-6 py-2.5 bg-[#E5B824] text-black font-bold text-xs rounded-xl hover:bg-[#dcae1f] inline-flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 bg-[#F2B705] text-[#141413] font-semibold text-xs rounded-lg hover:bg-[#dfa704] inline-flex items-center gap-2 cursor-pointer transition-colors"
           >
             <KeyRound className="w-4 h-4" />
             <span>Se connecter avec un Credential habilité</span>
@@ -375,22 +379,22 @@ export const AdminView: React.FC = () => {
   };
 
   const inputClass =
-    'w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950 rounded-lg p-2.5 text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none transition-colors';
+    'w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#141413] rounded-lg p-2.5 text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none transition-colors';
 
   return (
-    <div className="bg-white dark:bg-zinc-950 min-h-screen transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-        {/* Editorial Header */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 pb-8 flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
+    <div className="bg-[#F8F8F6] dark:bg-[#141413] min-h-screen transition-colors">
+      {/* Editorial Carbon Header Band */}
+      <section className="bg-[#141413] text-white border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div>
-            <span className="text-xs uppercase tracking-widest font-bold text-[#B8860B] dark:text-[#E5B824] flex items-center gap-1.5">
+            <span className="text-xs uppercase tracking-widest font-bold text-[#F2B705] flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
               <span>Console Back-Office Officielle</span>
             </span>
-            <h1 className="text-2xl sm:text-4xl font-bold font-heading text-black dark:text-white mt-1">
+            <h1 className="text-2xl sm:text-4xl font-bold font-heading text-white mt-1.5">
               {isFinance ? 'Gestion Financière & Trésorerie ALGB' : 'Administration & Gouvernance ALGB'}
             </h1>
-            <p className="text-sm text-gray-600 dark:text-zinc-400 font-editorial italic max-w-2xl mt-1">
+            <p className="text-sm text-zinc-300 font-editorial italic max-w-2xl mt-1.5">
               {isFinance
                 ? '« Délégation exclusive de gestion des flux de trésorerie, cotisations, quittances et paramétrage financier. »'
                 : '« Contrôle opérationnel intégral : cotisations, adhésions, promotions, projets, communication et gouvernance. »'}
@@ -398,31 +402,33 @@ export const AdminView: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className="px-3.5 py-1.5 bg-yellow-50 dark:bg-yellow-500/15 text-[#B8860B] dark:text-[#E5B824] border border-yellow-200 dark:border-yellow-500/30 rounded-lg text-xs font-semibold">
+            <span className="px-3.5 py-1.5 bg-[#FEF8E6] text-[#141413] border border-[#F2B705]/40 rounded-lg text-xs font-semibold">
               Profil actif : {currentRole.replace('_', ' ')}
             </span>
             {isFinance && (
-              <span className="text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1.5 rounded-md font-semibold">
+              <span className="text-[11px] text-white bg-[#134E4A] border border-white/15 px-3 py-1.5 rounded-lg font-semibold">
                 Délégation Trésorerie
               </span>
             )}
             {isAdminOrSuper && (
-              <span className="text-[11px] text-black dark:text-zinc-200 bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 px-2.5 py-1.5 rounded-md font-semibold">
+              <span className="text-[11px] text-white bg-white/10 border border-white/15 px-3 py-1.5 rounded-lg font-semibold">
                 Plein Exercice
               </span>
             )}
           </div>
         </div>
+      </section>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Navigation Sub-Tabs */}
-        <div className="flex items-center gap-2 border-b border-gray-200 dark:border-zinc-800 pb-3 overflow-x-auto text-xs scrollbar-none">
+        <div className="flex items-center gap-2 border-b border-[#141413]/10 dark:border-white/10 pb-3 overflow-x-auto text-xs scrollbar-none">
           {(isFinance || isAdminOrSuper) && (
             <button
               onClick={() => setAdminTab('TRESORERIE')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'TRESORERIE'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <Banknote className="w-3.5 h-3.5" />
@@ -433,10 +439,10 @@ export const AdminView: React.FC = () => {
           {(isFinance || isAdminOrSuper) && (
             <button
               onClick={() => setAdminTab('PARAMETRES_FINANCIERS')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'PARAMETRES_FINANCIERS'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
@@ -447,10 +453,10 @@ export const AdminView: React.FC = () => {
           {isAdminOrSuper && (
             <button
               onClick={() => setAdminTab('MEMBRES')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'MEMBRES'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <Users className="w-3.5 h-3.5" />
@@ -461,10 +467,10 @@ export const AdminView: React.FC = () => {
           {isAdminOrSuper && (
             <button
               onClick={() => setAdminTab('PROMOTIONS_PARAM')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'PROMOTIONS_PARAM'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <GraduationCap className="w-3.5 h-3.5" />
@@ -475,10 +481,10 @@ export const AdminView: React.FC = () => {
           {(isAdminOrSuper || isComm) && (
             <button
               onClick={() => setAdminTab('PROJETS')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'PROJETS'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <TrendingUp className="w-3.5 h-3.5" />
@@ -489,10 +495,10 @@ export const AdminView: React.FC = () => {
           {(isAdminOrSuper || isComm) && (
             <button
               onClick={() => setAdminTab('COMMUNICATION')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'COMMUNICATION'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <Megaphone className="w-3.5 h-3.5" />
@@ -503,10 +509,10 @@ export const AdminView: React.FC = () => {
           {isAdminOrSuper && (
             <button
               onClick={() => setAdminTab('PARAMETRES_GENERAUX')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'PARAMETRES_GENERAUX'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <Settings className="w-3.5 h-3.5" />
@@ -517,10 +523,10 @@ export const AdminView: React.FC = () => {
           {isAdminOrSuper && (
             <button
               onClick={() => setAdminTab('ACCES')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'ACCES'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <KeyRound className="w-3.5 h-3.5" />
@@ -531,10 +537,10 @@ export const AdminView: React.FC = () => {
           {(isFinance || isAdminOrSuper) && (
             <button
               onClick={() => setAdminTab('EXPORTS')}
-              className={`px-4 py-2 rounded-xl font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                 adminTab === 'EXPORTS'
-                  ? 'bg-[#E5B824] text-black shadow-xs'
-                  : 'bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white'
+                  ? 'bg-[#F2B705] text-[#141413]'
+                  : 'bg-white dark:bg-[#1e1e1c] text-[#4A4A48] dark:text-zinc-300 border border-[#141413]/10 dark:border-white/10 hover:text-[#141413] dark:hover:text-white'
               }`}
             >
               <Download className="w-3.5 h-3.5" />
@@ -545,57 +551,57 @@ export const AdminView: React.FC = () => {
 
         {/* TAB 1: TRESORERIE & ENCAISSEMENTS */}
         {adminTab === 'TRESORERIE' && (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 space-y-1">
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold block">
+              <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 space-y-1 shadow-editorial">
+                <span className="text-[10px] uppercase tracking-wider text-[#4A4A48] dark:text-zinc-400 font-semibold block">
                   Droits d’Adhésion Encaissés
                 </span>
-                <div className="text-xl sm:text-2xl font-bold font-mono tabular-nums text-black dark:text-white">
+                <div className="text-xl sm:text-2xl font-bold font-heading tabular-nums text-[#141413] dark:text-white">
                   {transactions
                     .filter((t) => t.type === 'DROIT_ADHESION' && t.status === 'PAYE')
                     .reduce((sum, t) => sum + t.amount, 0)
                     .toLocaleString('fr-FR')}{' '}
                   {settings.currency}
                 </div>
-                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium block">
+                <span className="text-[11px] text-[#134E4A] dark:text-emerald-400 font-semibold block">
                   {transactions.filter((t) => t.type === 'DROIT_ADHESION' && t.status === 'PAYE').length} adhésions statutaires
                 </span>
               </div>
 
-              <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 space-y-1">
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold block">
+              <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 space-y-1 shadow-editorial">
+                <span className="text-[10px] uppercase tracking-wider text-[#4A4A48] dark:text-zinc-400 font-semibold block">
                   Cotisations Mensuelles
                 </span>
-                <div className="text-xl sm:text-2xl font-bold font-mono tabular-nums text-[#B8860B] dark:text-[#E5B824]">
+                <div className="text-xl sm:text-2xl font-bold font-heading tabular-nums text-[#141413] dark:text-[#F2B705]">
                   {transactions
                     .filter((t) => t.type === 'COTISATION_MENSUELLE' && t.status === 'PAYE')
                     .reduce((sum, t) => sum + t.amount, 0)
                     .toLocaleString('fr-FR')}{' '}
                   {settings.currency}
                 </div>
-                <span className="text-[11px] text-gray-600 dark:text-zinc-400 block">Exercice {settings.fiscalYear}</span>
+                <span className="text-[11px] text-[#4A4A48] dark:text-zinc-400 block">Exercice {settings.fiscalYear}</span>
               </div>
 
-              <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 space-y-1">
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold block">
+              <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 space-y-1 shadow-editorial">
+                <span className="text-[10px] uppercase tracking-wider text-[#4A4A48] dark:text-zinc-400 font-semibold block">
                   Dons & Mécénat Projets
                 </span>
-                <div className="text-xl sm:text-2xl font-bold font-mono tabular-nums text-emerald-700 dark:text-emerald-400">
+                <div className="text-xl sm:text-2xl font-bold font-heading tabular-nums text-[#134E4A] dark:text-emerald-400">
                   {transactions
                     .filter((t) => t.type === 'DON_PROJET' && t.status === 'PAYE')
                     .reduce((sum, t) => sum + t.amount, 0)
                     .toLocaleString('fr-FR')}{' '}
                   {settings.currency}
                 </div>
-                <span className="text-[11px] text-gray-600 dark:text-zinc-400 block">Projets Lycée</span>
+                <span className="text-[11px] text-[#4A4A48] dark:text-zinc-400 block">Projets Lycée</span>
               </div>
 
-              <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 space-y-1">
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold block">
+              <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 space-y-1 shadow-editorial">
+                <span className="text-[10px] uppercase tracking-wider text-[#4A4A48] dark:text-zinc-400 font-semibold block">
                   En Attente de Pointage
                 </span>
-                <div className="text-xl sm:text-2xl font-bold font-mono tabular-nums text-amber-700 dark:text-amber-400">
+                <div className="text-xl sm:text-2xl font-bold font-heading tabular-nums text-amber-700 dark:text-amber-400">
                   {transactions
                     .filter((t) => t.status === 'EN_ATTENTE')
                     .reduce((sum, t) => sum + t.amount, 0)
@@ -608,20 +614,20 @@ export const AdminView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 sm:p-5 shadow-editorial">
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="text"
                   placeholder="Rechercher par membre ou référence..."
                   value={txSearch}
                   onChange={(e) => setTxSearch(e.target.value)}
-                  className="bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-lg px-3 py-1.5 text-xs text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none min-w-[220px]"
+                  className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg px-3 py-1.5 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none min-w-[220px]"
                 />
 
                 <select
                   value={txFilterStatus}
                   onChange={(e) => setTxFilterStatus(e.target.value)}
-                  className="bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-lg px-3 py-1.5 text-xs text-black dark:text-white focus:outline-none"
+                  className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg px-3 py-1.5 text-xs text-[#141413] dark:text-white focus:outline-none"
                 >
                   <option value="ALL">Tous les statuts</option>
                   <option value="EN_ATTENTE">En attente de validation</option>
@@ -632,7 +638,7 @@ export const AdminView: React.FC = () => {
                 <select
                   value={txFilterType}
                   onChange={(e) => setTxFilterType(e.target.value)}
-                  className="bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-lg px-3 py-1.5 text-xs text-black dark:text-white focus:outline-none"
+                  className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg px-3 py-1.5 text-xs text-[#141413] dark:text-white focus:outline-none"
                 >
                   <option value="ALL">Toutes les natures</option>
                   <option value="DROIT_ADHESION">Droits d'adhésion</option>
@@ -646,14 +652,14 @@ export const AdminView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => openQrSyncModal(null)}
-                  className="px-4 py-2 bg-black dark:bg-zinc-950 dark:border dark:border-[#E5B824]/50 text-[#E5B824] font-semibold text-xs rounded-xl hover:bg-gray-900 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-[#141413] dark:bg-[#141413] border border-[#141413] dark:border-[#F2B705]/50 text-[#F2B705] font-semibold text-xs rounded-lg hover:bg-[#1e1e1c] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <QrCode className="w-4 h-4" />
                   <span>Flasher QR Carte</span>
                 </button>
                 <button
                   onClick={() => setManualModalOpen(true)}
-                  className="px-4 py-2 bg-[#E5B824] text-black font-semibold text-xs rounded-xl hover:bg-[#dcae1f] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-[#F2B705] text-[#141413] font-semibold text-xs rounded-lg hover:bg-[#dfa704] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>Encaisser au Guichet (Espèces / Chèque)</span>
@@ -661,10 +667,10 @@ export const AdminView: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
+            <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl overflow-hidden shadow-editorial">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-gray-700 dark:text-zinc-300">
-                  <thead className="bg-gray-50 dark:bg-zinc-950 text-gray-600 dark:text-zinc-400 text-[10px] uppercase border-b border-gray-200 dark:border-zinc-800 font-bold tracking-wider">
+                <table className="w-full text-left text-xs text-[#4A4A48] dark:text-zinc-300">
+                  <thead className="bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-400 text-[10px] uppercase border-b border-[#141413]/10 dark:border-white/10 font-bold tracking-wider">
                     <tr>
                       <th className="p-3.5">Référence / Date</th>
                       <th className="p-3.5">Membre & Promo</th>
@@ -675,45 +681,45 @@ export const AdminView: React.FC = () => {
                       <th className="p-3.5 text-right">Actions Trésorerie</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-zinc-800 font-sans">
+                  <tbody className="divide-y divide-[#141413]/10 dark:divide-white/10 font-sans">
                     {filteredTransactions.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-zinc-400">
+                        <td colSpan={7} className="p-8 text-center text-[#4A4A48] dark:text-zinc-400">
                           Aucune transaction correspondant aux critères sélectionnés.
                         </td>
                       </tr>
                     ) : (
                       filteredTransactions.map((tx) => (
-                        <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                        <tr key={tx.id} className="hover:bg-[#F8F8F6] dark:hover:bg-white/5 transition-colors">
                           <td className="p-3.5">
-                            <div className="font-mono text-black dark:text-white font-semibold">{tx.reference}</div>
-                            <div className="text-[10px] text-gray-500 dark:text-zinc-400">{tx.date}</div>
+                            <div className="font-mono text-[#141413] dark:text-white font-semibold">{tx.reference}</div>
+                            <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">{tx.date}</div>
                           </td>
                           <td className="p-3.5">
-                            <div className="font-semibold text-black dark:text-white">{tx.memberName}</div>
-                            <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-mono">Promo {tx.promotionYear}</div>
+                            <div className="font-semibold text-[#141413] dark:text-white">{tx.memberName}</div>
+                            <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400 font-mono">Promo {tx.promotionYear}</div>
                           </td>
                           <td className="p-3.5">
-                            <div className="text-gray-800 dark:text-zinc-200">{tx.title}</div>
+                            <div className="text-[#141413] dark:text-zinc-200">{tx.title}</div>
                             {tx.monthYears && tx.monthYears.length > 0 && (
-                              <div className="text-[10px] text-gray-500 dark:text-zinc-400">
+                              <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">
                                 {tx.monthYears.length} mois : {tx.monthYears.join(', ')}
                               </div>
                             )}
                           </td>
                           <td className="p-3.5">
-                            <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] font-mono text-gray-700 dark:text-zinc-300">
+                            <span className="px-2 py-0.5 rounded-md bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 text-[10px] font-mono text-[#4A4A48] dark:text-zinc-300">
                               {tx.method.replace('_', ' ')}
                             </span>
                           </td>
                           <td className="p-3.5">
-                            <span className="font-mono tabular-nums font-bold text-black dark:text-white">
+                            <span className="font-mono tabular-nums font-bold text-[#141413] dark:text-white">
                               {tx.amount.toLocaleString('fr-FR')} {tx.currency}
                             </span>
                           </td>
                           <td className="p-3.5">
                             {tx.status === 'PAYE' ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-md font-semibold">
+                              <span className="inline-flex items-center gap-1 text-[10px] text-[#134E4A] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-md font-semibold">
                                 <CheckCircle className="w-3 h-3" />
                                 <span>Validé</span>
                               </span>
@@ -733,7 +739,7 @@ export const AdminView: React.FC = () => {
                             <button
                               onClick={() => setViewingTransactionReceipt(tx)}
                               title="Consulter le reçu officiel"
-                              className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-600 dark:text-zinc-400 hover:text-[#B8860B] dark:hover:text-[#E5B824] rounded cursor-pointer"
+                              className="p-1.5 hover:bg-[#FEF8E6] dark:hover:bg-white/10 text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-[#F2B705] rounded-lg cursor-pointer"
                             >
                               <Receipt className="w-4 h-4 inline" />
                             </button>
@@ -743,7 +749,7 @@ export const AdminView: React.FC = () => {
                                 <button
                                   onClick={() => updateTransactionStatus(tx.id, 'PAYE', settings.treasurerName)}
                                   title="Valider l'encaissement"
-                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded text-[10px] cursor-pointer inline-flex items-center gap-1"
+                                  className="px-2.5 py-1 bg-[#134E4A] hover:bg-[#115e59] text-white font-semibold rounded-lg text-[10px] cursor-pointer inline-flex items-center gap-1"
                                 >
                                   <CheckCircle className="w-3 h-3" />
                                   <span>Valider</span>
@@ -751,7 +757,7 @@ export const AdminView: React.FC = () => {
                                 <button
                                   onClick={() => updateTransactionStatus(tx.id, 'ANNULE', settings.treasurerName)}
                                   title="Rejeter ce règlement"
-                                  className="px-2 py-1 bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded text-[10px] cursor-pointer inline-flex items-center gap-1"
+                                  className="px-2 py-1 bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg text-[10px] cursor-pointer inline-flex items-center gap-1"
                                 >
                                   <XCircle className="w-3 h-3" />
                                   <span>Rejeter</span>
@@ -772,24 +778,24 @@ export const AdminView: React.FC = () => {
         {/* TAB 2: PARAMETRES FINANCIERS & TARIFS */}
         {adminTab === 'PARAMETRES_FINANCIERS' && (
           <div className="space-y-8">
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-zinc-800">
+            <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-6 shadow-editorial">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#141413]/10 dark:border-white/10">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold flex items-center gap-1.5">
+                  <span className="text-[10px] uppercase tracking-wider text-[#134E4A] dark:text-[#F2B705] font-bold flex items-center gap-1.5">
                     <Sliders className="w-3.5 h-3.5" />
                     <span>Délégation Profil Finance & Trésorerie</span>
                   </span>
-                  <h3 className="text-xl font-bold font-heading text-black dark:text-white mt-1">
+                  <h3 className="text-xl font-bold font-heading text-[#141413] dark:text-white mt-1">
                     Paramétrage des Données Variables Financières
                   </h3>
-                  <p className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
+                  <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
                     Configurez les montants statutaires, l'exercice budgétaire, les numéros marchands Mobile Money et les coordonnées bancaires de l'Amicale.
                   </p>
                 </div>
 
-                <div className="p-3 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl text-right">
-                  <span className="text-[10px] text-gray-500 dark:text-zinc-400 block uppercase font-semibold">Cotisation Annuelle Pleine</span>
-                  <span className="text-lg font-mono tabular-nums font-bold text-[#B8860B] dark:text-[#E5B824]">
+                <div className="p-3 bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl text-right">
+                  <span className="text-[10px] text-[#4A4A48] dark:text-zinc-400 block uppercase font-semibold">Cotisation Annuelle Pleine</span>
+                  <span className="text-lg font-mono tabular-nums font-bold text-[#141413] dark:text-[#F2B705]">
                     {(financeForm.cotisationMensuelleAmount * 12).toLocaleString('fr-FR')} {financeForm.currency}
                   </span>
                 </div>
@@ -797,13 +803,13 @@ export const AdminView: React.FC = () => {
 
               <form onSubmit={handleSaveFinancialSettings} className="space-y-6 text-xs">
                 <div>
-                  <h4 className="text-sm font-bold text-black dark:text-white mb-3 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+                  <h4 className="text-sm font-bold text-[#141413] dark:text-white mb-3 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-[#F2B705]" />
                     <span>1. Tarifs Statutaires des Droits et Cotisations</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-gray-700 dark:text-zinc-300 font-semibold">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">
                         Droits d'adhésion initiale ({financeForm.currency})
                       </label>
                       <input
@@ -815,11 +821,11 @@ export const AdminView: React.FC = () => {
                         onChange={(e) => setFinanceForm({ ...financeForm, droitAdhesionAmount: Number(e.target.value) })}
                         className={`${inputClass} font-mono font-bold`}
                       />
-                      <span className="text-[10px] text-gray-500 dark:text-zinc-400">Payable une seule fois lors de l'adhésion</span>
+                      <span className="text-[10px] text-[#4A4A48] dark:text-zinc-400">Payable une seule fois lors de l'adhésion</span>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-gray-700 dark:text-zinc-300 font-semibold">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">
                         Cotisation mensuelle ordinaire ({financeForm.currency})
                       </label>
                       <input
@@ -831,11 +837,11 @@ export const AdminView: React.FC = () => {
                         onChange={(e) => setFinanceForm({ ...financeForm, cotisationMensuelleAmount: Number(e.target.value) })}
                         className={`${inputClass} font-mono font-bold`}
                       />
-                      <span className="text-[10px] text-gray-500 dark:text-zinc-400">Montant par mois civil (base du calcul)</span>
+                      <span className="text-[10px] text-[#4A4A48] dark:text-zinc-400">Montant par mois civil (base du calcul)</span>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-gray-700 dark:text-zinc-300 font-semibold">Exercice fiscal en cours</label>
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">Exercice fiscal en cours</label>
                       <input
                         type="number"
                         min="2020"
@@ -845,11 +851,11 @@ export const AdminView: React.FC = () => {
                         onChange={(e) => setFinanceForm({ ...financeForm, fiscalYear: Number(e.target.value) })}
                         className={`${inputClass} font-mono font-bold`}
                       />
-                      <span className="text-[10px] text-gray-500 dark:text-zinc-400">Année comptable de référence</span>
+                      <span className="text-[10px] text-[#4A4A48] dark:text-zinc-400">Année comptable de référence</span>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-gray-700 dark:text-zinc-300 font-semibold">Délai de grâce impayés (mois)</label>
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">Délai de grâce impayés (mois)</label>
                       <input
                         type="number"
                         min="1"
@@ -859,14 +865,14 @@ export const AdminView: React.FC = () => {
                         onChange={(e) => setFinanceForm({ ...financeForm, overdueGraceMonths: Number(e.target.value) })}
                         className={`${inputClass} font-mono`}
                       />
-                      <span className="text-[10px] text-gray-500 dark:text-zinc-400">Mois d'arriéré avant alerte rouge</span>
+                      <span className="text-[10px] text-[#4A4A48] dark:text-zinc-400">Mois d'arriéré avant alerte rouge</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-200 dark:border-zinc-800">
-                  <h4 className="text-sm font-bold text-black dark:text-white mb-3 flex items-center gap-2">
-                    <Smartphone className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+                <div className="pt-4 border-t border-[#141413]/10 dark:border-white/10">
+                  <h4 className="text-sm font-bold text-[#141413] dark:text-white mb-3 flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-[#F2B705]" />
                     <span>2. Comptes Marchands Mobile Money de Réception</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -882,7 +888,7 @@ export const AdminView: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-[#B8860B] dark:text-[#E5B824] font-semibold">Compte Marchand MTN Mobile Money</label>
+                      <label className="block text-[#141413] dark:text-[#F2B705] font-semibold">Compte Marchand MTN Mobile Money</label>
                       <input
                         type="text"
                         required
@@ -905,14 +911,14 @@ export const AdminView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-200 dark:border-zinc-800">
-                  <h4 className="text-sm font-bold text-black dark:text-white mb-3 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+                <div className="pt-4 border-t border-[#141413]/10 dark:border-white/10">
+                  <h4 className="text-sm font-bold text-[#141413] dark:text-white mb-3 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[#F2B705]" />
                     <span>3. Coordonnées Bancaires Officielles & Signataire</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                      <label className="block text-gray-700 dark:text-zinc-300 font-semibold">Nom de la Banque</label>
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">Nom de la Banque</label>
                       <input
                         type="text"
                         required
@@ -923,7 +929,7 @@ export const AdminView: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-gray-700 dark:text-zinc-300 font-semibold">Code Relevé d'Identité Bancaire (RIB)</label>
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">Code Relevé d'Identité Bancaire (RIB)</label>
                       <input
                         type="text"
                         required
@@ -934,7 +940,7 @@ export const AdminView: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-gray-700 dark:text-zinc-300 font-semibold">Numéro IBAN International</label>
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">Numéro IBAN International</label>
                       <input
                         type="text"
                         required
@@ -945,7 +951,7 @@ export const AdminView: React.FC = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-gray-700 dark:text-zinc-300 font-semibold">Trésorier Général Signataire</label>
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">Trésorier Général Signataire</label>
                       <input
                         type="text"
                         required
@@ -960,7 +966,7 @@ export const AdminView: React.FC = () => {
                 <div className="pt-4 flex items-center justify-end">
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-[#E5B824] text-black font-semibold text-xs rounded-xl hover:bg-[#dcae1f] transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                    className="px-6 py-2.5 bg-[#F2B705] text-[#141413] font-semibold text-xs rounded-lg hover:bg-[#dfa704] transition-all flex items-center gap-2 cursor-pointer"
                   >
                     <Save className="w-4 h-4" />
                     <span>Enregistrer les Paramètres Financiers</span>
@@ -974,52 +980,52 @@ export const AdminView: React.FC = () => {
         {/* TAB 3: VALIDATION DES ADHESIONS & MEMBRES */}
         {adminTab === 'MEMBRES' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-zinc-800">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white">
+            <div className="flex items-center justify-between pb-2 border-b border-[#141413]/10 dark:border-white/10">
+              <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white">
                 Dossiers d'Adhésion en Attente de Validation ({pendingMembers.length})
               </h3>
             </div>
 
             {pendingMembers.length === 0 ? (
-              <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-10 text-center text-gray-500 dark:text-zinc-400 space-y-2">
-                <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto" />
-                <p className="text-sm text-black dark:text-white font-semibold">Tous les dossiers d'adhésion ont été traités.</p>
-                <p className="text-xs text-gray-500 dark:text-zinc-400">Aucune demande en attente de validation.</p>
+              <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-10 text-center text-[#4A4A48] dark:text-zinc-400 space-y-2 shadow-editorial">
+                <CheckCircle className="w-8 h-8 text-[#134E4A] dark:text-emerald-400 mx-auto" />
+                <p className="text-sm text-[#141413] dark:text-white font-semibold">Tous les dossiers d'adhésion ont été traités.</p>
+                <p className="text-xs text-[#4A4A48] dark:text-zinc-400">Aucune demande en attente de validation.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
                 {pendingMembers.map((member) => (
                   <div
                     key={member.id}
-                    className="bg-white dark:bg-zinc-900 border border-yellow-300 dark:border-yellow-500/40 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs"
+                    className="bg-white dark:bg-[#1e1e1c] border border-[#F2B705]/60 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-editorial"
                   >
                     <div className="space-y-1.5 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs text-[#B8860B] dark:text-[#E5B824] font-bold">{member.membershipCardId}</span>
-                        <span className="text-xs text-gray-600 dark:text-zinc-400">· Promotion {member.promotionYear}</span>
+                        <span className="font-mono text-xs text-[#141413] dark:text-[#F2B705] font-bold">{member.membershipCardId}</span>
+                        <span className="text-xs text-[#4A4A48] dark:text-zinc-400">· Promotion {member.promotionYear}</span>
                         {member.nickname && (
-                          <span className="text-[11px] font-semibold text-[#B8860B] dark:text-[#E5B824]">
+                          <span className="text-[11px] font-semibold text-[#141413] dark:text-[#F2B705]">
                             « {member.nickname} »
                           </span>
                         )}
                         {member.studyLevel && (
-                          <span className="text-[10px] text-gray-700 dark:text-zinc-300 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 px-2 py-0.5 rounded">
+                          <span className="text-[10px] text-[#4A4A48] dark:text-zinc-300 bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 px-2 py-0.5 rounded-md">
                             {member.studyLevel}
                           </span>
                         )}
                         {member.bdrRegistered && (
-                          <span className="text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded font-semibold">
+                          <span className="text-[10px] text-[#134E4A] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-md font-semibold">
                             BDR Référencé
                           </span>
                         )}
                       </div>
-                      <h4 className="text-base font-bold text-black dark:text-white font-heading">
+                      <h4 className="text-base font-bold text-[#141413] dark:text-white font-heading">
                         {member.firstName} {member.lastName}
                       </h4>
-                      <p className="text-xs text-gray-700 dark:text-zinc-300">
+                      <p className="text-xs text-[#4A4A48] dark:text-zinc-300">
                         {member.profession} — {member.currentRole} chez {member.company} ({member.city}{member.commune ? `, ${member.commune}` : ''}, {member.country})
                       </p>
-                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-zinc-400">
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#4A4A48] dark:text-zinc-400">
                         <span>Email : {member.email}</span>
                         <span>·</span>
                         <span>Tél : {member.phone || 'Non renseigné'}</span>
@@ -1027,9 +1033,9 @@ export const AdminView: React.FC = () => {
                       </div>
                       {member.skills && member.skills.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1 pt-1">
-                          <span className="text-[10px] text-gray-600 dark:text-zinc-400 font-semibold">Compétences BDR :</span>
+                          <span className="text-[10px] text-[#4A4A48] dark:text-zinc-400 font-semibold">Compétences BDR :</span>
                           {member.skills.map((s, i) => (
-                            <span key={i} className="text-[10px] bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200 dark:border-zinc-700 px-1.5 py-0.5 rounded">
+                            <span key={i} className="text-[10px] bg-[#F8F8F6] dark:bg-[#141413] text-[#141413] dark:text-zinc-200 border border-[#141413]/10 dark:border-white/10 px-1.5 py-0.5 rounded-md">
                               {s}
                             </span>
                           ))}
@@ -1037,9 +1043,9 @@ export const AdminView: React.FC = () => {
                       )}
                       {member.certifications && member.certifications.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1">
-                          <span className="text-[10px] text-[#B8860B] dark:text-[#E5B824] font-semibold">Certifications :</span>
+                          <span className="text-[10px] text-[#141413] dark:text-[#F2B705] font-semibold">Certifications :</span>
                           {member.certifications.map((c, i) => (
-                            <span key={i} className="text-[10px] bg-yellow-50 dark:bg-yellow-500/15 text-[#B8860B] dark:text-[#E5B824] border border-yellow-200 dark:border-yellow-500/30 px-1.5 py-0.5 rounded">
+                            <span key={i} className="text-[10px] bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-[#FEF8E6] border border-[#F2B705]/40 px-1.5 py-0.5 rounded-md">
                               {c}
                             </span>
                           ))}
@@ -1050,20 +1056,20 @@ export const AdminView: React.FC = () => {
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => setViewingCardMember(member)}
-                        className="px-3 py-1.5 bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-black dark:text-white font-medium border border-gray-300 dark:border-zinc-700 rounded text-xs cursor-pointer"
+                        className="px-3 py-1.5 bg-[#F8F8F6] dark:bg-[#141413] hover:bg-white dark:hover:bg-white/5 text-[#141413] dark:text-white font-medium border border-[#141413]/15 dark:border-white/15 rounded-lg text-xs cursor-pointer"
                       >
                         Examiner
                       </button>
                       <button
                         onClick={() => rejectMember(member.id)}
-                        className="px-3 py-1.5 bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded text-xs cursor-pointer flex items-center gap-1"
+                        className="px-3 py-1.5 bg-red-50 dark:bg-red-950/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg text-xs cursor-pointer flex items-center gap-1"
                       >
                         <XCircle className="w-3.5 h-3.5" />
                         <span>Refuser</span>
                       </button>
                       <button
                         onClick={() => approveMember(member.id)}
-                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded text-xs cursor-pointer flex items-center gap-1 shadow-xs"
+                        className="px-4 py-1.5 bg-[#134E4A] hover:bg-[#115e59] text-white font-semibold rounded-lg text-xs cursor-pointer flex items-center gap-1"
                       >
                         <CheckCircle className="w-3.5 h-3.5" />
                         <span>Valider & Activer la Carte</span>
@@ -1075,14 +1081,14 @@ export const AdminView: React.FC = () => {
             )}
 
             {/* Approved Members Table */}
-            <div className="pt-6 border-t border-gray-200 dark:border-zinc-800 space-y-4">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white">
+            <div className="pt-6 border-t border-[#141413]/10 dark:border-white/10 space-y-4">
+              <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white">
                 Registre des Membres Validés ({approvedMembers.length})
               </h3>
-              <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
+              <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl overflow-hidden shadow-editorial">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-gray-700 dark:text-zinc-300">
-                    <thead className="bg-gray-50 dark:bg-zinc-950 text-gray-600 dark:text-zinc-400 text-[10px] uppercase border-b border-gray-200 dark:border-zinc-800 font-bold">
+                  <table className="w-full text-left text-xs text-[#4A4A48] dark:text-zinc-300">
+                    <thead className="bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-400 text-[10px] uppercase border-b border-[#141413]/10 dark:border-white/10 font-bold">
                       <tr>
                         <th className="p-3.5">Matricule</th>
                         <th className="p-3.5">Membre & Pseudo</th>
@@ -1090,59 +1096,95 @@ export const AdminView: React.FC = () => {
                         <th className="p-3.5">Poste / Entreprise</th>
                         <th className="p-3.5">Localisation</th>
                         <th className="p-3.5">Compétences BDR</th>
-                        <th className="p-3.5">Statut</th>
+                        <th className="p-3.5">Cotisation & Accès Mentorat / Carrières</th>
                         <th className="p-3.5 text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-                      {approvedMembers.map((m) => (
-                        <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
-                          <td className="p-3.5 font-mono text-[#B8860B] dark:text-[#E5B824] font-bold">{m.membershipCardId}</td>
-                          <td className="p-3.5">
-                            <div className="font-semibold text-black dark:text-white">
-                              {m.firstName} {m.lastName}
-                            </div>
-                            {m.nickname && (
-                              <span className="text-[10px] text-[#B8860B] dark:text-[#E5B824] font-medium">
-                                « {m.nickname} »
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-3.5 font-mono">{m.promotionYear}</td>
-                          <td className="p-3.5 text-gray-800 dark:text-zinc-200">
-                            <div>{m.currentRole}</div>
-                            <div className="text-[10px] text-gray-500 dark:text-zinc-400">{m.company}</div>
-                          </td>
-                          <td className="p-3.5 text-gray-600 dark:text-zinc-400">
-                            {m.city} {m.commune ? `(${m.commune})` : ''}
-                          </td>
-                          <td className="p-3.5">
-                            <div className="flex flex-wrap gap-1 max-w-[220px]">
-                              {m.skills?.slice(0, 2).map((s, i) => (
-                                <span key={i} className="text-[9px] bg-gray-100 dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-200 dark:border-zinc-700 px-1.5 py-0.5 rounded">
-                                  {s}
+                    <tbody className="divide-y divide-[#141413]/10 dark:divide-white/10">
+                      {approvedMembers.map((m) => {
+                        const summary = getMemberFinancialSummary(m.id);
+                        const upToDate = isMemberUpToDate(m.id);
+                        return (
+                          <tr key={m.id} className="hover:bg-[#F8F8F6] dark:hover:bg-white/5 transition-colors">
+                            <td className="p-3.5 font-mono text-[#141413] dark:text-[#F2B705] font-bold">{m.membershipCardId}</td>
+                            <td className="p-3.5">
+                              <div className="font-semibold text-[#141413] dark:text-white">
+                                {m.firstName} {m.lastName}
+                              </div>
+                              {m.nickname && (
+                                <span className="text-[10px] text-[#4A4A48] dark:text-[#F2B705] font-medium">
+                                  « {m.nickname} »
                                 </span>
-                              ))}
-                              {(m.skills?.length || 0) > 2 && (
-                                <span className="text-[9px] text-[#B8860B] dark:text-[#E5B824] font-semibold">+{m.skills!.length - 2}</span>
                               )}
-                            </div>
-                          </td>
-                          <td className="p-3.5">
-                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 font-mono">
-                              VALIDE {settings.fiscalYear}
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-right">
-                            <button
-                              onClick={() => setViewingCardMember(m)}
-                              className="text-[#B8860B] dark:text-[#E5B824] hover:underline cursor-pointer font-semibold"
-                            >
-                              Voir Carte
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="p-3.5 font-mono">{m.promotionYear}</td>
+                            <td className="p-3.5 text-[#141413] dark:text-zinc-200">
+                              <div>{m.currentRole}</div>
+                              <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">{m.company}</div>
+                            </td>
+                            <td className="p-3.5 text-[#4A4A48] dark:text-zinc-400">
+                              {m.city} {m.commune ? `(${m.commune})` : ''}
+                            </td>
+                            <td className="p-3.5">
+                              <div className="flex flex-wrap gap-1 max-w-[220px]">
+                                {m.skills?.slice(0, 2).map((s, i) => (
+                                  <span key={i} className="text-[9px] bg-[#F8F8F6] dark:bg-[#141413] text-[#141413] dark:text-zinc-200 border border-[#141413]/10 dark:border-white/10 px-1.5 py-0.5 rounded-md">
+                                    {s}
+                                  </span>
+                                ))}
+                                {(m.skills?.length || 0) > 2 && (
+                                  <span className="text-[9px] text-[#141413] dark:text-[#F2B705] font-semibold">+{m.skills!.length - 2}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3.5 space-y-1">
+                              {upToDate ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#134E4A] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-md font-mono">
+                                  <CheckCircle className="w-3 h-3" />
+                                  <span>À JOUR ({summary.paidMonths.length}/12)</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-md font-mono">
+                                  <AlertCircle className="w-3 h-3" />
+                                  <span>
+                                    {summary.statusFinancial === 'PARTIEL' ? 'PARTIEL' : 'EN RETARD'} ({summary.paidMonths.length}/12)
+                                  </span>
+                                </span>
+                              )}
+                              <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">
+                                Parrains & Carrières :{' '}
+                                <strong className={upToDate ? 'text-[#134E4A] dark:text-emerald-400' : 'text-amber-700 dark:text-amber-300'}>
+                                  {upToDate ? 'Ouvert' : 'Verrouillé'}
+                                </strong>
+                              </div>
+                            </td>
+                            <td className="p-3.5 text-right whitespace-nowrap space-x-2">
+                              {!upToDate && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openPaymentModal({
+                                      type: 'COTISATION_MENSUELLE',
+                                      targetMember: m,
+                                      selectedMonths: summary.overdueMonths,
+                                    })
+                                  }
+                                  className="px-2.5 py-1 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-[10px] font-semibold inline-flex items-center gap-1 cursor-pointer"
+                                >
+                                  <CreditCard className="w-3 h-3 text-[#141413]" />
+                                  <span>Régler</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setViewingCardMember(m)}
+                                className="text-[#141413] dark:text-[#F2B705] hover:underline cursor-pointer font-semibold"
+                              >
+                                Voir Carte
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1153,27 +1195,27 @@ export const AdminView: React.FC = () => {
 
         {/* TAB 4: DONNEES DES PROMOTIONS */}
         {adminTab === 'PROMOTIONS_PARAM' && (
-          <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-zinc-800">
+          <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-6 shadow-editorial">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#141413]/10 dark:border-white/10">
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold flex items-center gap-1.5">
-                  <GraduationCap className="w-3.5 h-3.5" />
+                <span className="text-[10px] uppercase tracking-wider text-[#141413] dark:text-[#F2B705] font-bold flex items-center gap-1.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-[#F2B705]" />
                   <span>Gestionnaire des Promotions</span>
                 </span>
-                <h3 className="text-xl font-bold font-heading text-black dark:text-white mt-1">
+                <h3 className="text-xl font-bold font-heading text-[#141413] dark:text-white mt-1">
                   Paramétrage des Données Variables des Promotions
                 </h3>
-                <p className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
+                <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
                   Sélectionnez une promotion pour éditer sa devise, les coordonnées de son délégué et ses retrouvailles.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-700 dark:text-zinc-300 font-semibold">Choisir la promotion :</label>
+                <label className="text-xs text-[#141413] dark:text-zinc-200 font-semibold">Choisir la promotion :</label>
                 <select
                   value={selectedPromoYear}
                   onChange={(e) => handleSelectPromo(Number(e.target.value))}
-                  className="bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-lg px-3 py-1.5 text-xs text-black dark:text-white font-semibold focus:outline-none"
+                  className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg px-3 py-1.5 text-xs text-[#141413] dark:text-white font-semibold focus:outline-none"
                 >
                   {promotions.map((p) => (
                     <option key={p.year} value={p.year}>
@@ -1187,7 +1229,7 @@ export const AdminView: React.FC = () => {
             <form onSubmit={handleSavePromo} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Devise de la Promotion</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Devise de la Promotion</label>
                   <input
                     type="text"
                     required
@@ -1198,7 +1240,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Nom du Délégué Officiel</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Nom du Délégué Officiel</label>
                   <input
                     type="text"
                     required
@@ -1209,7 +1251,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Contact Délégué (Email / Téléphone)</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Contact Délégué (Email / Téléphone)</label>
                   <input
                     type="text"
                     required
@@ -1220,7 +1262,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Date des Prochaines Retrouvailles</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Date des Prochaines Retrouvailles</label>
                   <input
                     type="date"
                     value={promoForm.nextReunionDate}
@@ -1230,7 +1272,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Description & Historique de la Promotion</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Description & Historique de la Promotion</label>
                   <textarea
                     rows={3}
                     required
@@ -1244,7 +1286,7 @@ export const AdminView: React.FC = () => {
               <div className="flex items-center justify-end pt-2">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#E5B824] text-black font-semibold rounded-xl hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-6 py-2.5 bg-[#F2B705] text-[#141413] font-semibold rounded-lg hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>Enregistrer la Promotion {selectedPromoYear}</span>
@@ -1259,32 +1301,32 @@ export const AdminView: React.FC = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {projects.map((proj) => (
-                <div key={proj.id} className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-xs">
+                <div key={proj.id} className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 space-y-4 shadow-editorial">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#B8860B] dark:text-[#E5B824] font-bold">{proj.category}</span>
-                    <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{proj.progressPercentage}%</span>
+                    <span className="text-[#141413] dark:text-[#F2B705] font-bold">{proj.category}</span>
+                    <span className="font-mono text-[#134E4A] dark:text-emerald-400 font-bold">{proj.progressPercentage}%</span>
                   </div>
-                  <h4 className="text-sm font-bold font-heading text-black dark:text-white leading-snug">
+                  <h4 className="text-sm font-bold font-heading text-[#141413] dark:text-white leading-snug">
                     {proj.title}
                   </h4>
-                  <div className="text-xs text-gray-600 dark:text-zinc-400 space-y-1">
+                  <div className="text-xs text-[#4A4A48] dark:text-zinc-400 space-y-1">
                     <div>
                       Collecté :{' '}
-                      <span className="text-black dark:text-white font-semibold font-mono">
+                      <span className="text-[#141413] dark:text-white font-semibold font-mono">
                         {proj.budgetRaised.toLocaleString('fr-FR')} {settings.currency}
                       </span>
                     </div>
                     <div>
                       Objectif :{' '}
-                      <span className="text-gray-700 dark:text-zinc-300 font-mono">
+                      <span className="text-[#4A4A48] dark:text-zinc-300 font-mono">
                         {proj.budgetGoal.toLocaleString('fr-FR')} {settings.currency}
                       </span>
                     </div>
                     <div>
-                      Nombre de donateurs : <span className="text-black dark:text-white font-semibold">{proj.contributorsCount}</span>
+                      Nombre de donateurs : <span className="text-[#141413] dark:text-white font-semibold">{proj.contributorsCount}</span>
                     </div>
                     <div>
-                      Échéance : <span className="text-gray-700 dark:text-zinc-300 font-mono">{proj.deadline}</span>
+                      Échéance : <span className="text-[#4A4A48] dark:text-zinc-300 font-mono">{proj.deadline}</span>
                     </div>
                   </div>
                 </div>
@@ -1296,15 +1338,15 @@ export const AdminView: React.FC = () => {
         {/* TAB 6: COMMUNICATION OFFICIELLE */}
         {adminTab === 'COMMUNICATION' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-[#B8860B] dark:text-[#E5B824]" />
+            <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-5 shadow-editorial">
+              <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white flex items-center gap-2">
+                <Megaphone className="w-5 h-5 text-[#F2B705]" />
                 <span>Rédiger et Diffuser un Communiqué Officiel</span>
               </h3>
 
               <form onSubmit={handlePublishNews} className="space-y-4 text-xs">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Titre du communiqué</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Titre du communiqué</label>
                   <input
                     type="text"
                     required
@@ -1317,7 +1359,7 @@ export const AdminView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Catégorie</label>
+                    <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Catégorie</label>
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value as any)}
@@ -1334,7 +1376,7 @@ export const AdminView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Organe émetteur</label>
+                    <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Organe émetteur</label>
                     <input
                       type="text"
                       required
@@ -1346,7 +1388,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Résumé synthétique (accroche)</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Résumé synthétique (accroche)</label>
                   <textarea
                     rows={2}
                     required
@@ -1358,7 +1400,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Texte intégral du communiqué</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Texte intégral du communiqué</label>
                   <textarea
                     rows={4}
                     required
@@ -1371,27 +1413,27 @@ export const AdminView: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-[#E5B824] text-black font-semibold rounded-lg hover:bg-[#dcae1f] cursor-pointer shadow-xs"
+                  className="w-full py-2.5 bg-[#F2B705] text-[#141413] font-semibold rounded-lg hover:bg-[#dfa704] cursor-pointer"
                 >
                   Diffuser sur le site officiel
                 </button>
               </form>
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-4 shadow-xs">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white">
+            <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-4 shadow-editorial">
+              <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white">
                 Communiqués Publiés ({news.length})
               </h3>
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                 {news.map((item) => (
-                  <div key={item.id} className="p-3.5 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl space-y-2">
+                  <div key={item.id} className="p-3.5 bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl space-y-2">
                     <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-[#B8860B] dark:text-[#E5B824] font-bold">{item.category}</span>
-                      <span className="text-gray-500 dark:text-zinc-400 font-mono">{item.date}</span>
+                      <span className="text-[#141413] dark:text-[#F2B705] font-bold">{item.category}</span>
+                      <span className="text-[#4A4A48] dark:text-zinc-400 font-mono">{item.date}</span>
                     </div>
-                    <h4 className="text-xs font-bold text-black dark:text-white line-clamp-1">{item.title}</h4>
-                    <p className="text-[11px] text-gray-600 dark:text-zinc-400 line-clamp-2">{item.summary}</p>
-                    <div className="flex items-center justify-between pt-1 text-[10px] text-gray-500 dark:text-zinc-400 border-t border-gray-200 dark:border-zinc-800">
+                    <h4 className="text-xs font-bold text-[#141413] dark:text-white line-clamp-1">{item.title}</h4>
+                    <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 line-clamp-2">{item.summary}</p>
+                    <div className="flex items-center justify-between pt-1 text-[10px] text-[#4A4A48] dark:text-zinc-400 border-t border-[#141413]/10 dark:border-white/10">
                       <span>Par : {item.author}</span>
                       <button
                         onClick={() => deleteNewsItem(item.id)}
@@ -1407,17 +1449,17 @@ export const AdminView: React.FC = () => {
             </div>
 
             {canEnrichAi && (
-              <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-zinc-800">
+              <div className="lg:col-span-2 bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-6 shadow-editorial">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#141413]/10 dark:border-white/10">
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5" />
+                    <span className="text-[10px] uppercase tracking-wider text-[#141413] dark:text-[#F2B705] font-bold flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-[#F2B705]" />
                       <span>Base de Connaissances · Assistant IA ALGB</span>
                     </span>
-                    <h3 className="text-base font-bold font-heading text-black dark:text-white mt-1">
+                    <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white mt-1">
                       Enrichir l’Assistant IA depuis votre Profil & Directives Officielles
                     </h3>
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 mt-0.5">
+                    <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-0.5">
                       Les administrateurs et le pôle Communication peuvent injecter leurs données de profil ou des notes officielles directement dans l’assistant flottant.
                     </p>
                   </div>
@@ -1425,7 +1467,7 @@ export const AdminView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setAiChatOpen(true)}
-                    className="px-4 py-2 rounded-lg bg-black dark:bg-[#E5B824] hover:bg-gray-900 dark:hover:bg-[#dcae1f] text-[#E5B824] dark:text-black text-xs font-bold flex items-center gap-2 cursor-pointer shrink-0 self-start sm:self-center"
+                    className="px-4 py-2 rounded-lg bg-[#141413] dark:bg-[#F2B705] hover:bg-[#1e1e1c] dark:hover:bg-[#dfa704] text-[#F2B705] dark:text-[#141413] text-xs font-semibold flex items-center gap-2 cursor-pointer shrink-0 self-start sm:self-center"
                   >
                     <MessageSquareText className="w-4 h-4" />
                     <span>Tester l’Assistant IA</span>
@@ -1435,9 +1477,9 @@ export const AdminView: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Left: Profile Sync + Manual Form */}
                   <div className="space-y-5">
-                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 space-y-3 text-xs">
-                      <div className="font-bold text-black dark:text-white flex items-center gap-2">
-                        <UserCheck className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+                    <div className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-3 text-xs">
+                      <div className="font-bold text-[#141413] dark:text-white flex items-center gap-2">
+                        <UserCheck className="w-4 h-4 text-[#F2B705]" />
                         <span>
                           Synchroniser depuis le profil actif (
                           {currentUser
@@ -1446,7 +1488,7 @@ export const AdminView: React.FC = () => {
                           )
                         </span>
                       </div>
-                      <p className="text-[11px] text-gray-600 dark:text-zinc-400 leading-relaxed">
+                      <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 leading-relaxed">
                         {currentUser
                           ? `Extrait : fonction (${currentUser.currentRole} chez ${currentUser.company}), secteur (${currentUser.sector}), ville (${currentUser.city}, ${currentUser.country}), expertises BDR et présentation.`
                           : 'Synchronise votre rôle officiel actif dans la base de connaissances de l’assistant.'}
@@ -1464,7 +1506,7 @@ export const AdminView: React.FC = () => {
                           enrichAiFromCurrentProfile(aiProfileNote);
                           setAiProfileNote('');
                         }}
-                        className="w-full py-2.5 px-4 rounded-lg bg-black dark:bg-zinc-800 dark:border dark:border-[#E5B824]/50 hover:bg-gray-900 dark:hover:bg-zinc-700 text-[#E5B824] font-bold text-xs cursor-pointer flex items-center justify-center gap-2"
+                        className="w-full py-2.5 px-4 rounded-lg bg-[#141413] dark:bg-[#1e1e1c] border border-[#141413] dark:border-[#F2B705]/50 hover:bg-[#1e1e1c] dark:hover:bg-white/10 text-[#F2B705] font-semibold text-xs cursor-pointer flex items-center justify-center gap-2"
                       >
                         <UserCheck className="w-4 h-4" />
                         <span>Enrichir l’IA avec mon profil</span>
@@ -1485,10 +1527,10 @@ export const AdminView: React.FC = () => {
                           setAiEntryContent('');
                         }
                       }}
-                      className="p-4 rounded-xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 space-y-3 text-xs"
+                      className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-3 text-xs"
                     >
-                      <div className="font-bold text-black dark:text-white flex items-center gap-2">
-                        <PlusCircle className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
+                      <div className="font-bold text-[#141413] dark:text-white flex items-center gap-2">
+                        <PlusCircle className="w-4 h-4 text-[#F2B705]" />
                         <span>Ajouter une nouvelle connaissance IA</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1523,7 +1565,7 @@ export const AdminView: React.FC = () => {
                       />
                       <button
                         type="submit"
-                        className="w-full py-2.5 px-4 rounded-lg bg-[#E5B824] hover:bg-[#dcae1f] text-black font-semibold text-xs cursor-pointer"
+                        className="w-full py-2.5 px-4 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold text-xs cursor-pointer"
                       >
                         Ajouter à l’Assistant IA
                       </button>
@@ -1532,9 +1574,9 @@ export const AdminView: React.FC = () => {
 
                   {/* Right: Active Knowledge Base List */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs font-bold text-black dark:text-white">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#141413] dark:text-white">
                       <span>Base de connaissances active ({aiKnowledgeEntries.length})</span>
-                      <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 tabular-nums">
+                      <span className="text-[11px] font-normal text-[#4A4A48] dark:text-zinc-400 tabular-nums">
                         {aiKnowledgeEntries.filter((e) => e.isActive).length} actives
                       </span>
                     </div>
@@ -1544,14 +1586,14 @@ export const AdminView: React.FC = () => {
                           key={entry.id}
                           className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
                             entry.isActive
-                              ? 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800'
-                              : 'bg-gray-50/50 dark:bg-zinc-950/50 border-gray-200 dark:border-zinc-800 opacity-60'
+                              ? 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10'
+                              : 'bg-[#F8F8F6]/50 dark:bg-[#141413]/50 border-[#141413]/10 dark:border-white/10 opacity-60'
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex flex-wrap items-center gap-1.5">
-                                <span className="font-bold text-[#B8860B] dark:text-[#E5B824] uppercase">
+                              <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400 flex flex-wrap items-center gap-1.5">
+                                <span className="font-bold text-[#141413] dark:text-[#F2B705] uppercase">
                                   {entry.source === 'PROFIL' ? 'Profil' : 'Directive'}
                                 </span>
                                 <span aria-hidden="true">·</span>
@@ -1559,7 +1601,7 @@ export const AdminView: React.FC = () => {
                                 <span aria-hidden="true">·</span>
                                 <span className="font-mono tabular-nums">{entry.updatedAt}</span>
                               </div>
-                              <h4 className="font-bold text-black dark:text-white mt-0.5">{entry.title}</h4>
+                              <h4 className="font-bold text-[#141413] dark:text-white mt-0.5">{entry.title}</h4>
                             </div>
 
                             <div className="flex items-center gap-1 shrink-0">
@@ -1567,7 +1609,7 @@ export const AdminView: React.FC = () => {
                                 type="button"
                                 onClick={() => toggleAiKnowledgeEntry(entry.id)}
                                 title={entry.isActive ? 'Désactiver' : 'Activer'}
-                                className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 hover:border-black dark:hover:border-[#E5B824] text-gray-700 dark:text-zinc-300 cursor-pointer"
+                                className="p-1.5 rounded-lg bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 hover:border-[#F2B705] text-[#4A4A48] dark:text-zinc-300 cursor-pointer"
                               >
                                 {entry.isActive ? (
                                   <Eye className="w-3.5 h-3.5" />
@@ -1579,14 +1621,14 @@ export const AdminView: React.FC = () => {
                                 type="button"
                                 onClick={() => deleteAiKnowledgeEntry(entry.id)}
                                 title="Supprimer"
-                                className="p-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 hover:border-red-500 text-red-600 dark:text-red-400 cursor-pointer"
+                                className="p-1.5 rounded-lg bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 hover:border-red-500 text-red-600 dark:text-red-400 cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
-                          <p className="text-[11px] text-gray-700 dark:text-zinc-300 leading-relaxed">{entry.content}</p>
-                          <div className="text-[10px] text-gray-500 dark:text-zinc-400">
+                          <p className="text-[11px] text-[#4A4A48] dark:text-zinc-300 leading-relaxed">{entry.content}</p>
+                          <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">
                             Par : {entry.authorName} ({entry.authorRole})
                           </div>
                         </div>
@@ -1601,16 +1643,16 @@ export const AdminView: React.FC = () => {
 
         {/* TAB 7: PARAMETRES GENERAUX & GOUVERNANCE */}
         {adminTab === 'PARAMETRES_GENERAUX' && (
-          <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xs">
-            <div className="pb-4 border-b border-gray-200 dark:border-zinc-800">
-              <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold flex items-center gap-1.5">
-                <Settings className="w-3.5 h-3.5" />
+          <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-6 shadow-editorial">
+            <div className="pb-4 border-b border-[#141413]/10 dark:border-white/10">
+              <span className="text-[10px] uppercase tracking-wider text-[#141413] dark:text-[#F2B705] font-bold flex items-center gap-1.5">
+                <Settings className="w-3.5 h-3.5 text-[#F2B705]" />
                 <span>Plein Exercice Administration</span>
               </span>
-              <h3 className="text-xl font-bold font-heading text-black dark:text-white mt-1">
+              <h3 className="text-xl font-bold font-heading text-[#141413] dark:text-white mt-1">
                 Paramètres Institutionnels & Identité de l'Amicale
               </h3>
-              <p className="text-xs text-gray-600 dark:text-zinc-400 mt-1">
+              <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-1">
                 Personnalisez les coordonnées du siège, les signataires officiels, la devise et le message central de l'ALGB.
               </p>
             </div>
@@ -1618,7 +1660,7 @@ export const AdminView: React.FC = () => {
             <form onSubmit={handleSaveGeneralSettings} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Raison Sociale Officielle</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Raison Sociale Officielle</label>
                   <input
                     type="text"
                     required
@@ -1629,7 +1671,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Signature Institutionnelle</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Signature Institutionnelle</label>
                   <input
                     type="text"
                     required
@@ -1640,7 +1682,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Message Central</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Message Central</label>
                   <input
                     type="text"
                     required
@@ -1651,7 +1693,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Président du Bureau Exécutif</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Président du Bureau Exécutif</label>
                   <input
                     type="text"
                     required
@@ -1662,7 +1704,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Secrétaire Général</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Secrétaire Général</label>
                   <input
                     type="text"
                     required
@@ -1673,7 +1715,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Adresse Officielle du Siège</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Adresse Officielle du Siège</label>
                   <input
                     type="text"
                     required
@@ -1684,7 +1726,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Email Officiel</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Email Officiel</label>
                   <input
                     type="email"
                     required
@@ -1695,7 +1737,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Téléphone de Contact</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Téléphone de Contact</label>
                   <input
                     type="text"
                     required
@@ -1705,13 +1747,13 @@ export const AdminView: React.FC = () => {
                   />
                 </div>
 
-                <div className="sm:col-span-2 pt-3 border-t border-gray-200 dark:border-zinc-800 space-y-3">
-                  <div className="text-[#B8860B] dark:text-[#E5B824] font-bold">
+                <div className="sm:col-span-2 pt-3 border-t border-[#141413]/10 dark:border-white/10 space-y-3">
+                  <div className="text-[#141413] dark:text-[#F2B705] font-bold">
                     Expédition Automatique des Credentials par E-mail & Accusé de Réception
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Adresse E-mail d’expédition & de réception des accusés
                       </label>
                       <input
@@ -1726,7 +1768,7 @@ export const AdminView: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Nom d’expéditeur affiché
                       </label>
                       <input
@@ -1742,35 +1784,35 @@ export const AdminView: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-4 pt-1">
-                    <label className="inline-flex items-center gap-2 text-gray-800 dark:text-zinc-200 cursor-pointer">
+                    <label className="inline-flex items-center gap-2 text-[#141413] dark:text-zinc-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={generalForm.autoSendCredentialEmail}
                         onChange={(e) =>
                           setGeneralForm({ ...generalForm, autoSendCredentialEmail: e.target.checked })
                         }
-                        className="accent-[#E5B824] w-4 h-4"
+                        className="accent-[#F2B705] w-4 h-4"
                       />
                       <span>Envoyer automatiquement l’e-mail dès création du credential</span>
                     </label>
-                    <label className="inline-flex items-center gap-2 text-gray-800 dark:text-zinc-200 cursor-pointer">
+                    <label className="inline-flex items-center gap-2 text-[#141413] dark:text-zinc-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={generalForm.credentialAckCopyToAdmin}
                         onChange={(e) =>
                           setGeneralForm({ ...generalForm, credentialAckCopyToAdmin: e.target.checked })
                         }
-                        className="accent-[#E5B824] w-4 h-4"
+                        className="accent-[#F2B705] w-4 h-4"
                       />
                       <span>Envoyer une copie BCC + demande d’accusé à l’adresse administrateur</span>
                     </label>
                   </div>
                 </div>
 
-                <div className="sm:col-span-2 pt-2 border-t border-gray-200 dark:border-zinc-800">
-                  <label className="block text-[#B8860B] dark:text-[#E5B824] font-bold mb-1 flex items-center justify-between">
+                <div className="sm:col-span-2 pt-2 border-t border-[#141413]/10 dark:border-white/10">
+                  <label className="block text-[#141413] dark:text-[#F2B705] font-bold mb-1 flex items-center justify-between">
                     <span>Passerelle Webhook Google Apps Script / Google Sheets (Stratégie Enrôlement)</span>
-                    <span className="text-[10px] text-gray-500 dark:text-zinc-400 font-normal">algbannuaire.netlify.app</span>
+                    <span className="text-[10px] text-[#4A4A48] dark:text-zinc-400 font-normal">algbannuaire.netlify.app</span>
                   </label>
                   <input
                     type="url"
@@ -1779,7 +1821,7 @@ export const AdminView: React.FC = () => {
                     placeholder="https://script.google.com/macros/s/.../exec"
                     className={`${inputClass} font-mono text-xs`}
                   />
-                  <p className="text-[11px] text-gray-600 dark:text-zinc-400 mt-1">
+                  <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 mt-1">
                     URL du déploiement Webhook Apps Script recevant chaque enrôlement d’adhérent en temps réel (POST asynchrone no-cors et sauvegarde locale).
                   </p>
                 </div>
@@ -1788,7 +1830,7 @@ export const AdminView: React.FC = () => {
               <div className="flex items-center justify-end pt-3">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#E5B824] text-black font-semibold rounded-xl hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-6 py-2.5 bg-[#F2B705] text-[#141413] font-semibold rounded-lg hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>Mettre à Jour la Gouvernance</span>
@@ -1804,24 +1846,24 @@ export const AdminView: React.FC = () => {
         {/* TAB 9: EXPORTS CSV & GRAND LIVRE */}
         {adminTab === 'EXPORTS' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white flex items-center gap-2">
-                <Banknote className="w-5 h-5 text-[#B8860B] dark:text-[#E5B824]" />
+            <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-5 shadow-editorial">
+              <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white flex items-center gap-2">
+                <Banknote className="w-5 h-5 text-[#F2B705]" />
                 <span>Grand Livre & Journal Comptable (Trésorerie)</span>
               </h3>
 
-              <p className="text-gray-700 dark:text-zinc-300 leading-relaxed">
+              <p className="text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
                 Exportez l'intégralité des transactions, encaissements par Mobile Money, virements SGBCI et espèces avec leurs références, statuts et numéros de quittances.
               </p>
 
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 space-y-2">
-                <div className="flex items-center justify-between text-gray-800 dark:text-zinc-200 font-medium">
+              <div className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-2">
+                <div className="flex items-center justify-between text-[#141413] dark:text-zinc-200 font-medium">
                   <span>Transactions enregistrées :</span>
-                  <span className="font-mono text-[#B8860B] dark:text-[#E5B824] font-bold">{transactions.length} écritures</span>
+                  <span className="font-mono text-[#141413] dark:text-[#F2B705] font-bold">{transactions.length} écritures</span>
                 </div>
-                <div className="flex items-center justify-between text-gray-800 dark:text-zinc-200 font-medium">
+                <div className="flex items-center justify-between text-[#141413] dark:text-zinc-200 font-medium">
                   <span>Total Encaissé ({settings.fiscalYear}) :</span>
-                  <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+                  <span className="font-mono text-[#134E4A] dark:text-emerald-400 font-bold">
                     {transactions
                       .filter((t) => t.status === 'PAYE')
                       .reduce((sum, t) => sum + t.amount, 0)
@@ -1833,37 +1875,37 @@ export const AdminView: React.FC = () => {
 
               <button
                 onClick={handleExportGrandLivreCSV}
-                className="w-full py-3 bg-[#E5B824] text-black font-semibold rounded-xl hover:bg-[#dcae1f] flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                className="w-full py-3 bg-[#F2B705] text-[#141413] font-semibold rounded-lg hover:bg-[#dfa704] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>Télécharger le Grand Livre (CSV)</span>
               </button>
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white flex items-center gap-2">
-                <Download className="w-5 h-5 text-[#B8860B] dark:text-[#E5B824]" />
+            <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl p-6 sm:p-8 space-y-5 shadow-editorial">
+              <h3 className="text-base font-bold font-heading text-[#141413] dark:text-white flex items-center gap-2">
+                <Download className="w-5 h-5 text-[#F2B705]" />
                 <span>Registre Officiel des Membres & Diplômés</span>
               </h3>
 
-              <p className="text-gray-700 dark:text-zinc-300 leading-relaxed">
+              <p className="text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
                 Téléchargez la liste complète des anciens élèves avec leurs matricules biométriques, années de promotion, statuts de cotisation et coordonnées professionnelles.
               </p>
 
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 space-y-2">
-                <div className="flex items-center justify-between text-gray-800 dark:text-zinc-200 font-medium">
+              <div className="p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 space-y-2">
+                <div className="flex items-center justify-between text-[#141413] dark:text-zinc-200 font-medium">
                   <span>Membres inscrits :</span>
-                  <span className="font-mono text-[#B8860B] dark:text-[#E5B824] font-bold">{members.length} alumni</span>
+                  <span className="font-mono text-[#141413] dark:text-[#F2B705] font-bold">{members.length} alumni</span>
                 </div>
-                <div className="flex items-center justify-between text-gray-800 dark:text-zinc-200 font-medium">
+                <div className="flex items-center justify-between text-[#141413] dark:text-zinc-200 font-medium">
                   <span>Membres statutairement à jour :</span>
-                  <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{approvedMembers.length} adhérents</span>
+                  <span className="font-mono text-[#134E4A] dark:text-emerald-400 font-bold">{approvedMembers.length} adhérents</span>
                 </div>
               </div>
 
               <button
                 onClick={handleExportCSV}
-                className="w-full py-3 bg-black dark:bg-zinc-800 hover:bg-gray-800 dark:hover:bg-zinc-700 text-white font-semibold rounded-xl border border-transparent dark:border-zinc-700 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                className="w-full py-3 bg-[#141413] dark:bg-[#141413] hover:bg-[#1e1e1c] text-white font-semibold rounded-lg border border-[#141413] dark:border-white/15 flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
                 <Download className="w-4 h-4" />
                 <span>Télécharger l'Annuaire (CSV)</span>
@@ -1874,16 +1916,16 @@ export const AdminView: React.FC = () => {
 
         {/* Manual Cash/Check Encaissement Modal */}
         {manualModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl max-w-lg w-full p-6 space-y-5 text-xs shadow-2xl">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-zinc-800">
-                <h3 className="text-base font-bold text-black dark:text-white font-heading flex items-center gap-2">
-                  <Banknote className="w-5 h-5 text-[#B8860B] dark:text-[#E5B824]" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#141413]/70 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 rounded-xl max-w-lg w-full p-6 space-y-5 text-xs shadow-2xl">
+              <div className="flex items-center justify-between pb-3 border-b border-[#141413]/10 dark:border-white/10">
+                <h3 className="text-base font-bold text-[#141413] dark:text-white font-heading flex items-center gap-2">
+                  <Banknote className="w-5 h-5 text-[#F2B705]" />
                   <span>Encaisser un Règlement au Guichet Trésorerie</span>
                 </h3>
                 <button
                   onClick={() => setManualModalOpen(false)}
-                  className="text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                  className="text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                 >
                   ✕
                 </button>
@@ -1891,7 +1933,7 @@ export const AdminView: React.FC = () => {
 
               <form onSubmit={handleCreateManualPayment} className="space-y-4">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Adhérent concerné</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Adhérent concerné</label>
                   <select
                     value={manualPayment.memberId}
                     onChange={(e) => setManualPayment({ ...manualPayment, memberId: e.target.value })}
@@ -1907,7 +1949,7 @@ export const AdminView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Nature</label>
+                    <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Nature</label>
                     <select
                       value={manualPayment.type}
                       onChange={(e) => setManualPayment({ ...manualPayment, type: e.target.value as any })}
@@ -1921,7 +1963,7 @@ export const AdminView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Mode de règlement</label>
+                    <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Mode de règlement</label>
                     <select
                       value={manualPayment.method}
                       onChange={(e) => setManualPayment({ ...manualPayment, method: e.target.value as any })}
@@ -1937,7 +1979,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Montant perçu ({settings.currency})</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Montant perçu ({settings.currency})</label>
                   <input
                     type="number"
                     min="500"
@@ -1950,7 +1992,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Libellé de l'encaissement</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Libellé de l'encaissement</label>
                   <input
                     type="text"
                     required
@@ -1961,7 +2003,7 @@ export const AdminView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Notes / Référence du reçu manuel</label>
+                  <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">Notes / Référence du reçu manuel</label>
                   <input
                     type="text"
                     value={manualPayment.notes}
@@ -1974,13 +2016,13 @@ export const AdminView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setManualModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
+                    className="px-4 py-2 rounded-lg text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-[#E5B824] text-black font-semibold rounded-xl hover:bg-[#dcae1f] cursor-pointer"
+                    className="px-5 py-2.5 bg-[#F2B705] text-[#141413] font-semibold rounded-lg hover:bg-[#dfa704] cursor-pointer"
                   >
                     Enregistrer & Générer la Quittance
                   </button>

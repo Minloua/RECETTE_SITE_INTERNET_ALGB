@@ -253,29 +253,29 @@ export const EnrollmentModal: React.FC = () => {
   };
 
   const inputClass =
-    'w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-900 rounded-xl p-2.5 text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none transition-colors';
+    'w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] focus:bg-white dark:focus:bg-[#1e1e1c] rounded-lg p-2.5 text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none transition-colors';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 dark:bg-black/75 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#141413]/70 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-3xl bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
         {/* Top Sticky Header */}
-        <div className="bg-gray-50 dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between shrink-0">
+        <div className="bg-[#16324F] border-b border-white/15 px-6 py-4 flex items-center justify-between shrink-0 text-white">
           <div className="flex items-center gap-3">
             <img
               src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
               alt="Logo ALGB"
-              className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-[#E5B824] shadow-sm"
+              className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-[#F2B705] shadow-sm"
             />
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-bold font-heading text-black dark:text-white">
+                <h3 className="text-sm sm:text-base font-bold font-heading text-white">
                   Enrôlement ALGB & Base de Compétences
                 </h3>
-                <span className="px-2 py-0.5 rounded-md bg-yellow-50 dark:bg-yellow-500/15 text-[#B8860B] dark:text-[#E5B824] text-[10px] font-mono font-semibold border border-yellow-200 dark:border-yellow-500/30">
+                <span className="px-2 py-0.5 rounded-md bg-[#F2B705] text-[#141413] text-[10px] font-mono font-bold">
                   Étape {step}/4
                 </span>
               </div>
-              <p className="text-[11px] text-gray-600 dark:text-zinc-400 font-editorial italic hidden sm:block">
+              <p className="text-[11px] text-white/80 font-editorial italic hidden sm:block">
                 « Intégrez l’Annuaire officiel et le Réseau des Compétences du Lycée de Garçons de Bingerville. »
               </p>
             </div>
@@ -284,23 +284,23 @@ export const EnrollmentModal: React.FC = () => {
           <button
             onClick={handleClose}
             aria-label="Fermer"
-            className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="p-1.5 text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Linear Stepper Progress Bar */}
-        <div className="w-full bg-gray-200 dark:bg-zinc-800 h-1.5 shrink-0">
+        <div className="w-full bg-[#141413]/10 dark:bg-white/10 h-1.5 shrink-0">
           <div
-            className="bg-[#E5B824] h-1.5 transition-all duration-300"
+            className="bg-[#F2B705] h-1.5 transition-all duration-300"
             style={{ width: `${(step / 4) * 100}%` }}
           ></div>
         </div>
 
         {/* Stepper Tabs */}
         {!successData && (
-          <div className="grid grid-cols-4 bg-gray-50 dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800 text-xs shrink-0">
+          <div className="grid grid-cols-4 bg-[#F8F8F6] dark:bg-[#141413] border-b border-[#141413]/10 dark:border-white/10 text-xs shrink-0">
             {[
               { num: 1, label: 'Identité & Contact', icon: User },
               { num: 2, label: 'Parcours Pro', icon: Briefcase },
@@ -322,13 +322,13 @@ export const EnrollmentModal: React.FC = () => {
                   }}
                   className={`py-2.5 px-2 flex items-center justify-center gap-1.5 border-b-2 text-center transition-colors cursor-pointer ${
                     isActive
-                      ? 'border-[#E5B824] text-black dark:text-white font-bold bg-yellow-50/70 dark:bg-yellow-500/10'
+                      ? 'border-[#F2B705] text-[#141413] dark:text-[#FEF8E6] font-bold bg-[#FEF8E6] dark:bg-[#2a2719]'
                       : isPast
-                      ? 'border-transparent text-gray-700 dark:text-zinc-300 hover:text-black dark:hover:text-white font-medium'
-                      : 'border-transparent text-gray-400 dark:text-zinc-500'
+                      ? 'border-transparent text-[#16324F] dark:text-zinc-300 hover:text-[#141413] dark:hover:text-white font-medium'
+                      : 'border-transparent text-[#4A4A48]/60 dark:text-zinc-500'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#B8860B] dark:text-[#E5B824]' : ''}`} />
+                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#16324F] dark:text-[#F2B705]' : ''}`} />
                   <span className="truncate hidden sm:inline">{t.label}</span>
                   <span className="sm:hidden font-mono">{t.num}</span>
                 </button>
@@ -338,56 +338,56 @@ export const EnrollmentModal: React.FC = () => {
         )}
 
         {/* Body Content */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-8 text-xs text-gray-700 dark:text-zinc-300 space-y-6 bg-white dark:bg-zinc-900">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-8 text-xs text-[#4A4A48] dark:text-zinc-300 space-y-6 bg-white dark:bg-[#1e1e1c]">
           {successData ? (
             <div className="text-center py-8 space-y-6 max-w-lg mx-auto">
-              <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto">
+              <div className="w-16 h-16 rounded-xl bg-[#F0FDF9] dark:bg-[#0f2422] border border-[#134E4A]/30 dark:border-emerald-800 flex items-center justify-center text-[#134E4A] dark:text-emerald-400 mx-auto">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold font-heading text-black dark:text-white">
+                <h3 className="text-xl font-bold font-heading text-[#141413] dark:text-white">
                   Dossier d’Enrôlement Soumis & Enregistré !
                 </h3>
-                <p className="text-xs text-gray-600 dark:text-zinc-400 font-editorial italic leading-relaxed">
+                <p className="text-xs text-[#4A4A48] dark:text-zinc-400 font-editorial italic leading-relaxed">
                   Votre profil a bien été enregistré et transmis au système officiel de l’Amicale des Anciens Élèves du Lycée de Garçons de Bingerville.
                 </p>
               </div>
 
               {/* Summary Card */}
-              <div className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 text-left space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-zinc-800">
-                  <span className="text-gray-500 dark:text-zinc-400">Matricule Officiel</span>
-                  <span className="font-mono font-bold text-[#B8860B] dark:text-[#E5B824] text-sm">
+              <div className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl p-5 text-left space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#141413]/10 dark:border-white/10">
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Matricule Officiel</span>
+                  <span className="font-mono font-bold text-[#16324F] dark:text-[#F2B705] text-sm">
                     {successData.membershipCardId}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-zinc-400">Nom & Prénom</span>
-                  <span className="font-semibold text-black dark:text-white">
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Nom & Prénom</span>
+                  <span className="font-semibold text-[#141413] dark:text-white">
                     {successData.firstName} {successData.lastName}{' '}
-                    {successData.nickname && <span className="text-[#B8860B] dark:text-[#E5B824] font-normal">« {successData.nickname} »</span>}
+                    {successData.nickname && <span className="text-[#16324F] dark:text-[#F2B705] font-normal">« {successData.nickname} »</span>}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-zinc-400">Promotion</span>
-                  <span className="font-mono text-gray-800 dark:text-zinc-200 font-semibold">{successData.promotionYear}</span>
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Promotion</span>
+                  <span className="font-mono text-[#141413] dark:text-zinc-200 font-semibold">{successData.promotionYear}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-zinc-400">Poste & Entreprise</span>
-                  <span className="text-gray-800 dark:text-zinc-200 text-right truncate max-w-[200px]">
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Poste & Entreprise</span>
+                  <span className="text-[#141413] dark:text-zinc-200 text-right truncate max-w-[200px]">
                     {successData.currentRole} — {successData.company}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500 dark:text-zinc-400">Localisation</span>
-                  <span className="text-gray-800 dark:text-zinc-200">
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Localisation</span>
+                  <span className="text-[#141413] dark:text-zinc-200">
                     {successData.city} {successData.commune ? `(${successData.commune})` : ''}, {successData.country}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs pt-1">
-                  <span className="text-gray-500 dark:text-zinc-400">Base BDR & Compétences</span>
-                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                  <span className="text-[#4A4A48] dark:text-zinc-400">Base BDR & Compétences</span>
+                  <span className="text-[#134E4A] dark:text-emerald-400 font-semibold flex items-center gap-1">
                     <Check className="w-3.5 h-3.5" />
                     <span>Référencé</span>
                   </span>
@@ -401,14 +401,14 @@ export const EnrollmentModal: React.FC = () => {
                     handleClose();
                     setActiveTab('anciens');
                   }}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#E5B824] hover:bg-[#dcae1f] text-black font-semibold text-xs transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Voir mon profil dans l’Annuaire
                 </button>
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 font-medium text-xs transition-colors cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#FEF8E6] dark:hover:bg-white/10 border border-[#141413]/15 dark:border-white/15 text-[#141413] dark:text-zinc-200 font-medium text-xs transition-colors cursor-pointer"
                 >
                   Fermer
                 </button>
@@ -419,21 +419,21 @@ export const EnrollmentModal: React.FC = () => {
               {/* ÉTAPE 1 : Identité & Contact */}
               {step === 1 && (
                 <div className="space-y-5">
-                  <div className="pb-3 border-b border-gray-200 dark:border-zinc-800">
-                    <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold">
+                  <div className="pb-3 border-b border-[#141413]/10 dark:border-white/10">
+                    <span className="text-[10px] uppercase tracking-wider text-[#16324F] dark:text-[#F2B705] font-bold">
                       Étape 1 sur 4
                     </span>
-                    <h4 className="text-base font-bold font-heading text-black dark:text-white mt-0.5">
+                    <h4 className="text-base font-bold font-heading text-[#141413] dark:text-white mt-0.5">
                       Identité & Coordonnées de Contact
                     </h4>
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 font-editorial italic">
+                    <p className="text-xs text-[#4A4A48] dark:text-zinc-400 font-editorial italic">
                       Renseignez votre identité et vos souvenirs de promotion pour nous permettre de vous rattacher fidèlement à votre promotion.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Nom et prénom *
                       </label>
                       <input
@@ -447,9 +447,9 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Pseudo du lycée{' '}
-                        <span className="text-[#B8860B] dark:text-[#E5B824] font-normal">(Surnom LGB)</span>
+                        <span className="text-[#16324F] dark:text-[#F2B705] font-medium">(Surnom LGB)</span>
                       </label>
                       <input
                         type="text"
@@ -461,7 +461,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Promotion (Année de bac / sortie) *
                       </label>
                       <input
@@ -477,7 +477,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Niveau d’étude le plus élevé *
                       </label>
                       <select
@@ -494,7 +494,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Téléphone mobile (avec indicatif) *
                       </label>
                       <input
@@ -508,7 +508,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Numéro WhatsApp *
                       </label>
                       <input
@@ -522,7 +522,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Adresse e-mail personnelle *
                       </label>
                       <input
@@ -536,7 +536,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Pays de résidence *
                       </label>
                       <select
@@ -553,7 +553,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Ville de résidence *
                       </label>
                       {pays === 'autre' ? (
@@ -582,7 +582,7 @@ export const EnrollmentModal: React.FC = () => {
 
                     {communesList.length > 0 && pays !== 'autre' && (
                       <div className="sm:col-span-2">
-                        <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                        <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                           Commune / Quartier / Arrondissement
                         </label>
                         <select
@@ -601,23 +601,23 @@ export const EnrollmentModal: React.FC = () => {
 
                     {/* Photo d'identité Dropzone */}
                     <div className="sm:col-span-2 space-y-2 pt-2">
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold">
                         Photo d’identité ou portrait officiel
                       </label>
-                      <div className="border-2 border-dashed border-gray-300 dark:border-zinc-700 hover:border-[#E5B824] rounded-2xl p-4 text-center bg-gray-50 dark:bg-zinc-950 transition-colors flex flex-col items-center justify-center gap-3">
+                      <div className="border-2 border-dashed border-[#141413]/20 dark:border-white/20 hover:border-[#F2B705] rounded-xl p-4 text-center bg-[#F8F8F6] dark:bg-[#141413] transition-colors flex flex-col items-center justify-center gap-3">
                         {photoDataUrl ? (
                           <div className="flex items-center gap-4">
                             <img
                               src={photoDataUrl}
                               alt="Aperçu photo"
-                              className="w-16 h-16 rounded-xl object-cover border-2 border-[#E5B824]"
+                              className="w-16 h-16 rounded-lg object-cover border-2 border-[#F2B705]"
                             />
                             <div className="text-left">
-                              <p className="text-xs font-semibold text-black dark:text-white truncate max-w-xs">
+                              <p className="text-xs font-semibold text-[#141413] dark:text-white truncate max-w-xs">
                                 {photoFilename || 'Photo sélectionnée'}
                               </p>
-                              <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">Photo prête pour le dossier</p>
-                              <label className="text-[11px] text-[#B8860B] dark:text-[#E5B824] font-semibold hover:underline cursor-pointer">
+                              <p className="text-[10px] text-[#134E4A] dark:text-emerald-400 font-medium">Photo prête pour le dossier</p>
+                              <label className="text-[11px] text-[#16324F] dark:text-[#F2B705] font-semibold hover:underline cursor-pointer">
                                 Remplacer la photo
                                 <input
                                   type="file"
@@ -630,11 +630,11 @@ export const EnrollmentModal: React.FC = () => {
                           </div>
                         ) : (
                           <>
-                            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-400">
+                            <div className="w-12 h-12 rounded-full bg-white dark:bg-[#1e1e1c] border border-[#141413]/10 dark:border-white/10 flex items-center justify-center text-[#4A4A48] dark:text-zinc-400">
                               <Camera className="w-6 h-6" />
                             </div>
                             <div>
-                              <label className="inline-block px-3.5 py-1.5 rounded-lg bg-[#E5B824] text-black font-semibold text-xs cursor-pointer hover:bg-[#dcae1f] transition-colors">
+                              <label className="inline-block px-3.5 py-1.5 rounded-lg bg-[#F2B705] text-[#141413] font-semibold text-xs cursor-pointer hover:bg-[#dfa704] transition-colors">
                                 Choisir une photo
                                 <input
                                   type="file"
@@ -643,26 +643,26 @@ export const EnrollmentModal: React.FC = () => {
                                   onChange={handlePhotoUpload}
                                 />
                               </label>
-                              <p className="text-[11px] text-gray-500 dark:text-zinc-400 mt-1.5">
+                              <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 mt-1.5">
                                 Formats JPG, PNG, WEBP (Max 2 Mo). Utilisée pour la carte officielle ALGB.
                               </p>
                             </div>
                           </>
                         )}
                         {photoError && (
-                          <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">{photoError}</p>
+                          <p className="text-[11px] text-[#C2410C] dark:text-orange-400 font-medium">{photoError}</p>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-zinc-800">
+                  <div className="flex justify-end pt-4 border-t border-[#141413]/10 dark:border-white/10">
                     <button
                       type="button"
                       onClick={() => {
                         if (validateStep1()) setStep(2);
                       }}
-                      className="px-6 py-2.5 rounded-xl bg-[#E5B824] text-black font-semibold text-xs hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer shadow-sm"
+                      className="px-6 py-2.5 rounded-lg bg-[#F2B705] text-[#141413] font-semibold text-xs hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer shadow-sm transition-colors"
                     >
                       <span>Suivant — Parcours professionnel</span>
                       <ArrowRight className="w-4 h-4" />
@@ -674,21 +674,21 @@ export const EnrollmentModal: React.FC = () => {
               {/* ÉTAPE 2 : Parcours Professionnel */}
               {step === 2 && (
                 <div className="space-y-5">
-                  <div className="pb-3 border-b border-gray-200 dark:border-zinc-800">
-                    <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold">
+                  <div className="pb-3 border-b border-[#141413]/10 dark:border-white/10">
+                    <span className="text-[10px] uppercase tracking-wider text-[#16324F] dark:text-[#F2B705] font-bold">
                       Étape 2 sur 4
                     </span>
-                    <h4 className="text-base font-bold font-heading text-black dark:text-white mt-0.5">
+                    <h4 className="text-base font-bold font-heading text-[#141413] dark:text-white mt-0.5">
                       Parcours Professionnel & Structure Actuelle
                     </h4>
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 font-editorial italic">
+                    <p className="text-xs text-[#4A4A48] dark:text-zinc-400 font-editorial italic">
                       Ces données valorisent votre carrière au sein de l’Annuaire et aident les promotions à identifier des experts sectoriels.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Secteur d’activité principal *
                       </label>
                       <select
@@ -705,7 +705,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Structure / Entreprise / Institution employeur *
                       </label>
                       <input
@@ -719,7 +719,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Situation professionnelle actuelle *
                       </label>
                       <select
@@ -736,7 +736,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Fonction / Intitulé de poste occupé *
                       </label>
                       <input
@@ -750,11 +750,11 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-zinc-800">
+                  <div className="flex items-center justify-between pt-4 border-t border-[#141413]/10 dark:border-white/10">
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 hover:bg-[#141413]/5 dark:hover:bg-white/10 text-[#141413] dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       <span>Précédent</span>
@@ -765,7 +765,7 @@ export const EnrollmentModal: React.FC = () => {
                       onClick={() => {
                         if (validateStep2()) setStep(3);
                       }}
-                      className="px-6 py-2.5 rounded-xl bg-[#E5B824] text-black font-semibold text-xs hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer shadow-sm"
+                      className="px-6 py-2.5 rounded-lg bg-[#F2B705] text-[#141413] font-semibold text-xs hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer shadow-sm transition-colors"
                     >
                       <span>Suivant — Compétences & Certifications</span>
                       <ArrowRight className="w-4 h-4" />
@@ -777,21 +777,21 @@ export const EnrollmentModal: React.FC = () => {
               {/* ÉTAPE 3 : Compétences & BDR */}
               {step === 3 && (
                 <div className="space-y-5">
-                  <div className="pb-3 border-b border-gray-200 dark:border-zinc-800">
-                    <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold">
+                  <div className="pb-3 border-b border-[#141413]/10 dark:border-white/10">
+                    <span className="text-[10px] uppercase tracking-wider text-[#16324F] dark:text-[#F2B705] font-bold">
                       Étape 3 sur 4
                     </span>
-                    <h4 className="text-base font-bold font-heading text-black dark:text-white mt-0.5">
+                    <h4 className="text-base font-bold font-heading text-[#141413] dark:text-white mt-0.5">
                       Base de Données des Ressources & Compétences (BDR)
                     </h4>
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 font-editorial italic">
+                    <p className="text-xs text-[#4A4A48] dark:text-zinc-400 font-editorial italic">
                       Alimentez la cartographie des talents de l’Amicale pour les missions de conseil, mentorat et opportunités professionnelles.
                     </p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Domaine de formation principale *
                       </label>
                       <select
@@ -809,7 +809,7 @@ export const EnrollmentModal: React.FC = () => {
 
                     {formation === 'autre_formation' && (
                       <div>
-                        <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                        <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                           Précisez votre domaine de formation
                         </label>
                         <input
@@ -825,7 +825,7 @@ export const EnrollmentModal: React.FC = () => {
 
                     {/* Domaines de compétences */}
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-2">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-2">
                         Domaines de compétences spécifiques * (Cochez tout ce qui s'applique)
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -835,15 +835,15 @@ export const EnrollmentModal: React.FC = () => {
                             <label
                               key={comp}
                               onClick={() => toggleCompetence(comp)}
-                              className={`p-2.5 rounded-xl border text-xs flex items-center gap-2 cursor-pointer transition-all ${
+                              className={`p-2.5 rounded-lg border text-xs flex items-center gap-2 cursor-pointer transition-all ${
                                 isChecked
-                                  ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824] text-black dark:text-[#E5B824] font-semibold'
-                                  : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:border-gray-300 dark:hover:border-zinc-600'
+                                  ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-[#F2B705] font-semibold'
+                                  : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-400 hover:border-[#141413]/30 dark:hover:border-white/30'
                               }`}
                             >
                               <div
                                 className={`w-4 h-4 rounded flex items-center justify-center shrink-0 text-[10px] ${
-                                  isChecked ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                                  isChecked ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/25 bg-white dark:bg-[#1e1e1c]'
                                 }`}
                               >
                                 {isChecked && '✓'}
@@ -855,15 +855,15 @@ export const EnrollmentModal: React.FC = () => {
 
                         <label
                           onClick={() => setCompAutreActive(!compAutreActive)}
-                          className={`p-2.5 rounded-xl border text-xs flex items-center gap-2 cursor-pointer transition-all ${
+                          className={`p-2.5 rounded-lg border text-xs flex items-center gap-2 cursor-pointer transition-all ${
                             compAutreActive
-                              ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824] text-black dark:text-[#E5B824] font-semibold'
-                              : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:border-gray-300 dark:hover:border-zinc-600'
+                              ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-[#F2B705] font-semibold'
+                              : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-400 hover:border-[#141413]/30 dark:hover:border-white/30'
                           }`}
                         >
                           <div
                             className={`w-4 h-4 rounded flex items-center justify-center shrink-0 text-[10px] ${
-                              compAutreActive ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                              compAutreActive ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/25 bg-white dark:bg-[#1e1e1c]'
                             }`}
                           >
                             {compAutreActive && '✓'}
@@ -887,7 +887,7 @@ export const EnrollmentModal: React.FC = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                        <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                           Niveau de maîtrise principal *
                         </label>
                         <select
@@ -904,7 +904,7 @@ export const EnrollmentModal: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                        <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                           Années d’expérience cumulées *
                         </label>
                         <select
@@ -923,10 +923,10 @@ export const EnrollmentModal: React.FC = () => {
 
                     {/* Certifications professionnelles */}
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-2">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-2">
                         Certifications / Diplômes professionnels obtenus
                       </label>
-                      <div className="max-h-48 overflow-y-auto p-3 bg-gray-50 dark:bg-zinc-950 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-1.5">
+                      <div className="max-h-48 overflow-y-auto p-3 bg-[#F8F8F6] dark:bg-[#141413] rounded-xl border border-[#141413]/10 dark:border-white/10 space-y-1.5">
                         {CERTIFICATIONS_LIST.map((cert) => {
                           const isChecked = selectedCertifications.includes(cert);
                           return (
@@ -935,13 +935,13 @@ export const EnrollmentModal: React.FC = () => {
                               onClick={() => toggleCertification(cert)}
                               className={`p-2 rounded-lg text-xs flex items-center gap-2 cursor-pointer transition-colors ${
                                 isChecked
-                                  ? 'bg-yellow-50 dark:bg-yellow-500/15 text-black dark:text-[#E5B824] font-semibold border border-yellow-200 dark:border-yellow-500/30'
-                                  : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-900'
+                                  ? 'bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-[#F2B705] font-semibold border border-[#F2B705]/40'
+                                  : 'text-[#4A4A48] dark:text-zinc-300 hover:bg-[#141413]/5 dark:hover:bg-white/5'
                               }`}
                             >
                               <div
                                 className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 text-[9px] ${
-                                  isChecked ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                                  isChecked ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/25 bg-white dark:bg-[#1e1e1c]'
                                 }`}
                               >
                                 {isChecked && '✓'}
@@ -954,12 +954,14 @@ export const EnrollmentModal: React.FC = () => {
                         <label
                           onClick={() => setCertAutreActive(!certAutreActive)}
                           className={`p-2 rounded-lg text-xs flex items-center gap-2 cursor-pointer transition-colors ${
-                            certAutreActive ? 'bg-yellow-50 dark:bg-yellow-500/15 text-black dark:text-[#E5B824] font-semibold' : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-900'
+                            certAutreActive
+                              ? 'bg-[#FEF8E6] dark:bg-[#2a2719] text-[#141413] dark:text-[#F2B705] font-semibold border border-[#F2B705]/40'
+                              : 'text-[#4A4A48] dark:text-zinc-300 hover:bg-[#141413]/5 dark:hover:bg-white/5'
                           }`}
                         >
                           <div
                             className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 text-[9px] ${
-                              certAutreActive ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                              certAutreActive ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/25 bg-white dark:bg-[#1e1e1c]'
                             }`}
                           >
                             {certAutreActive && '✓'}
@@ -980,11 +982,11 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-zinc-800">
+                  <div className="flex items-center justify-between pt-4 border-t border-[#141413]/10 dark:border-white/10">
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 hover:bg-[#141413]/5 dark:hover:bg-white/10 text-[#141413] dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       <span>Précédent</span>
@@ -995,7 +997,7 @@ export const EnrollmentModal: React.FC = () => {
                       onClick={() => {
                         if (validateStep3()) setStep(4);
                       }}
-                      className="px-6 py-2.5 rounded-xl bg-[#E5B824] text-black font-semibold text-xs hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer shadow-sm"
+                      className="px-6 py-2.5 rounded-lg bg-[#F2B705] text-[#141413] font-semibold text-xs hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer shadow-sm transition-colors"
                     >
                       <span>Suivant — Préférences & Finalisation</span>
                       <ArrowRight className="w-4 h-4" />
@@ -1007,21 +1009,21 @@ export const EnrollmentModal: React.FC = () => {
               {/* ÉTAPE 4 : Préférences, Offre & Finalisation */}
               {step === 4 && (
                 <div className="space-y-5">
-                  <div className="pb-3 border-b border-gray-200 dark:border-zinc-800">
-                    <span className="text-[10px] uppercase tracking-wider text-[#B8860B] dark:text-[#E5B824] font-bold">
+                  <div className="pb-3 border-b border-[#141413]/10 dark:border-white/10">
+                    <span className="text-[10px] uppercase tracking-wider text-[#16324F] dark:text-[#F2B705] font-bold">
                       Étape 4 sur 4
                     </span>
-                    <h4 className="text-base font-bold font-heading text-black dark:text-white mt-0.5">
+                    <h4 className="text-base font-bold font-heading text-[#141413] dark:text-white mt-0.5">
                       Préférences, Offre de Services & Finalisation
                     </h4>
-                    <p className="text-xs text-gray-600 dark:text-zinc-400 font-editorial italic">
+                    <p className="text-xs text-[#4A4A48] dark:text-zinc-400 font-editorial italic">
                       Définissez vos modalités d’intervention au service de l’Amicale et vos préférences de confidentialité.
                     </p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Services et expertises que vous pouvez offrir *
                       </label>
                       <textarea
@@ -1036,7 +1038,7 @@ export const EnrollmentModal: React.FC = () => {
 
                     {/* Disponibilités */}
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-2">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-2">
                         Vos disponibilités pour l'Amicale & les anciens
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1046,15 +1048,15 @@ export const EnrollmentModal: React.FC = () => {
                             <label
                               key={d}
                               onClick={() => toggleDisponibilite(d)}
-                              className={`p-2.5 rounded-xl border text-xs flex items-center gap-2 cursor-pointer transition-all ${
+                              className={`p-2.5 rounded-lg border text-xs flex items-center gap-2 cursor-pointer transition-all ${
                                 isChecked
-                                  ? 'bg-yellow-50 dark:bg-yellow-500/15 border-[#E5B824] text-black dark:text-[#E5B824] font-semibold'
-                                  : 'bg-gray-50 dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 hover:border-gray-300 dark:hover:border-zinc-600'
+                                  ? 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705] text-[#141413] dark:text-[#F2B705] font-semibold'
+                                  : 'bg-[#F8F8F6] dark:bg-[#141413] border-[#141413]/10 dark:border-white/10 text-[#4A4A48] dark:text-zinc-400 hover:border-[#141413]/30 dark:hover:border-white/30'
                               }`}
                             >
                               <div
                                 className={`w-4 h-4 rounded flex items-center justify-center shrink-0 text-[10px] ${
-                                  isChecked ? 'bg-[#E5B824] text-black font-bold' : 'border border-gray-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
+                                  isChecked ? 'bg-[#F2B705] text-[#141413] font-bold' : 'border border-[#141413]/30 dark:border-white/25 bg-white dark:bg-[#1e1e1c]'
                                 }`}
                               >
                                 {isChecked && '✓'}
@@ -1067,13 +1069,13 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     {/* Intégration BDR Oui/Non */}
-                    <div className="p-4 bg-gray-50 dark:bg-zinc-950 rounded-2xl border border-gray-200 dark:border-zinc-800">
+                    <div className="p-4 bg-[#F8F8F6] dark:bg-[#141413] rounded-xl border border-[#141413]/10 dark:border-white/10">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                          <p className="text-xs font-semibold text-black dark:text-white">
+                          <p className="text-xs font-semibold text-[#141413] dark:text-white">
                             Intégration à la Base de Données des Compétences (BDR)
                           </p>
-                          <p className="text-[11px] text-gray-600 dark:text-zinc-400">
+                          <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
                             Acceptez-vous d'être référencé(e) dans le répertoire des compétences pour sollicitations expertes ?
                           </p>
                         </div>
@@ -1083,8 +1085,8 @@ export const EnrollmentModal: React.FC = () => {
                             onClick={() => setBdrAnnuaire('Oui')}
                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
                               bdrAnnuaire === 'Oui'
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                                ? 'bg-[#134E4A] text-white'
+                                : 'bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300 hover:bg-[#141413]/5 dark:hover:bg-white/10'
                             }`}
                           >
                             Oui
@@ -1094,8 +1096,8 @@ export const EnrollmentModal: React.FC = () => {
                             onClick={() => setBdrAnnuaire('Non')}
                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
                               bdrAnnuaire === 'Non'
-                                ? 'bg-red-600 text-white'
-                                : 'bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                                ? 'bg-[#C2410C] text-white'
+                                : 'bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300 hover:bg-[#141413]/5 dark:hover:bg-white/10'
                             }`}
                           >
                             Non
@@ -1105,13 +1107,13 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     {/* Partage Contacts Oui/Non */}
-                    <div className="p-4 bg-gray-50 dark:bg-zinc-950 rounded-2xl border border-gray-200 dark:border-zinc-800">
+                    <div className="p-4 bg-[#F8F8F6] dark:bg-[#141413] rounded-xl border border-[#141413]/10 dark:border-white/10">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                          <p className="text-xs font-semibold text-black dark:text-white">
+                          <p className="text-xs font-semibold text-[#141413] dark:text-white">
                             Autorisation de partage de contact sécurisée (RGPD / ARTCI)
                           </p>
-                          <p className="text-[11px] text-gray-600 dark:text-zinc-400 max-w-md">
+                          <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 max-w-md">
                             Vos coordonnées seront visibles uniquement aux membres actifs à jour de leur cotisation et sous réserve de validation de votre part.
                           </p>
                         </div>
@@ -1121,8 +1123,8 @@ export const EnrollmentModal: React.FC = () => {
                             onClick={() => setPartageContacts('Oui')}
                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
                               partageContacts === 'Oui'
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                                ? 'bg-[#134E4A] text-white'
+                                : 'bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300 hover:bg-[#141413]/5 dark:hover:bg-white/10'
                             }`}
                           >
                             Oui
@@ -1132,8 +1134,8 @@ export const EnrollmentModal: React.FC = () => {
                             onClick={() => setPartageContacts('Non')}
                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
                               partageContacts === 'Non'
-                                ? 'bg-red-600 text-white'
-                                : 'bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800'
+                                ? 'bg-[#C2410C] text-white'
+                                : 'bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#4A4A48] dark:text-zinc-300 hover:bg-[#141413]/5 dark:hover:bg-white/10'
                             }`}
                           >
                             Non
@@ -1143,7 +1145,7 @@ export const EnrollmentModal: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
+                      <label className="block text-[#141413] dark:text-zinc-200 font-semibold mb-1">
                         Observations ou suggestions pour l'Amicale (Facultatif)
                       </label>
                       <input
@@ -1155,19 +1157,19 @@ export const EnrollmentModal: React.FC = () => {
                       />
                     </div>
 
-                    <div className="p-3 bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 rounded-xl text-[11px] text-yellow-900 dark:text-amber-200 flex items-start gap-2">
-                      <ShieldCheck className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824] shrink-0 mt-0.5" />
+                    <div className="p-3 bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 rounded-xl text-[11px] text-[#141413] dark:text-amber-100 flex items-start gap-2">
+                      <ShieldCheck className="w-4 h-4 text-[#16324F] dark:text-[#F2B705] shrink-0 mt-0.5" />
                       <span>
                         En soumettant ce formulaire, vous rejoignez officiellement le réseau de l'ALGB. Vos informations sont protégées conformément aux statuts associatifs et synchronisées de façon sécurisée.
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-zinc-800">
+                  <div className="flex items-center justify-between pt-4 border-t border-[#141413]/10 dark:border-white/10">
                     <button
                       type="button"
                       onClick={() => setStep(3)}
-                      className="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 hover:bg-[#141413]/5 dark:hover:bg-white/10 text-[#141413] dark:text-zinc-200 font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       <span>Précédent</span>
@@ -1176,11 +1178,11 @@ export const EnrollmentModal: React.FC = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-6 py-2.5 rounded-xl bg-[#E5B824] hover:bg-[#dcae1f] text-black font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+                      className="px-6 py-2.5 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50 transition-colors"
                     >
                       {isSubmitting ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-4 h-4 border-2 border-[#141413] border-t-transparent rounded-full animate-spin"></div>
                           <span>Enregistrement du dossier...</span>
                         </>
                       ) : (

@@ -1,213 +1,206 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp, NavigationTab } from '../context/AppContext';
 import {
   MapPin,
   Mail,
   Phone,
   ShieldCheck,
-  Award,
   ChevronRight,
-  ExternalLink,
+  Send,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { setActiveTab } = useApp();
+  const { setActiveTab, subscribeNewsletter, settings } = useApp();
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
 
   const handleNav = (tab: NavigationTab) => {
     setActiveTab(tab);
   };
 
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const ok = subscribeNewsletter(newsletterEmail);
+    if (ok) {
+      setSubscribed(true);
+      setNewsletterEmail('');
+    }
+  };
+
   return (
-    <footer className="border-t border-gray-200 dark:border-zinc-800 text-sm">
-      {/* Top Prominent Signature Strip */}
-      <div className="border-b border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-8 px-4 sm:px-6 lg:px-8 transition-colors">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-          <div className="flex items-center gap-4">
-            <img
-              src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
-              alt="Logo ALGB"
-              className="w-16 h-16 object-contain rounded-xl bg-white p-1 border border-gray-200 dark:border-zinc-700 shadow-sm shrink-0"
-            />
-            <div>
-              <p className="text-[#B8860B] dark:text-[#E5B824] font-heading font-bold text-base sm:text-lg tracking-wide uppercase">
-                « Une histoire, des générations, un même engagement. »
-              </p>
-              <p className="text-gray-600 dark:text-zinc-400 text-xs sm:text-sm font-editorial italic mt-0.5">
-                « Notre histoire nous rassemble. Notre engagement construit l'avenir. »
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleNav('adhesion')}
-              className="px-5 py-2.5 text-xs font-bold text-black bg-[#E5B824] hover:bg-[#dcae1f] rounded-lg transition-all cursor-pointer shadow-sm"
-            >
-              Rejoindre l’Amicale
-            </button>
-            <button
-              onClick={() => handleNav('projets')}
-              className="px-5 py-2.5 text-xs font-semibold text-gray-800 dark:text-zinc-100 border border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-all cursor-pointer bg-gray-50 dark:bg-zinc-900"
-            >
-              Soutenir un projet
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main 4-Column Directory - Deep Noir Impérial with Jaune and Gris Clair */}
-      <div className="bg-[#0B0C0E] text-gray-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-            {/* Column 1: L'Institution */}
-            <div className="space-y-4">
-              <h4 className="text-white font-heading text-sm font-bold tracking-wider uppercase border-b border-gray-800 pb-2">
-                L’Amicale ALGB
-              </h4>
-              <p className="text-xs leading-relaxed text-gray-400">
-                L’Amicale des Anciens Élèves du Lycée de Garçons de Bingerville fédère toutes les générations
-                d’anciens élèves au service de la mémoire, de la fraternité et de l’excellence de notre établissement.
-              </p>
-              <div className="pt-2">
-                <span className="text-[11px] text-gray-500 block uppercase tracking-wider font-semibold">Statut légal</span>
-                <span className="text-xs text-gray-300">
-                  Association déclarée régie par la loi du 21 septembre 1960 de la République de Côte d’Ivoire.
-                </span>
+    <footer className="bg-[#141413] text-zinc-300 border-t border-white/10 text-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10">
+          {/* Column 1: Rappels Institutionnels (4 cols) */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
+                alt="Blason ALGB"
+                className="w-12 h-12 object-contain rounded-lg bg-white p-1 border border-[#F2B705]/60 shrink-0"
+              />
+              <div>
+                <h3 className="text-base font-heading font-bold text-white leading-snug">
+                  ALGB · Lycée de Garçons de Bingerville
+                </h3>
+                <p className="text-xs text-[#F2B705] font-editorial italic">
+                  « Une histoire, des générations, un même engagement. »
+                </p>
               </div>
             </div>
 
-          {/* Column 2: Navigation Rapide */}
-          <div className="space-y-4">
-            <h4 className="text-white font-heading text-sm font-semibold tracking-wider uppercase border-b border-gray-800 pb-2">
-              Rubriques Principales
+            <p className="text-xs leading-relaxed text-zinc-400">
+              L’Amicale des Anciens Élèves du Lycée de Garçons de Bingerville fédère les promotions
+              en Côte d’Ivoire et dans la diaspora autour de la solidarité, du mentorat exécutif et du
+              mécénat éducatif.
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1.5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                <ShieldCheck className="w-4 h-4 text-[#F2B705] shrink-0" />
+                <span>Statut associatif & Conformité ARTCI</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-zinc-400">
+                Association régie par la loi n° 60-315 du 21 septembre 1960 · Traitement des données conforme
+                à la loi n° 2013-450 (Côte d’Ivoire).
+              </p>
+            </div>
+          </div>
+
+          {/* Column 2: Univers & Pages (3 cols) */}
+          <div className="lg:col-span-3 space-y-4">
+            <h4 className="text-xs font-semibold tracking-widest uppercase text-zinc-400 border-b border-white/10 pb-2">
+              Architecture du Réseau
             </h4>
-            <ul className="space-y-2 text-xs">
-              <li>
-                <button
-                  onClick={() => handleNav('amicale')}
-                  className="hover:text-[#E5B824] transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-[#E5B824]" />
-                  <span>Présentation & Gouvernance</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNav('histoire')}
-                  className="hover:text-[#E5B824] transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-[#E5B824]" />
-                  <span>Histoire & Chronologie du Lycée</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNav('anciens')}
-                  className="hover:text-[#E5B824] transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-[#E5B824]" />
-                  <span>Annuaire des Promotions</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNav('reseau')}
-                  className="hover:text-[#E5B824] transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-[#E5B824]" />
-                  <span>Réseau Professionnel & Mentorat</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNav('projets')}
-                  className="hover:text-[#E5B824] transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-[#E5B824]" />
-                  <span>Projets & Contributions Solidaires</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNav('mediatheque')}
-                  className="hover:text-[#E5B824] transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-[#E5B824]" />
-                  <span className="font-semibold text-gray-200">Médiathèque (Photos & YouTube ALGB TV)</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNav('espace-membre')}
-                  className="hover:text-[#E5B824] transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <ChevronRight className="w-3 h-3 text-[#E5B824]" />
-                  <span>Tableau de Bord Membre & Cotisation</span>
-                </button>
-              </li>
+            <ul className="space-y-2.5 text-xs">
+              {[
+                { tab: 'accueil' as NavigationTab, label: 'Accueil & Synthèse' },
+                { tab: 'anciens' as NavigationTab, label: 'Annuaire des Membres' },
+                { tab: 'reseau' as NavigationTab, label: 'Carrières & Recrutement' },
+                { tab: 'mentorat' as NavigationTab, label: 'Programme de Mentorat' },
+                { tab: 'actualites' as NavigationTab, label: 'Événements & Magazine' },
+                { tab: 'projets' as NavigationTab, label: 'Mécénat & Bourses' },
+                { tab: 'espace-membre' as NavigationTab, label: 'Espace Membre' },
+              ].map((link) => (
+                <li key={link.tab}>
+                  <button
+                    type="button"
+                    onClick={() => handleNav(link.tab)}
+                    className="text-zinc-300 hover:text-[#F2B705] transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5 text-[#F2B705]" />
+                    <span>{link.label}</span>
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Column 3: Coordonnées & Localisation */}
-          <div className="space-y-4">
-            <h4 className="text-white font-heading text-sm font-semibold tracking-wider uppercase border-b border-gray-800 pb-2">
-              Siège & Contact
+          {/* Column 3: Siège & Coordonnées (2 cols) */}
+          <div className="lg:col-span-2 space-y-4">
+            <h4 className="text-xs font-semibold tracking-widest uppercase text-zinc-400 border-b border-white/10 pb-2">
+              Secrétariat Général
             </h4>
-            <div className="space-y-3 text-xs">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-[#E5B824] shrink-0 mt-0.5" />
-                <span>
-                  Lycée de Garçons de Bingerville, Boulevard Principal, BP 24 Bingerville, District Autonome d’Abidjan, Côte d’Ivoire.
-                </span>
+            <div className="space-y-3 text-xs text-zinc-300">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-[#F2B705] shrink-0 mt-0.5" />
+                <span>BP 24 Bingerville, District Autonome d’Abidjan, Côte d’Ivoire</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-[#E5B824] shrink-0" />
-                <span>contact@algb-bingerville.ci</span>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#F2B705] shrink-0" />
+                <span className="truncate">{settings.officialEmail}</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-[#E5B824] shrink-0" />
-                <span>+225 27 22 40 12 00 / 07 08 09 10 11</span>
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-[#F2B705] shrink-0" />
+                <span>+225 27 22 40 12 00</span>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => handleNav('contact')}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#F2B705] hover:underline cursor-pointer pt-1"
+            >
+              <span>Écrire au secrétariat</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Column 4: Protection des Données & Transparence */}
-          <div className="space-y-4">
-            <h4 className="text-white font-heading text-sm font-semibold tracking-wider uppercase border-b border-gray-800 pb-2">
-              Conformité & Éthique
+          {/* Column 4: Newsletter (3 cols) */}
+          <div className="lg:col-span-3 space-y-4">
+            <h4 className="text-xs font-semibold tracking-widest uppercase text-zinc-400 border-b border-white/10 pb-2">
+              Lettre d’Information Alumni
             </h4>
-            <div className="bg-gray-900 border border-gray-800 rounded-lg p-3 space-y-2">
-              <div className="flex items-center gap-2 text-white text-xs font-bold">
-                <ShieldCheck className="w-4 h-4 text-[#E5B824]" />
-                <span>Protection des Données (ARTCI)</span>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Recevez chaque mois les appels à projets de bourses, les offres exécutives et le calendrier des galas.
+            </p>
+
+            {subscribed ? (
+              <div className="p-3.5 rounded-xl bg-white/10 border border-[#F2B705]/40 text-xs text-white flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-[#F2B705] shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-semibold text-white">Abonnement enregistré</div>
+                  <p className="text-[11px] text-zinc-300 mt-0.5">
+                    Vous êtes inscrit à la lettre mensuelle de l’ALGB.
+                  </p>
+                </div>
               </div>
-              <p className="text-[11px] leading-relaxed text-gray-400">
-                Traitement des coordonnées conforme à la Loi n° 2013-450 de la République de Côte d’Ivoire. Les coordonnées privées des anciens ne sont jamais commercialisées ni cédées à des tiers.
-              </p>
-            </div>
-            <div className="text-[11px] text-gray-500">
-              <span>Gestion financière sous contrôle du Commissariat aux Comptes ALGB.</span>
-            </div>
+            ) : (
+              <form onSubmit={handleNewsletterSubmit} className="space-y-2.5">
+                <label htmlFor="footer-newsletter-email" className="sr-only">
+                  Adresse e-mail pour la newsletter
+                </label>
+                <input
+                  id="footer-newsletter-email"
+                  type="email"
+                  required
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder="votre.email@exemple.ci"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-white/10 border border-white/20 text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-[#F2B705]"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-2.5 px-4 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5 text-[#141413]" />
+                  <span>S’abonner à la newsletter</span>
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
-    </div>
 
-      {/* Bottom Bar: Copyright & Mentions */}
-      <div className="border-t border-gray-900 bg-black py-4 px-4 sm:px-6 lg:px-8 text-xs text-gray-400">
+      {/* Bottom Legal Bar */}
+      <div className="border-t border-white/10 bg-[#0d0d0c] py-4 px-4 sm:px-6 lg:px-8 text-xs text-zinc-400">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-          <p>© {new Date().getFullYear()} Amicale des Anciens Élèves du Lycée de Garçons de Bingerville (ALGB). Tous droits réservés.</p>
-          <div className="flex items-center gap-4 text-[11px]">
-            <button onClick={() => handleNav('amicale')} className="hover:text-[#E5B824] transition-colors cursor-pointer">
-              Statuts & Règlement
+          <p>
+            © {new Date().getFullYear()} Amicale des Anciens Élèves du Lycée de Garçons de Bingerville (ALGB).
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">
+            <button
+              type="button"
+              onClick={() => handleNav('amicale')}
+              className="hover:text-[#F2B705] transition-colors cursor-pointer"
+            >
+              Statuts & Gouvernance
             </button>
-            <span aria-hidden="true" className="text-gray-700">·</span>
-            <button onClick={() => handleNav('contact')} className="hover:text-[#E5B824] transition-colors cursor-pointer">
-              Mentions Légales
+            <span aria-hidden="true" className="text-zinc-700">·</span>
+            <button
+              type="button"
+              onClick={() => handleNav('histoire')}
+              className="hover:text-[#F2B705] transition-colors cursor-pointer"
+            >
+              Patrimoine 1903
             </button>
-            <span aria-hidden="true" className="text-gray-700">·</span>
-            <button onClick={() => handleNav('contact')} className="hover:text-[#E5B824] transition-colors cursor-pointer">
-              Assistance Adhérent
+            <span aria-hidden="true" className="text-zinc-700">·</span>
+            <button
+              type="button"
+              onClick={() => handleNav('adhesion')}
+              className="hover:text-[#F2B705] transition-colors cursor-pointer"
+            >
+              Adhésion en ligne
             </button>
           </div>
         </div>

@@ -1,34 +1,40 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { AlumniMember, JobOffer } from '../data/mockData';
-import { AlumniWorldMap } from '../components/AlumniWorldMap';
+import { JobOffer } from '../data/mockData';
 import {
-  Search,
-  Building,
+  Briefcase,
   MapPin,
-  UserCheck,
-  Send,
   PlusCircle,
-  Sparkles,
-  Globe,
+  Search,
+  Building2,
+  CheckCircle2,
+  Lock,
+  CreditCard,
+  KeyRound,
+  X,
 } from 'lucide-react';
+
+type ContractFilter = 'ALL' | 'STAGE' | 'ALTERNANCE' | 'CDI' | 'EXECUTIVE';
 
 export const ReseauView: React.FC = () => {
   const {
-    members,
     jobOffers,
     postJobOffer,
+    applyToJobOffer,
     currentUser,
-    addToast,
-    setViewingCardMember,
-    setEnrollmentModalOpen,
+    currentRole,
+    activeCredential,
+    isCurrentMemberUpToDate,
+    currentMemberFinancialSummary,
+    openAuthModal,
+    openPaymentModal,
+    setActiveTab,
   } = useApp();
 
-  const [activeSubTab, setActiveSubTab] = useState<'ANNUAIRE' | 'OFFRES' | 'MENTORAT' | 'CARTE'>('ANNUAIRE');
+  const [contractFilter, setContractFilter] = useState<ContractFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sectorFilter, setSectorFilter] = useState('ALL');
 
-  // Job Modal
+  // Publier une offre modal
   const [jobModalOpen, setJobModalOpen] = useState(false);
   const [newJob, setNewJob] = useState({
     title: '',
@@ -41,663 +47,570 @@ export const ReseauView: React.FC = () => {
     contactEmail: currentUser?.email || 'recrutement@algb-alumni.ci',
   });
 
-  // Mentorship Request Modal
-  const [mentorshipModalOpen, setMentorshipModalOpen] = useState(false);
-  const [selectedMentor, setSelectedMentor] = useState<AlumniMember | null>(null);
-  const [mentorshipGoal, setMentorshipGoal] = useState('');
+  useEffect(() => {
+    if (!currentUser) return;
+    setNewJob((prev) => ({
+      ...prev,
+      company: prev.company || currentUser.company || '',
+      sector: prev.sector === 'Technologie & Numérique' ? currentUser.sector || prev.sector : prev.sector,
+      contactEmail:
+        prev.contactEmail === 'recrutement@algb-alumni.ci'
+          ? currentUser.email || prev.contactEmail
+          : prev.contactEmail,
+    }));
+  }, [currentUser]);
 
-  // Apply to job modal
+  // Postuler modal
   const [applyModalJob, setApplyModalJob] = useState<JobOffer | null>(null);
   const [coverNote, setCoverNote] = useState('');
 
-  const sectors = ['ALL', ...Array.from(new Set(members.map((m) => m.sector)))];
+  const contractTabs: { id: ContractFilter; label: string }[] = [
+    { id: 'ALL', label: 'Toutes les offres' },
+    { id: 'STAGE', label: 'Stage' },
+    { id: 'ALTERNANCE', label: 'Alternance' },
+    { id: 'CDI', label: 'CDI' },
+    { id: 'EXECUTIVE', label: 'Executive' },
+  ];
 
-  const filteredMembers = members.filter((member) => {
+  const filteredJobs = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const fullName = `${member.firstName} ${member.lastName}`.toLowerCase();
-    const nick = (member.nickname || '').toLowerCase();
-    const matchesSearch =
-      !q ||
-      fullName.includes(q) ||
-      nick.includes(q) ||
-      member.profession.toLowerCase().includes(q) ||
-      member.company.toLowerCase().includes(q) ||
-      member.skills.some((s) => s.toLowerCase().includes(q));
-
-    if (!matchesSearch) return false;
-    if (sectorFilter !== 'ALL' && member.sector !== sectorFilter) return false;
-    if (activeSubTab === 'MENTORAT' && !member.isMentor) return false;
-    return true;
-  });
-
-  const filteredJobs = jobOffers.filter((job) => {
-    const matches =
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.sector.toLowerCase().includes(searchQuery.toLowerCase());
-    return matches;
-  });
+    return jobOffers.filter((job) => {
+      if (contractFilter !== 'ALL' && job.type !== contractFilter) return false;
+      if (!q) return true;
+      return (
+        job.title.toLowerCase().includes(q) ||
+        job.company.toLowerCase().includes(q) ||
+        job.location.toLowerCase().includes(q) ||
+        job.sector.toLowerCase().includes(q)
+      );
+    });
+  }, [jobOffers, contractFilter, searchQuery]);
 
   const handleCreateJob = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newJob.title || !newJob.description) return;
+    if (!newJob.title.trim() || !newJob.description.trim()) return;
 
     postJobOffer({
-      title: newJob.title,
+      title: newJob.title.trim(),
       type: newJob.type,
-      company: newJob.company || 'Entreprise Partenaire ALGB',
-      sector: newJob.sector,
-      location: newJob.location,
+      company: newJob.company.trim() || 'Entreprise Partenaire ALGB',
+      sector: newJob.sector.trim(),
+      location: newJob.location.trim(),
       postedBy: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Alumni ALGB',
       postedByPromo: currentUser?.promotionYear || 2002,
       deadline: '2026-12-31',
-      description: newJob.description,
-      requirements: newJob.requirements.split('\n').filter((r) => r.trim().length > 0),
-      contactEmail: newJob.contactEmail,
+      description: newJob.description.trim(),
+      requirements: newJob.requirements
+        .split('\n')
+        .map((r) => r.trim())
+        .filter(Boolean),
+      contactEmail: newJob.contactEmail.trim() || 'recrutement@algb-alumni.ci',
     });
 
     setJobModalOpen(false);
     setNewJob({
       title: '',
       type: 'CDI',
-      company: '',
-      sector: 'Technologie & Numérique',
+      company: currentUser?.company || '',
+      sector: currentUser?.sector || 'Technologie & Numérique',
       location: 'Abidjan',
       description: '',
       requirements: '',
-      contactEmail: '',
+      contactEmail: currentUser?.email || 'recrutement@algb-alumni.ci',
     });
   };
 
-  const handleSendMentorshipRequest = (e: React.FormEvent) => {
+  const handleApplySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedMentor) return;
-    addToast(
-      'success',
-      'Demande de mentorat transmise avec honneur',
-      `Votre sollicitation fraternelle a été adressée à ${selectedMentor.firstName} ${selectedMentor.lastName}. Il prendra contact avec vous prochainement.`
-    );
-    setMentorshipModalOpen(false);
-    setSelectedMentor(null);
-    setMentorshipGoal('');
-  };
-
-  const handleApplyToJob = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!applyModalJob) return;
-    addToast(
-      'success',
-      'Candidature fraternelle transmise !',
-      `Votre profil et lettre d'intérêt ont été transmis à ${applyModalJob.postedBy} (${applyModalJob.company}).`
-    );
+    if (!applyModalJob || !coverNote.trim()) return;
+    applyToJobOffer({ jobId: applyModalJob.id, note: coverNote.trim() });
     setApplyModalJob(null);
     setCoverNote('');
   };
 
+  const getContractLabel = (type: JobOffer['type']) => {
+    switch (type) {
+      case 'EXECUTIVE':
+        return 'Executive';
+      case 'ALTERNANCE':
+        return 'Alternance';
+      case 'STAGE':
+        return 'Stage';
+      default:
+        return type;
+    }
+  };
+
+  const getCompanyMonogram = (company: string) =>
+    company
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() || '')
+      .join('');
+
   const inputClass =
-    'w-full bg-gray-50 dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] focus:bg-white dark:focus:bg-zinc-950 rounded-lg p-2.5 text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none';
+    'w-full bg-[#F8F8F6] dark:bg-[#141413] border border-black/15 dark:border-white/15 focus:border-[#C2410C] dark:focus:border-[#F2B705] rounded-lg px-3.5 py-2.5 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/70 focus:outline-none';
 
   return (
-    <div className="bg-white dark:bg-zinc-950 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-        {/* Editorial Header */}
-        <div className="border-b border-gray-200 dark:border-zinc-800 pb-8 flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
-          <div>
-            <span className="text-xs uppercase tracking-widest font-bold text-[#B8860B] dark:text-[#E5B824]">
-              Synergie & Opportunités
-            </span>
-            <h1 className="text-2xl sm:text-4xl font-bold font-heading text-black dark:text-white mt-1">
-              Réseau Professionnel & Solidarité
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-zinc-400 font-editorial italic max-w-2xl mt-1">
-              « Synergie intergénérationnelle, annuaire des compétences, opportunités d'affaires et mentorat. »
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setEnrollmentModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-zinc-800 transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-[#B8860B] dark:text-[#E5B824]" />
-              <span>S’enrôler dans la BDR</span>
-            </button>
-
-            <button
-              onClick={() => setJobModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#E5B824] text-black hover:bg-[#dcae1f] transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Publier une opportunité</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Navigation Sub-Tabs */}
-        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl w-fit">
-          <button
-            onClick={() => setActiveSubTab('ANNUAIRE')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-              activeSubTab === 'ANNUAIRE'
-                ? 'bg-[#E5B824] text-black shadow-sm'
-                : 'text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-            }`}
-          >
-            Annuaire des Compétences ({filteredMembers.length})
-          </button>
-          <button
-            onClick={() => setActiveSubTab('OFFRES')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-              activeSubTab === 'OFFRES'
-                ? 'bg-[#E5B824] text-black shadow-sm'
-                : 'text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-            }`}
-          >
-            Offres & Stages ({jobOffers.length})
-          </button>
-          <button
-            onClick={() => setActiveSubTab('MENTORAT')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-              activeSubTab === 'MENTORAT'
-                ? 'bg-[#E5B824] text-black shadow-sm'
-                : 'text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-            }`}
-          >
-            Programme de Mentorat
-          </button>
-          <button
-            onClick={() => setActiveSubTab('CARTE')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
-              activeSubTab === 'CARTE'
-                ? 'bg-[#E5B824] text-black shadow-sm'
-                : 'text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-            }`}
-          >
-            <Globe className="w-3.5 h-3.5" />
-            <span>Carte Mondiale (D3)</span>
-          </button>
-        </div>
-
-        {/* Filters Strip */}
-        {activeSubTab !== 'CARTE' && (
-          <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full sm:max-w-md">
-              <Search className="w-4 h-4 text-gray-400 dark:text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Rechercher par nom, expertise (ex: Cloud), métier ou entreprise..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-xl pl-10 pr-4 py-2 text-xs text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none"
-              />
+    <div className="bg-[#F8F8F6] dark:bg-[#141413] min-h-screen transition-colors">
+      {/* Univers Terracotta doux (#FFF7ED) */}
+      <section className="bg-[#FFF7ED] dark:bg-[#221712] border-b border-[#C2410C]/15 py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <span className="text-xs uppercase tracking-[0.16em] font-semibold text-[#C2410C] dark:text-orange-400 inline-flex items-center gap-1.5">
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>Jeunes Diplômés & Mobilité Exécutive</span>
+              </span>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-[#141413] dark:text-white">
+                Carrières & Opportunités Alumni
+              </h1>
+              <p className="text-sm text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
+                Accédez aux postes ouverts par nos diplômés en poste en Côte d’Ivoire, en Afrique de
+                l’Ouest et à l’international, du premier stage jusqu’aux directions générales.
+              </p>
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <select
-                value={sectorFilter}
-                onChange={(e) => setSectorFilter(e.target.value)}
-                className="w-full sm:w-auto bg-white dark:bg-zinc-950 border border-gray-300 dark:border-zinc-700 focus:border-[#E5B824] rounded-xl px-3 py-2 text-xs text-black dark:text-white focus:outline-none cursor-pointer"
+            {isCurrentMemberUpToDate ? (
+              <button
+                type="button"
+                onClick={() => setJobModalOpen(true)}
+                className="px-5 py-3 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer transition-colors shrink-0 self-start md:self-auto shadow-xs"
               >
-                {sectors.map((sec) => (
-                  <option key={sec} value={sec}>
-                    {sec === 'ALL' ? 'Tous les secteurs d’activité' : sec}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <PlusCircle className="w-4 h-4 text-[#141413]" />
+                <span>Publier une offre</span>
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white dark:bg-[#1e1e1c] border border-[#C2410C]/25 text-[#C2410C] dark:text-orange-300 text-xs font-semibold shrink-0 self-start md:self-auto">
+                <Lock className="w-3.5 h-3.5" />
+                <span>Réservé aux membres à jour de cotisation</span>
+              </span>
+            )}
           </div>
-        )}
 
-        {/* Tab 1: Annuaire des Compétences */}
-        {activeSubTab === 'ANNUAIRE' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMembers.map((member) => (
-              <div
-                key={member.id}
-                className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 space-y-4 hover:border-gray-300 dark:hover:border-zinc-700 shadow-sm transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 flex items-center justify-center text-[#B8860B] dark:text-[#E5B824] font-heading font-bold text-base shrink-0 overflow-hidden">
-                      {member.avatarUrl ? (
-                        <img src={member.avatarUrl} alt={member.firstName} className="w-full h-full object-cover" />
-                      ) : (
-                        <span>
-                          {member.firstName[0]}
-                          {member.lastName[0]}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] font-mono text-gray-600 dark:text-zinc-400 font-semibold">
-                        Promo {member.promotionYear}
-                      </span>
-                      {member.studyLevel && (
-                        <span className="block text-[10px] font-mono text-gray-500 dark:text-zinc-500 mt-0.5">
-                          {member.studyLevel}
-                        </span>
-                      )}
-                      {member.isMentor && (
-                        <span className="block text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold mt-0.5">
-                          Mentor Disponible
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <h3 className="text-base font-bold font-heading text-black dark:text-white">
-                    {member.firstName} {member.lastName}
-                  </h3>
-                  {member.nickname && (
-                    <div className="text-xs text-[#B8860B] dark:text-[#E5B824] font-editorial italic font-semibold">
-                      « {member.nickname} »
-                    </div>
-                  )}
-                  <div className="text-xs text-gray-900 dark:text-zinc-100 font-semibold mt-1">
-                    {member.currentRole}
-                  </div>
-                  <div className="text-xs text-gray-700 dark:text-zinc-300 flex items-center gap-1.5 mt-0.5">
-                    <Building className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
-                    <span className="truncate">{member.company}</span>
-                  </div>
-                  <div className="text-[11px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5 mt-1">
-                    <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
-                    <span>
-                      {member.city} {member.commune ? `(${member.commune})` : ''}, {member.country} · {member.sector}
-                    </span>
-                  </div>
-
-                  {((member.certifications && member.certifications.length > 0) ||
-                    (member.availabilities && member.availabilities.length > 0)) && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {(member.certifications || []).slice(0, 2).map((c) => (
-                        <span
-                          key={c}
-                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700 truncate max-w-[180px]"
-                        >
-                          {c.split('–')[0].trim()}
-                        </span>
-                      ))}
-                      {(member.availabilities || []).map((av) => (
-                        <span
-                          key={av}
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                        >
-                          {av}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Clean typography skills */}
-                  <div className="mt-3 pt-2.5 border-t border-gray-200 dark:border-zinc-800">
-                    <span className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold block mb-1">
-                      Compétences BDR
-                    </span>
-                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-700 dark:text-zinc-300">
-                      {member.skills.map((skill, i) => (
-                        <React.Fragment key={skill}>
-                          <span>{skill}</span>
-                          {i < member.skills.length - 1 && <span className="text-gray-300 dark:text-zinc-600">·</span>}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-gray-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-                  <button
-                    onClick={() => setViewingCardMember(member)}
-                    className="text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white font-semibold text-[11px] cursor-pointer"
-                  >
-                    Carte officielle
-                  </button>
-
-                  {member.isMentor && (
+          {isCurrentMemberUpToDate && (
+            /* Filtres rapides par type de contrat (Terracotta Intense #C2410C) + Recherche */
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {contractTabs.map((tab) => {
+                  const active = contractFilter === tab.id;
+                  return (
                     <button
-                      onClick={() => {
-                        setSelectedMentor(member);
-                        setMentorshipModalOpen(true);
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-yellow-50 dark:bg-yellow-500/15 hover:bg-[#E5B824] text-[#B8860B] dark:text-[#E5B824] hover:text-black border border-yellow-200 dark:border-yellow-500/30 font-semibold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setContractFilter(tab.id)}
+                      className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-[#C2410C] text-white shadow-xs'
+                          : 'bg-white dark:bg-[#1e1e1c] text-[#141413] dark:text-zinc-200 border border-black/10 dark:border-white/10 hover:border-[#C2410C]'
+                      }`}
                     >
-                      <UserCheck className="w-3.5 h-3.5" />
-                      <span>Solliciter mentorat</span>
+                      {tab.label}
                     </button>
+                  );
+                })}
+              </div>
+
+              <div className="relative w-full lg:w-80">
+                <Search className="w-4 h-4 text-[#4A4A48] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un poste, entreprise, ville..."
+                  className="w-full bg-white dark:bg-[#1e1e1c] border border-black/15 dark:border-white/15 focus:border-[#C2410C] rounded-lg pl-9 pr-3 py-2 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/70 focus:outline-none"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Liste de cartes d'offres (uniquement membres à jour de cotisation) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+        {!isCurrentMemberUpToDate ? (
+          <div className="bg-white dark:bg-[#1e1e1c] rounded-xl p-8 sm:p-10 shadow-editorial border border-[#C2410C]/20 dark:border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="space-y-3 max-w-2xl">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#C2410C] dark:text-orange-400">
+                <Lock className="w-4 h-4" />
+                <span>Carrières au cœur du réseau · {jobOffers.length} opportunités actives</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-heading font-bold text-[#141413] dark:text-white">
+                Accès exclusif aux membres à jour de cotisation
+              </h2>
+              <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
+                Conformément à la matrice des profils ALGB, la consultation des offres de stages,
+                d’alternance, de CDI et de postes exécutifs, ainsi que la publication d’offres et
+                le dépôt de candidatures, sont réservés aux membres connectés à jour de leur
+                cotisation annuelle.
+              </p>
+
+              {currentRole !== 'VISITEUR' && activeCredential && currentUser && currentMemberFinancialSummary && (
+                <div className="p-3.5 rounded-lg bg-[#FFF7ED] dark:bg-[#2b1b15] border border-[#C2410C]/20 text-xs space-y-1">
+                  <div className="font-semibold text-[#C2410C] dark:text-orange-300">
+                    Statut de votre dossier ({currentUser.firstName} {currentUser.lastName}) :
+                  </div>
+                  <div className="text-[#4A4A48] dark:text-zinc-300">
+                    {currentMemberFinancialSummary.paidMonths.length} / 12 mois acquittés
+                    {currentMemberFinancialSummary.overdueMonths.length > 0 &&
+                      ` · ${currentMemberFinancialSummary.overdueMonths.length} mois à régulariser`}
+                    {currentMemberFinancialSummary.pendingMonths.length > 0 &&
+                      ` · ${currentMemberFinancialSummary.pendingMonths.length} en attente de pointage`}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              {currentRole === 'VISITEUR' || !activeCredential ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal('reseau')}
+                    className="px-5 py-3 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs font-semibold inline-flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <KeyRound className="w-4 h-4 text-[#141413]" />
+                    <span>Me connecter avec mon credential</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('adhesion')}
+                    className="px-4 py-3 rounded-lg border border-black/15 dark:border-white/15 text-[#141413] dark:text-white text-xs font-medium cursor-pointer"
+                  >
+                    Adhérer à l’ALGB
+                  </button>
+                </>
+              ) : currentUser ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openPaymentModal({
+                        type: 'COTISATION_MENSUELLE',
+                        selectedMonths: currentMemberFinancialSummary?.overdueMonths,
+                      })
+                    }
+                    className="px-5 py-3 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs font-semibold inline-flex items-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <CreditCard className="w-4 h-4 text-[#141413]" />
+                    <span>Régulariser ma cotisation</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('espace-membre')}
+                    className="px-4 py-3 rounded-lg border border-black/15 dark:border-white/15 text-[#141413] dark:text-white text-xs font-medium cursor-pointer"
+                  >
+                    Mon Espace Cotisations
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('espace-membre')}
+                  className="px-5 py-3 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  Consulter mon profil membre
+                </button>
+              )}
+            </div>
+          </div>
+        ) : filteredJobs.length === 0 ? (
+          <div className="bg-white dark:bg-[#1e1e1c] rounded-xl p-12 text-center shadow-editorial border border-black/5 dark:border-white/10 space-y-3">
+            <Briefcase className="w-10 h-10 text-[#C2410C] mx-auto" />
+            <h2 className="text-lg font-heading font-bold text-[#141413] dark:text-white">
+              Aucune offre ne correspond à ce filtre
+            </h2>
+            <p className="text-xs text-[#4A4A48] dark:text-zinc-400">
+              Affichez toutes les catégories de contrats ou publiez une nouvelle opportunité.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setContractFilter('ALL');
+                setSearchQuery('');
+              }}
+              className="px-4 py-2 rounded-lg bg-[#F2B705] text-[#141413] text-xs font-semibold cursor-pointer"
+            >
+              Afficher toutes les offres
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredJobs.map((job) => (
+              <article
+                key={job.id}
+                className="bg-[#FFFFFF] dark:bg-[#1e1e1c] rounded-xl p-6 shadow-editorial border border-black/5 dark:border-white/10 flex flex-col justify-between gap-5"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      {/* Logo entreprise monogramme */}
+                      <div className="w-12 h-12 rounded-xl bg-[#FFF7ED] dark:bg-[#2b1b15] border border-[#C2410C]/25 flex items-center justify-center font-heading font-bold text-sm text-[#C2410C] dark:text-orange-400 shrink-0">
+                        {getCompanyMonogram(job.company) || <Building2 className="w-5 h-5" />}
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="px-2 py-0.5 rounded bg-[#C2410C] text-white text-[10px] font-semibold uppercase tracking-wide">
+                            {getContractLabel(job.type)}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded bg-[#FEF8E6] text-[#141413] text-[10px] font-semibold">
+                            Publié par un Alumni
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-heading font-bold text-[#141413] dark:text-white leading-snug">
+                          {job.title}
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#4A4A48] dark:text-zinc-300">
+                    <span className="font-semibold text-[#141413] dark:text-white">{job.company}</span>
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#C2410C] dark:text-orange-400" />
+                      <span>{job.location}</span>
+                    </span>
+                    <span>· {job.sector}</span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-300 leading-relaxed">
+                    {job.description}
+                  </p>
+
+                  {job.requirements.length > 0 && (
+                    <ul className="space-y-1 text-xs text-[#4A4A48] dark:text-zinc-400">
+                      {job.requirements.map((req, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#C2410C] dark:text-orange-400 shrink-0 mt-0.5" />
+                          <span>{req}</span>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
-              </div>
+
+                <div className="pt-4 border-t border-black/10 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-[11px] text-[#4A4A48] dark:text-zinc-400">
+                    Déposé par <strong className="text-[#141413] dark:text-white">{job.postedBy}</strong> (Promo{' '}
+                    {job.postedByPromo})
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setApplyModalJob(job)}
+                    className="px-5 py-2.5 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold text-xs cursor-pointer transition-colors"
+                  >
+                    Postuler
+                  </button>
+                </div>
+              </article>
             ))}
           </div>
         )}
+      </div>
 
-        {/* Tab 2: Offres d'emploi & Stages */}
-        {activeSubTab === 'OFFRES' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredJobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 space-y-4 hover:border-gray-300 dark:hover:border-zinc-700 shadow-sm transition-all flex flex-col justify-between"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#E5B824] text-black">
-                        {job.type}
-                      </span>
-                      <span className="text-[11px] text-gray-500 dark:text-zinc-400 font-mono">
-                        Publiée le {job.postedDate}
-                      </span>
-                    </div>
-
-                    <h3 className="text-base font-bold font-heading text-black dark:text-white">
-                      {job.title}
-                    </h3>
-                    <div className="text-xs text-[#B8860B] dark:text-[#E5B824] font-semibold">
-                      {job.company} · {job.location}
-                    </div>
-                    <p className="text-xs text-gray-700 dark:text-zinc-300 leading-relaxed">
-                      {job.description}
-                    </p>
-
-                    <div className="pt-2">
-                      <span className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-zinc-400 font-semibold block mb-1">
-                        Prérequis & Profil :
-                      </span>
-                      <ul className="text-xs text-gray-600 dark:text-zinc-400 space-y-1 list-disc list-inside">
-                        {job.requirements.map((req, idx) => (
-                          <li key={idx}>{req}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-                    <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                      Déposée par : {job.postedBy} (Promo {job.postedByPromo})
-                    </span>
-                    <button
-                      onClick={() => setApplyModalJob(job)}
-                      className="px-4 py-2 rounded-lg bg-[#E5B824] text-black font-semibold hover:bg-[#dcae1f] cursor-pointer"
-                    >
-                      Postuler / Contacter
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 3: Mentorat */}
-        {activeSubTab === 'MENTORAT' && (
-          <div className="space-y-8">
-            <div className="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-3">
-              <span className="text-xs uppercase tracking-widest font-bold text-[#B8860B] dark:text-[#E5B824]">
-                Transmission de l'Excellence
-              </span>
-              <h2 className="text-xl sm:text-2xl font-bold font-heading text-black dark:text-white">
-                Le Programme de Mentorat Intergénérationnel ALGB
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-700 dark:text-zinc-300 leading-relaxed max-w-3xl">
-                Chaque année, des dizaines de jeunes bacheliers et étudiants du Lycée de Garçons de Bingerville entrent dans les universités et grandes écoles. Ce programme met en relation directe ces jeunes talents avec des hauts dirigeants, magistrats, médecins et ingénieurs anciens du LGB pour les conseiller, les encourager et faciliter leur insertion professionnelle.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {members
-                .filter((m) => m.isMentor)
-                .map((mentor) => (
-                  <div
-                    key={mentor.id}
-                    className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 space-y-4 shadow-sm flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 flex items-center justify-center text-[#B8860B] dark:text-[#E5B824] font-heading font-bold text-base">
-                          {mentor.firstName[0]}
-                          {mentor.lastName[0]}
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold font-heading text-black dark:text-white">
-                            {mentor.firstName} {mentor.lastName}
-                          </h4>
-                          <div className="text-xs text-[#B8860B] dark:text-[#E5B824] font-semibold">
-                            Promo {mentor.promotionYear}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-black dark:text-white font-semibold">{mentor.currentRole}</div>
-                      <div className="text-xs text-gray-600 dark:text-zinc-400">{mentor.company}</div>
-                      <p className="text-xs text-gray-600 dark:text-zinc-400 italic font-editorial mt-2">
-                        « {mentor.bio} »
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        setSelectedMentor(mentor);
-                        setMentorshipModalOpen(true);
-                      }}
-                      className="w-full mt-4 py-2.5 rounded-xl bg-[#E5B824] text-black text-xs font-semibold hover:bg-[#dcae1f] flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Demander un parrainage</span>
-                    </button>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 4: Carte Mondiale Interactive (D3) */}
-        {activeSubTab === 'CARTE' && (
-          <AlumniWorldMap
-            members={members}
-            onViewCard={(member) => setViewingCardMember(member)}
-            onContact={(member) => {
-              if (member.isMentor) {
-                setSelectedMentor(member);
-                setMentorshipModalOpen(true);
-              } else if (member.email) {
-                window.location.href = `mailto:${member.email}?subject=Contact Réseau ALGB`;
-              } else {
-                addToast('info', 'Profil sélectionné', `Consultez la carte officielle de ${member.firstName} ${member.lastName}.`);
-              }
-            }}
-          />
-        )}
-
-        {/* Modal: Post Job Offer */}
-        {jobModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm overflow-y-auto">
-            <div className="relative w-full max-w-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-5 my-8">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white">
-                Publier une opportunité professionnelle
+      {/* Modal: Publier une offre */}
+      {jobModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+          <div className="relative w-full max-w-xl bg-white dark:bg-[#1e1e1c] rounded-xl p-6 shadow-2xl border border-black/10 dark:border-white/10 space-y-5 my-8">
+            <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
+              <h3 className="text-lg font-heading font-bold text-[#141413] dark:text-white">
+                Publier une offre sur le portail Carrières
               </h3>
+              <button
+                type="button"
+                onClick={() => setJobModalOpen(false)}
+                aria-label="Fermer"
+                className="p-1.5 rounded-lg text-[#4A4A48] hover:text-[#141413] dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-              <form onSubmit={handleCreateJob} className="space-y-4 text-xs">
+            <form onSubmit={handleCreateJob} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-[#141413] dark:text-white mb-1">
+                  Intitulé du poste *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex : Ingénieur Data & Cloud Junior"
+                  value={newJob.title}
+                  onChange={(e) => setNewJob({ ...newJob, title: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Intitulé du poste / offre</label>
+                  <label className="block font-semibold text-[#141413] dark:text-white mb-1">
+                    Type de contrat *
+                  </label>
+                  <select
+                    value={newJob.type}
+                    onChange={(e) => setNewJob({ ...newJob, type: e.target.value as JobOffer['type'] })}
+                    className={inputClass}
+                  >
+                    <option value="STAGE">Stage</option>
+                    <option value="ALTERNANCE">Alternance</option>
+                    <option value="CDI">CDI</option>
+                    <option value="EXECUTIVE">Executive</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-[#141413] dark:text-white mb-1">
+                    Entreprise / Institution *
+                  </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Ingénieur Génie Civil Junior"
-                    value={newJob.title}
-                    onChange={(e) => setNewJob({ ...newJob, title: e.target.value })}
+                    value={newJob.company}
+                    onChange={(e) => setNewJob({ ...newJob, company: e.target.value })}
                     className={inputClass}
                   />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Type de contrat</label>
-                    <select
-                      value={newJob.type}
-                      onChange={(e) => setNewJob({ ...newJob, type: e.target.value as any })}
-                      className={inputClass}
-                    >
-                      <option value="CDI">CDI</option>
-                      <option value="CDD">CDD</option>
-                      <option value="STAGE">Stage de fin d’études</option>
-                      <option value="CONSULTANCE">Consultance / Mission</option>
-                      <option value="PARTENARIAT">Partenariat d’affaires</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Entreprise / Institution</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Nom de l’entreprise"
-                      value={newJob.company}
-                      onChange={(e) => setNewJob({ ...newJob, company: e.target.value })}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Description de la mission</label>
-                  <textarea
-                    rows={3}
-                    required
-                    placeholder="Détails du poste, enjeux et responsabilités..."
-                    value={newJob.description}
-                    onChange={(e) => setNewJob({ ...newJob, description: e.target.value })}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">Profil recherché (1 ligne par prérequis)</label>
-                  <textarea
-                    rows={2}
-                    placeholder="Ex: Bac+5 Grande École d'Ingénieur&#10;Bonne maîtrise de Python"
-                    value={newJob.requirements}
-                    onChange={(e) => setNewJob({ ...newJob, requirements: e.target.value })}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setJobModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 bg-[#E5B824] text-black font-semibold rounded-lg hover:bg-[#dcae1f] cursor-pointer"
-                  >
-                    Publier l’opportunité
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Modal: Demande de Mentorat */}
-        {mentorshipModalOpen && selectedMentor && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white">
-                Solliciter un mentorat fraternel auprès de {selectedMentor.firstName} {selectedMentor.lastName}
-              </h3>
-              <p className="text-xs text-gray-600 dark:text-zinc-400">
-                {selectedMentor.currentRole} à {selectedMentor.company} (Promo {selectedMentor.promotionYear})
-              </p>
-
-              <form onSubmit={handleSendMentorshipRequest} className="space-y-4 text-xs">
-                <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
-                    Présentez votre projet académique ou professionnel et vos attentes
+                  <label className="block font-semibold text-[#141413] dark:text-white mb-1">
+                    Localisation *
                   </label>
-                  <textarea
-                    rows={4}
+                  <input
+                    type="text"
                     required
-                    value={mentorshipGoal}
-                    onChange={(e) => setMentorshipGoal(e.target.value)}
-                    placeholder="Ex: Diplômé de la promo 2023 en mathématiques appliquées, je souhaite bénéficier de vos conseils pour orienter ma carrière dans les systèmes financiers..."
+                    value={newJob.location}
+                    onChange={(e) => setNewJob({ ...newJob, location: e.target.value })}
                     className={inputClass}
                   />
                 </div>
-
-                <div className="flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setMentorshipModalOpen(false)}
-                    className="px-3 py-1.5 text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-[#E5B824] text-black font-semibold rounded-lg hover:bg-[#dcae1f] cursor-pointer"
-                  >
-                    Transmettre ma demande
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Modal: Apply to Job */}
-        {applyModalJob && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 shadow-2xl space-y-4">
-              <h3 className="text-base font-bold font-heading text-black dark:text-white">
-                Postuler à l'offre : {applyModalJob.title}
-              </h3>
-              <p className="text-xs text-[#B8860B] dark:text-[#E5B824] font-semibold">
-                {applyModalJob.company} — Contact recruteur : {applyModalJob.contactEmail}
-              </p>
-
-              <form onSubmit={handleApplyToJob} className="space-y-4 text-xs">
                 <div>
-                  <label className="block text-gray-800 dark:text-zinc-200 font-semibold mb-1">
-                    Note de motivation / Parcours LGB
+                  <label className="block font-semibold text-[#141413] dark:text-white mb-1">
+                    Secteur *
                   </label>
-                  <textarea
-                    rows={4}
+                  <input
+                    type="text"
                     required
-                    value={coverNote}
-                    onChange={(e) => setCoverNote(e.target.value)}
-                    placeholder="Mentionnez votre promotion, vos compétences principales et votre motivation pour rejoindre cette équipe..."
+                    value={newJob.sector}
+                    onChange={(e) => setNewJob({ ...newJob, sector: e.target.value })}
                     className={inputClass}
                   />
                 </div>
+              </div>
 
-                <div className="p-3 bg-gray-50 dark:bg-zinc-950 rounded-lg border border-gray-200 dark:border-zinc-800 text-[11px] text-gray-600 dark:text-zinc-400">
-                  Vos coordonnées d'adhérent ALGB seront automatiquement jointes à votre candidature.
-                </div>
+              <div>
+                <label className="block font-semibold text-[#141413] dark:text-white mb-1">
+                  Description de la mission *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={newJob.description}
+                  onChange={(e) => setNewJob({ ...newJob, description: e.target.value })}
+                  placeholder="Contexte, missions principales et impact..."
+                  className={inputClass}
+                />
+              </div>
 
-                <div className="flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setApplyModalJob(null)}
-                    className="px-3 py-1.5 text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-[#E5B824] text-black font-semibold rounded-lg hover:bg-[#dcae1f] cursor-pointer"
-                  >
-                    Envoyer ma candidature
-                  </button>
-                </div>
-              </form>
-            </div>
+              <div>
+                <label className="block font-semibold text-[#141413] dark:text-white mb-1">
+                  Critères recherchés (1 ligne par critère)
+                </label>
+                <textarea
+                  rows={2}
+                  value={newJob.requirements}
+                  onChange={(e) => setNewJob({ ...newJob, requirements: e.target.value })}
+                  placeholder="Ex : Bac+5 École d'Ingénieur ou Commerce&#10;Maîtrise du français et de l'anglais"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setJobModalOpen(false)}
+                  className="px-4 py-2 text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold cursor-pointer"
+                >
+                  Publier l’offre
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Modal: Postuler */}
+      {applyModalJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-white dark:bg-[#1e1e1c] rounded-xl p-6 shadow-2xl border border-black/10 dark:border-white/10 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#C2410C] dark:text-orange-400">
+                  {getContractLabel(applyModalJob.type)} · {applyModalJob.company}
+                </span>
+                <h3 className="text-lg font-heading font-bold text-[#141413] dark:text-white mt-0.5">
+                  Postuler : {applyModalJob.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setApplyModalJob(null)}
+                aria-label="Fermer"
+                className="p-1 text-[#4A4A48] hover:text-[#141413] dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleApplySubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-[#141413] dark:text-white mb-1">
+                  Note de candidature & présentation de votre parcours
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={coverNote}
+                  onChange={(e) => setCoverNote(e.target.value)}
+                  placeholder="Précisez votre promotion, vos compétences clés et votre motivation..."
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="p-3 rounded-lg bg-[#FEF8E6] text-[#141413] text-[11px]">
+                Votre candidature sera transmise à {applyModalJob.postedBy} et enregistrée dans votre
+                suivi Espace Membre.
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setApplyModalJob(null)}
+                  className="px-4 py-2 text-[#4A4A48] dark:text-zinc-400 cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-semibold cursor-pointer"
+                >
+                  Envoyer ma candidature
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

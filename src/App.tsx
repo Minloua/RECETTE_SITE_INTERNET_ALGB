@@ -27,6 +27,7 @@ import { AmicaleView } from './views/AmicaleView';
 import { HistoireView } from './views/HistoireView';
 import { PromotionsView } from './views/PromotionsView';
 import { ReseauView } from './views/ReseauView';
+import { MentoratView } from './views/MentoratView';
 import { ProjetsView } from './views/ProjetsView';
 import { ActualitesView } from './views/ActualitesView';
 import { GalerieView } from './views/GalerieView';
@@ -40,22 +41,23 @@ const MainContent: React.FC = () => {
 
   if (!canAccessTab(activeTab)) {
     return (
-      <main className="min-h-screen bg-white dark:bg-zinc-950 transition-colors">
+      <main className="min-h-screen bg-[#F8F8F6] dark:bg-[#141413] transition-colors">
         <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-5">
-          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 flex items-center justify-center text-[#B8860B] dark:text-[#E5B824] mx-auto">
+          <div className="w-16 h-16 rounded-full bg-[#141413] text-[#F2B705] flex items-center justify-center mx-auto">
             <Lock className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold font-heading text-black dark:text-white">
+          <h2 className="text-2xl font-bold font-heading text-[#141413] dark:text-white">
             Accès protégé par Credential ALGB
           </h2>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
-            Cette rubrique nécessite une connexion par credential attribué par l’Administration. Les menus publics définis pour les visiteurs restent accessibles librement sans credential.
+          <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-400 leading-relaxed">
+            Cette rubrique nécessite une connexion par credential attribué par l’Administration. Les
+            menus publics définis pour les visiteurs restent accessibles librement sans credential.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <button
               type="button"
               onClick={() => openAuthModal(activeTab)}
-              className="px-5 py-2.5 bg-[#E5B824] text-black font-bold text-xs rounded-xl hover:bg-[#dcae1f] flex items-center gap-2 cursor-pointer"
+              className="px-5 py-2.5 bg-[#F2B705] text-[#141413] font-semibold text-xs rounded-lg hover:bg-[#dfa704] flex items-center gap-2 cursor-pointer"
             >
               <KeyRound className="w-4 h-4" />
               <span>Se connecter avec mes accès</span>
@@ -63,7 +65,7 @@ const MainContent: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('accueil')}
-              className="px-5 py-2.5 bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-zinc-200 font-semibold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-zinc-800 cursor-pointer"
+              className="px-5 py-2.5 bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 text-[#141413] dark:text-zinc-200 font-semibold text-xs rounded-lg hover:bg-[#F8F8F6] dark:hover:bg-white/10 cursor-pointer transition-colors"
             >
               Retour à l’Accueil public
             </button>
@@ -80,6 +82,7 @@ const MainContent: React.FC = () => {
       {activeTab === 'histoire' && <HistoireView />}
       {activeTab === 'anciens' && <PromotionsView />}
       {activeTab === 'reseau' && <ReseauView />}
+      {activeTab === 'mentorat' && <MentoratView />}
       {activeTab === 'projets' && <ProjetsView />}
       {activeTab === 'actualites' && <ActualitesView />}
       {(activeTab === 'galerie' || activeTab === 'mediatheque') && <GalerieView />}
@@ -94,7 +97,7 @@ const MainContent: React.FC = () => {
 export default function App() {
   return (
     <AppProvider>
-      <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-950 text-gray-900 dark:text-zinc-100 font-sans antialiased selection:bg-[#E5B824] selection:text-black transition-colors duration-150">
+      <div className="min-h-screen flex flex-col bg-[#F8F8F6] dark:bg-[#141413] text-[#141413] dark:text-[#F8F8F6] font-sans antialiased selection:bg-[#F2B705] selection:text-[#141413] transition-colors duration-150">
         <Header />
         <div className="flex-1">
           <MainContent />
