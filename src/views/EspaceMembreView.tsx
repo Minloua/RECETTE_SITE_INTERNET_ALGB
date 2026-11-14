@@ -20,9 +20,19 @@ import {
   QrCode,
   UserCheck,
   MessageSquareText,
+  ShieldCheck,
+  Download,
+  WifiOff,
+  Trash2,
 } from 'lucide-react';
+import { OFFLINE_CARD_STORAGE_KEY } from '../context/AppContext';
 
-type MemberSidebarSection = 'OVERVIEW' | 'COTISATIONS' | 'MENTORAT_CANDIDATURES' | 'PROFIL';
+type MemberSidebarSection =
+  | 'OVERVIEW'
+  | 'COTISATIONS'
+  | 'MENTORAT_CANDIDATURES'
+  | 'PROFIL'
+  | 'ARTCI_PRIVACY';
 
 export const EspaceMembreView: React.FC = () => {
   const {
@@ -49,11 +59,27 @@ export const EspaceMembreView: React.FC = () => {
     updateMentorshipRequestStatus,
     jobApplications,
     theme,
+    updateMyPrivacy,
+    exportMyArtciData,
+    anonymizeMyAccount,
+    cacheOfflineMemberCard,
+    addToast,
   } = useApp();
 
   const [section, setSection] = useState<MemberSidebarSection>('OVERVIEW');
   const [aiProfileNote, setAiProfileNote] = useState('');
   const [previewMemberId, setPreviewMemberId] = useState<string>('');
+  const [confirmAnonymize, setConfirmAnonymize] = useState(false);
+  const [offlineSyncedAt, setOfflineSyncedAt] = useState<string | null>(() => {
+    try {
+      const raw = localStorage.getItem(OFFLINE_CARD_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { cachedAt?: string };
+      return parsed.cachedAt || null;
+    } catch {
+      return null;
+    }
+  });
 
   const activeMember = useMemo(
     () =>
@@ -228,6 +254,7 @@ export const EspaceMembreView: React.FC = () => {
       icon: <Briefcase className="w-4 h-4" />,
     },
     { id: 'PROFIL', label: 'Édition du profil', icon: <User className="w-4 h-4" /> },
+    { id: 'ARTCI_PRIVACY', label: 'Mes données & ARTCI', icon: <ShieldCheck className="w-4 h-4" /> },
   ];
 
   const inputClass =
@@ -984,6 +1011,185 @@ export const EspaceMembreView: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* MES DONNEES & CONFIDENTIALITE (ARTCI) + CARTE HORS-LIGNE */}
+            {section === 'ARTCI_PRIVACY' && (
+              <div className="space-y-6">
+                {/* Carte QR Hors-Ligne PWA */}
+                <div className="bg-white dark:bg-[#1e1e1c] rounded-xl p-6 sm:p-8 shadow-editorial border border-black/5 dark:border-white/10 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-[#16324F] text-[#F2B705] flex items-center justify-center shrink-0">
+                        <WifiOff className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider font-semibold text-[#16324F] dark:text-[#F2B705]">
+                          Mode Hors-Ligne PWA
+                        </span>
+                        <h2 className="text-lg font-heading font-bold text-[#141413] dark:text-white">
+                          Carte d’Adhérent & QR Certifié disponibles hors connexion
+                        </h2>
+                        <p className="text-xs text-[#4A4A48] dark:text-zinc-400 mt-0.5">
+                          {offlineSyncedAt
+                            ? `Dernière mise en cache locale : ${new Date(offlineSyncedAt).toLocaleString('fr-FR')}. Présentable sans réseau aux Galas et Assemblées Générales.`
+                            : 'Synchronisez votre carte numérique signée pour y accéder même sans connexion internet.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void (async () => {
+                          await cacheOfflineMemberCard(activeMember);
+                          const nowIso = new Date().toISOString();
+                          setOfflineSyncedAt(nowIso);
+                          addToast(
+                            'success',
+                            'Carte synchronisée hors-ligne',
+                            'Votre carte et son QR code certifié HMAC-SHA256 sont enregistrés pour un usage sans connexion.'
+                          );
+                        })();
+                      }}
+                      className="px-4 py-2.5 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs font-bold inline-flex items-center gap-2 shrink-0 cursor-pointer"
+                    >
+                      <QrCode className="w-4 h-4" />
+                      <span>Synchroniser hors-ligne</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Droits ARTCI Loi 2013-450 */}
+                <div className="bg-white dark:bg-[#1e1e1c] rounded-xl p-6 sm:p-8 shadow-editorial border border-black/5 dark:border-white/10 space-y-6">
+                  <div className="pb-4 border-b border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="text-xs uppercase tracking-wider font-semibold text-[#134E4A] dark:text-[#F2B705]">
+                        Loi n° 2013-450 (ARTCI Côte d’Ivoire)
+                      </span>
+                      <h2 className="text-2xl font-heading font-bold text-[#141413] dark:text-white mt-0.5">
+                        Mes données & Confidentialité
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('confidentialite')}
+                      className="text-xs font-semibold text-[#16324F] dark:text-[#F2B705] hover:underline cursor-pointer self-start"
+                    >
+                      Consulter la politique ARTCI →
+                    </button>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    {[
+                      {
+                        key: 'showEmail' as const,
+                        label: 'Afficher mon adresse e-mail aux membres connectés de l’Annuaire',
+                        value: activeMember.privacy.showEmail,
+                      },
+                      {
+                        key: 'showPhone' as const,
+                        label: 'Afficher mon numéro de téléphone / WhatsApp aux membres connectés',
+                        value: activeMember.privacy.showPhone,
+                      },
+                      {
+                        key: 'allowMentorshipRequests' as const,
+                        label: 'Autoriser les sollicitations de Mentorat exécutif',
+                        value: activeMember.privacy.allowMentorshipRequests,
+                      },
+                      {
+                        key: 'shareContactsConsent' as const,
+                        label: 'Autoriser la mise en relation institutionnelle par le Secrétariat Général',
+                        value: activeMember.shareContactsConsent ?? true,
+                      },
+                      {
+                        key: 'bdrRegistered' as const,
+                        label: 'Figurer dans la Base de Données des Compétences (BDR)',
+                        value: activeMember.bdrRegistered ?? true,
+                      },
+                    ].map((pref) => (
+                      <label
+                        key={pref.key}
+                        className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-black/10 dark:border-white/10 cursor-pointer"
+                      >
+                        <span className="font-medium text-[#141413] dark:text-zinc-200">{pref.label}</span>
+                        <input
+                          type="checkbox"
+                          checked={pref.value}
+                          onChange={(e) => {
+                            void updateMyPrivacy({ [pref.key]: e.target.checked });
+                          }}
+                          className="w-4 h-4 accent-[#16324F] shrink-0 cursor-pointer"
+                        />
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Export JSON + Anonymisation */}
+                  <div className="pt-4 border-t border-black/10 dark:border-white/10 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-5 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-black/10 dark:border-white/10 space-y-3">
+                      <h3 className="text-sm font-heading font-bold text-[#141413] dark:text-white">
+                        Portabilité des données (Droit d’accès)
+                      </h3>
+                      <p className="text-xs text-[#4A4A48] dark:text-zinc-400">
+                        Téléchargez une archive complète au format JSON de votre fiche membre et de vos écritures de cotisation.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void exportMyArtciData()}
+                        className="px-4 py-2.5 rounded-lg bg-[#16324F] hover:bg-[#1e4268] text-white text-xs font-semibold inline-flex items-center gap-2 cursor-pointer"
+                      >
+                        <Download className="w-4 h-4 text-[#F2B705]" />
+                        <span>Exporter mes données (JSON)</span>
+                      </button>
+                    </div>
+
+                    <div className="p-5 rounded-xl bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 space-y-3">
+                      <h3 className="text-sm font-heading font-bold text-red-800 dark:text-red-300">
+                        Droit à l’oubli & Anonymisation
+                      </h3>
+                      <p className="text-xs text-red-700 dark:text-red-300/80">
+                        Remplace vos informations nominatives par des libellés anonymisés tout en conservant les pièces comptables légales.
+                      </p>
+                      {!confirmAnonymize ? (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmAnonymize(true)}
+                          className="px-4 py-2.5 rounded-lg border border-red-400 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/50 text-xs font-semibold inline-flex items-center gap-2 cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span>Anonymiser mon compte</span>
+                        </button>
+                      ) : (
+                        <div className="p-3 rounded-lg bg-white dark:bg-[#141413] border border-red-300 dark:border-red-800 space-y-2.5">
+                          <p className="text-[11px] font-semibold text-red-800 dark:text-red-300">
+                            Confirmer l’anonymisation définitive et la fermeture de session ?
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setConfirmAnonymize(false);
+                                void anonymizeMyAccount();
+                              }}
+                              className="px-3 py-1.5 rounded-md bg-red-700 text-white text-[11px] font-bold cursor-pointer"
+                            >
+                              Confirmer
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmAnonymize(false)}
+                              className="px-3 py-1.5 rounded-md border border-black/15 dark:border-white/15 text-[11px] font-semibold cursor-pointer"
+                            >
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

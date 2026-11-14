@@ -181,6 +181,30 @@ export const Footer: React.FC = () => {
           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">
             <button
               type="button"
+              onClick={() => handleNav('mentions-legales')}
+              className="hover:text-[#F2B705] transition-colors cursor-pointer"
+            >
+              Mentions légales (Loi 60-315)
+            </button>
+            <span aria-hidden="true" className="text-zinc-700">·</span>
+            <button
+              type="button"
+              onClick={() => handleNav('confidentialite')}
+              className="hover:text-[#F2B705] transition-colors cursor-pointer"
+            >
+              Confidentialité & ARTCI
+            </button>
+            <span aria-hidden="true" className="text-zinc-700">·</span>
+            <button
+              type="button"
+              onClick={() => handleNav('cgu')}
+              className="hover:text-[#F2B705] transition-colors cursor-pointer"
+            >
+              CGU & Mécénat
+            </button>
+            <span aria-hidden="true" className="text-zinc-700">·</span>
+            <button
+              type="button"
               onClick={() => handleNav('amicale')}
               className="hover:text-[#F2B705] transition-colors cursor-pointer"
             >
@@ -193,14 +217,6 @@ export const Footer: React.FC = () => {
               className="hover:text-[#F2B705] transition-colors cursor-pointer"
             >
               Patrimoine 1903
-            </button>
-            <span aria-hidden="true" className="text-zinc-700">·</span>
-            <button
-              type="button"
-              onClick={() => handleNav('adhesion')}
-              className="hover:text-[#F2B705] transition-colors cursor-pointer"
-            >
-              Adhésion en ligne
             </button>
           </div>
         </div>

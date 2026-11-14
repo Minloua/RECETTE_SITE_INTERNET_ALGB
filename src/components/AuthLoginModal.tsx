@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { PROFILE_ACCESS_MATRIX } from '../utils/accessMatrix';
 import {
   KeyRound,
   Lock,
@@ -10,7 +9,7 @@ import {
   X,
   ShieldCheck,
   UserPlus,
-  ChevronDown,
+  Loader2,
 } from 'lucide-react';
 
 export const AuthLoginModal: React.FC = () => {
@@ -19,34 +18,33 @@ export const AuthLoginModal: React.FC = () => {
     authRedirectTab,
     closeAuthModal,
     loginWithCredential,
-    accessCredentials,
     setActiveTab,
   } = useApp();
 
   const [identifier, setIdentifier] = useState('');
   const [secretCode, setSecretCode] = useState('');
   const [showSecret, setShowSecret] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showSeededDefaults, setShowSeededDefaults] = useState(false);
 
   useEffect(() => {
     if (authModalOpen) {
       setErrorMsg(null);
       setSecretCode('');
       setShowSecret(false);
+      setIsSubmitting(false);
     }
   }, [authModalOpen]);
 
-  const seededDefaults = useMemo(
-    () => accessCredentials.filter((c) => c.isSeededDefault && c.isActive),
-    [accessCredentials]
-  );
-
   if (!authModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = loginWithCredential(identifier, secretCode);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    const res = await loginWithCredential(identifier, secretCode);
+    setIsSubmitting(false);
     if (!res.allowed) {
       setErrorMsg(res.reason || 'Identifiant ou code d’accès invalide.');
       return;
@@ -101,10 +99,10 @@ export const AuthLoginModal: React.FC = () => {
 
         <div className="p-6 space-y-5 text-xs">
           <p className="text-[#4A4A48] dark:text-zinc-400 leading-relaxed">
-            La consultation des rubriques publiques reste libre sans credential. Saisissez les accès créés depuis l’Administration pour ouvrir votre espace dédié.
+            La consultation des rubriques publiques reste libre. Saisissez vos accès personnels (vérifiés par session sécurisée chiffrée HttpOnly &amp; hachage scrypt) pour ouvrir votre espace dédié.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <div>
               <label className="block text-[11px] font-bold text-[#141413] dark:text-zinc-200 mb-1.5">
                 Identifiant (e-mail, matricule ou login fonction)
@@ -118,7 +116,7 @@ export const AuthLoginModal: React.FC = () => {
                   setIdentifier(e.target.value);
                   setErrorMsg(null);
                 }}
-                placeholder="ex: amadou.toure@algb-alumni.ci ou admin@algb.ci"
+                placeholder="ex: amadou.toure@algb-alumni.ci"
                 className="w-full bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg px-3.5 py-2.5 text-xs text-[#141413] dark:text-white placeholder-[#4A4A48]/60 dark:placeholder-zinc-500 focus:outline-none"
               />
             </div>
@@ -159,60 +157,20 @@ export const AuthLoginModal: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 px-4 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              disabled={isSubmitting}
+              className="w-full py-2.5 px-4 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
-              <KeyRound className="w-4 h-4" />
-              <span>Valider & Ouvrir ma session</span>
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+              <span>{isSubmitting ? 'Vérification sécurisée...' : 'Valider & Ouvrir ma session'}</span>
             </button>
           </form>
 
-          {/* Initial seeded accounts helper (disappears for modified/custom credentials) */}
-          {seededDefaults.length > 0 && (
-            <div className="border-t border-[#141413]/10 dark:border-white/10 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowSeededDefaults((prev) => !prev)}
-                className="w-full flex items-center justify-between text-[11px] font-semibold text-[#4A4A48] dark:text-zinc-400 hover:text-[#141413] dark:hover:text-white cursor-pointer"
-              >
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
-                  <span>Comptes initiaux de configuration (à modifier en Admin)</span>
-                </span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform ${showSeededDefaults ? 'rotate-180' : ''}`}
-                />
-              </button>
-
-              {showSeededDefaults && (
-                <div className="mt-2.5 space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                  {seededDefaults.map((cred) => (
-                    <button
-                      key={cred.id}
-                      type="button"
-                      onClick={() => {
-                        setIdentifier(cred.identifier);
-                        setSecretCode(cred.secretCode);
-                        setErrorMsg(null);
-                      }}
-                      className="w-full text-left p-2.5 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#FEF8E6] dark:hover:bg-[#2a2719] border border-[#141413]/10 dark:border-white/10 hover:border-[#F2B705] transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-[#141413] dark:text-white truncate">
-                          {PROFILE_ACCESS_MATRIX[cred.role].label}
-                        </span>
-                        <span className="text-[10px] font-mono text-[#141413] dark:text-[#F2B705] font-semibold shrink-0">
-                          {cred.secretCode}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400 font-mono truncate mt-0.5">
-                        {cred.identifier}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          <div className="p-3 rounded-xl bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 flex items-start gap-2 text-[11px] text-[#4A4A48] dark:text-zinc-400">
+            <ShieldCheck className="w-4 h-4 text-[#134E4A] dark:text-emerald-400 shrink-0 mt-0.5" />
+            <span>
+              Aucun mot de passe en clair n’est stocké dans le navigateur. En cas d’oubli, contactez le Secrétariat Général ou votre Administrateur ALGB pour réinitialiser votre accès.
+            </span>
+          </div>
 
           <div className="border-t border-[#141413]/10 dark:border-white/10 pt-3 flex items-center justify-between text-[11px] text-[#4A4A48] dark:text-zinc-400">
             <span>Pas encore enregistré ?</span>
@@ -230,3 +188,4 @@ export const AuthLoginModal: React.FC = () => {
     </div>
   );
 };
+

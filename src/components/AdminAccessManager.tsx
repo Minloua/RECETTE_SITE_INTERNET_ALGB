@@ -131,7 +131,6 @@ export const AdminAccessManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL' | AuthRoleKey>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED'>('ALL');
-  const [revealedIds, setRevealedIds] = useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Inline editing state
@@ -203,7 +202,7 @@ export const AdminAccessManager: React.FC = () => {
     );
   };
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (role === 'SUPER_ADMIN' && !isSuperAdmin) {
       addToast(
@@ -214,7 +213,7 @@ export const AdminAccessManager: React.FC = () => {
       return;
     }
 
-    const created = createAccessCredential({
+    const created = await createAccessCredential({
       identifier,
       secretCode,
       displayName,
@@ -238,19 +237,15 @@ export const AdminAccessManager: React.FC = () => {
     }
   };
 
-  const toggleReveal = (id: string) => {
-    setRevealedIds((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
   const handleCopyCredentials = async (cred: AccessCredential) => {
-    const text = `Accès ALGB (${PROFILE_ACCESS_MATRIX[cred.role].label})\nIdentifiant : ${cred.identifier}\nCode d'accès : ${cred.secretCode}`;
+    const text = `Accès ALGB (${PROFILE_ACCESS_MATRIX[cred.role].label})\nIdentifiant : ${cred.identifier}\nCode d'accès : chiffré scrypt sur serveur (utilisez « Renvoyer par e-mail » ou réinitialisez via Modifier)`;
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(cred.identifier);
       setCopiedId(cred.id);
-      addToast('success', 'Accès copiés', `Identifiant et code de ${cred.displayName} copiés.`);
+      addToast('success', 'Identifiant copié', `Identifiant de ${cred.displayName} copié dans le presse-papier.`);
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      addToast('info', 'Copie manuelle', `ID : ${cred.identifier} | Code : ${cred.secretCode}`);
+      addToast('info', 'Identifiant', text);
     }
   };
 
@@ -265,7 +260,7 @@ export const AdminAccessManager: React.FC = () => {
       recipientEmail:
         cred.recipientEmail ||
         (cred.identifier.includes('@') ? cred.identifier : linked?.email || ''),
-      secretCode: cred.secretCode,
+      secretCode: '',
       role: cred.role,
       linkedMemberId: cred.linkedMemberId || '',
       allowedTabs: cred.allowedTabs,
@@ -273,7 +268,7 @@ export const AdminAccessManager: React.FC = () => {
     });
   };
 
-  const handleSaveEdit = (credId: string) => {
+  const handleSaveEdit = async (credId: string) => {
     if (!editForm) return;
     if (editForm.role === 'SUPER_ADMIN' && !isSuperAdmin) {
       addToast(
@@ -283,11 +278,11 @@ export const AdminAccessManager: React.FC = () => {
       );
       return;
     }
-    updateAccessCredential(credId, {
+    await updateAccessCredential(credId, {
       displayName: editForm.displayName.trim(),
       identifier: editForm.identifier.trim(),
       recipientEmail: editForm.recipientEmail.trim() || undefined,
-      secretCode: editForm.secretCode.trim(),
+      ...(editForm.secretCode.trim() ? { secretCode: editForm.secretCode.trim() } : {}),
       role: editForm.role,
       linkedMemberId: editForm.linkedMemberId || undefined,
       allowedTabs: Array.from(new Set<NavigationTab>(['accueil', ...editForm.allowedTabs])),
@@ -482,7 +477,7 @@ export const AdminAccessManager: React.FC = () => {
           </p>
         </div>
 
-        <form onSubmit={handleCreateSubmit} className="space-y-5">
+        <form onSubmit={(e) => void handleCreateSubmit(e)} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block font-semibold text-[#141413] dark:text-zinc-200 mb-1">
@@ -743,7 +738,6 @@ export const AdminAccessManager: React.FC = () => {
 
         <div className="space-y-3">
           {filteredCredentials.map((cred) => {
-            const isRevealed = !!revealedIds[cred.id];
             const isSelf = activeCredential?.id === cred.id;
             const isSendingEmail = sendingCredentialIds.includes(cred.id);
             const isEditing = editingId === cred.id && editForm !== null;
@@ -806,19 +800,11 @@ export const AdminAccessManager: React.FC = () => {
                             </strong>
                           </span>
                         )}
-                        <span className="flex items-center gap-1.5">
-                          Code secret :{' '}
-                          <strong className="font-mono text-[#141413] dark:text-[#F2B705]">
-                            {isRevealed ? cred.secretCode : '••••••••••••'}
+                        <span className="inline-flex items-center gap-1.5">
+                          Sécurité :{' '}
+                          <strong className="font-mono text-[#134E4A] dark:text-emerald-400">
+                            •••••• (Hachage scrypt serveur)
                           </strong>
-                          <button
-                            type="button"
-                            onClick={() => toggleReveal(cred.id)}
-                            title={isRevealed ? 'Masquer le code' : 'Afficher le code'}
-                            className="p-0.5 text-[#4A4A48] hover:text-[#141413] dark:hover:text-white cursor-pointer"
-                          >
-                            {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
                         </span>
                         <span>
                           Menus :{' '}
@@ -1014,7 +1000,7 @@ export const AdminAccessManager: React.FC = () => {
                       <button
                         type="button"
                         disabled={isSelf}
-                        onClick={() => deleteAccessCredential(cred.id)}
+                        onClick={() => void deleteAccessCredential(cred.id)}
                         title="Supprimer ce credential"
                         className="p-1.5 rounded-lg border border-[#141413]/15 dark:border-white/15 hover:border-red-500 text-red-600 dark:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       >
@@ -1087,12 +1073,13 @@ export const AdminAccessManager: React.FC = () => {
 
                       <div>
                         <label className="block font-semibold mb-1 text-[#141413] dark:text-zinc-300">
-                          Nouveau code secret
+                          Réinitialiser le code secret (optionnel)
                         </label>
                         <div className="flex items-center gap-1.5">
                           <input
                             type="text"
                             value={editForm.secretCode}
+                            placeholder="Laisser vide pour conserver l’actuel"
                             onChange={(e) =>
                               setEditForm({ ...editForm, secretCode: e.target.value })
                             }
@@ -1216,7 +1203,7 @@ export const AdminAccessManager: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleSaveEdit(cred.id)}
+                        onClick={() => void handleSaveEdit(cred.id)}
                         className="px-5 py-2 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold flex items-center gap-1.5 cursor-pointer"
                       >
                         <Save className="w-3.5 h-3.5" />

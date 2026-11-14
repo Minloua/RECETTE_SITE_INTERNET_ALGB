@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="96" fill="#141413" />
+  <rect x="24" y="24" width="464" height="464" rx="76" stroke="#F2B705" stroke-width="14" />
+  <circle cx="256" cy="204" r="78" fill="#16324F" stroke="#F2B705" stroke-width="10" />
+  <path d="M256 154L282 222H230L256 154Z" fill="#F2B705" />
+  <rect x="218" y="226" width="76" height="14" rx="7" fill="#FFFFFF" />
+  <text x="256" y="346" text-anchor="middle" fill="#FFFFFF" font-family="Georgia, serif" font-size="78" font-weight="700" letter-spacing="4">ALGB</text>
+  <text x="256" y="394" text-anchor="middle" fill="#F2B705" font-family="sans-serif" font-size="26" font-weight="600" letter-spacing="6">BINGERVILLE · 1903</text>
+</svg>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { generateMemberQrDataUrl } from '../utils/qrPayload';
+import { fetchSignedQrMetadata, generateMemberQrDataUrl } from '../utils/qrPayload';
 import {
   Briefcase,
   Calendar,
@@ -24,23 +24,33 @@ export const MembershipCardModal: React.FC = () => {
   } = useApp();
 
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [qrSigned, setQrSigned] = useState<boolean>(false);
   const [avatarError, setAvatarError] = useState<boolean>(false);
 
   useEffect(() => {
     setAvatarError(false);
+    setQrSigned(false);
     if (!viewingCardMember) {
       setQrDataUrl('');
       return;
     }
 
     let cancelled = false;
-    generateMemberQrDataUrl(viewingCardMember)
-      .then((url) => {
-        if (!cancelled) setQrDataUrl(url);
-      })
-      .catch(() => {
-        if (!cancelled) setQrDataUrl('');
-      });
+    (async () => {
+      try {
+        const sig = await fetchSignedQrMetadata(viewingCardMember);
+        const url = await generateMemberQrDataUrl(viewingCardMember, sig || undefined);
+        if (!cancelled) {
+          setQrDataUrl(url);
+          setQrSigned(Boolean(sig));
+        }
+      } catch {
+        if (!cancelled) {
+          setQrDataUrl('');
+          setQrSigned(false);
+        }
+      }
+    })();
 
     return () => {
       cancelled = true;
@@ -315,6 +325,11 @@ export const MembershipCardModal: React.FC = () => {
                 <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[#4A4A48] mt-1">
                   Scan Paiement
                 </span>
+                {qrSigned && (
+                  <span className="text-[8px] font-mono font-semibold text-[#134E4A] tracking-tight">
+                    Certifié HMAC-SHA256
+                  </span>
+                )}
               </div>
             </div>
 

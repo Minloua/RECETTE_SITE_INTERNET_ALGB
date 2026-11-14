@@ -13,6 +13,7 @@ import {
   RotateCcw,
   User,
 } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 export const RightActionSidebar: React.FC = () => {
   const {
@@ -226,6 +227,8 @@ export const RightActionSidebar: React.FC = () => {
             </span>
             <span className="truncate">Assistant ALGB</span>
           </button>
+
+          <PWAInstallButton />
 
           <button
             type="button"

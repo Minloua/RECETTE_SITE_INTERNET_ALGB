@@ -14,6 +14,7 @@ export type PaymentMethod =
   | 'ORANGE_MONEY'
   | 'MTN_MOMO'
   | 'MOOV_MONEY'
+  | 'WAVE'
   | 'CARTE_BANCAIRE'
   | 'VIREMENT'
   | 'ESPECES';
@@ -122,9 +123,15 @@ export interface ProjectContribution {
   amount: number;
   currency: string;
   date: string;
-  method: 'ORANGE_MONEY' | 'MTN_MOMO' | 'MOOV_MONEY' | 'CARTE_BANCAIRE' | 'VIREMENT';
+  method: 'ORANGE_MONEY' | 'MTN_MOMO' | 'MOOV_MONEY' | 'WAVE' | 'CARTE_BANCAIRE' | 'VIREMENT';
   isAnonymous: boolean;
   message?: string;
+}
+
+export interface ProjectMilestone {
+  label: string;
+  status: 'DONE' | 'IN_PROGRESS' | 'UPCOMING';
+  date: string;
 }
 
 export interface Project {
@@ -149,6 +156,16 @@ export interface Project {
     title: string;
     summary: string;
   }[];
+  milestones?: ProjectMilestone[];
+  beforeAfter?: {
+    beforeSummary: string;
+    afterSummary: string;
+  };
+  scholarsSupported?: {
+    cohortLabel: string;
+    count: number;
+    details: string;
+  };
 }
 
 export interface JobOffer {
@@ -1144,6 +1161,16 @@ export const INITIAL_PROJECTS: Project[] = [
         summary: 'Installation des baies de brassage et câblage blindé de l’aile Sud de la bibliothèque.',
       },
     ],
+    milestones: [
+      { label: 'Audit architectural & cahier des charges', status: 'DONE', date: 'Août 2026' },
+      { label: 'Câblage fibre optique & réfection boiseries', status: 'DONE', date: 'Octobre 2026' },
+      { label: 'Livraison des 30 postes & serveur hors-ligne', status: 'IN_PROGRESS', date: 'Janvier 2027' },
+      { label: 'Inauguration officielle sur le campus', status: 'UPCOMING', date: 'Mars 2027' },
+    ],
+    beforeAfter: {
+      beforeSummary: 'Rayonnages vieillissants (1968), absence de postes informatiques et ventilation insuffisante pour 2 400 élèves.',
+      afterSummary: 'Salle climatisée à l’énergie solaire, 30 stations connectées, 4 500 nouveaux manuels scientifiques et espace numérique hors-ligne.',
+    },
   },
   {
     id: 'proj-002',
@@ -1197,6 +1224,21 @@ export const INITIAL_PROJECTS: Project[] = [
         summary: 'Examen de 68 dossiers sociaux et académiques. 25 élèves retenus avec une moyenne supérieure à 14,5/20.',
       },
     ],
+    milestones: [
+      { label: 'Commission paritaire Direction / ALGB', status: 'DONE', date: 'Septembre 2026' },
+      { label: 'Prise en charge internat & cantine (Trimestre 1)', status: 'DONE', date: 'Octobre 2026' },
+      { label: 'Dotation kits scientifiques & tutorat alumni', status: 'IN_PROGRESS', date: 'Novembre 2026' },
+      { label: 'Remise des Prix d’Excellence & bilan annuel', status: 'UPCOMING', date: 'Juin 2027' },
+    ],
+    beforeAfter: {
+      beforeSummary: 'Élèves majors issus de familles modestes menacés de décrochage faute de frais d’internat et de manuels.',
+      afterSummary: '25 boursiers pris en charge à 100 % (600 000 FCFA / boursier / an) avec mentorat direct par un parrain alumni.',
+    },
+    scholarsSupported: {
+      cohortLabel: 'Promotion Boursiers 2026–2027',
+      count: 25,
+      details: '8 élèves en Secondes Scientifiques, 9 en Premières C/D, 8 en Terminales C/D (moyenne minimale 14,5/20).',
+    },
   },
   {
     id: 'proj-003',
@@ -1240,6 +1282,16 @@ export const INITIAL_PROJECTS: Project[] = [
         summary: 'Audit technique par une équipe conjointe ALGB et médecin scolaire.',
       },
     ],
+    milestones: [
+      { label: 'Audit sanitaire du pavillon médical', status: 'DONE', date: 'Octobre 2026' },
+      { label: 'Peinture sanitaire, plomberie & étanchéité', status: 'IN_PROGRESS', date: 'Décembre 2026' },
+      { label: 'Installation des 6 lits & DAE', status: 'UPCOMING', date: 'Janvier 2027' },
+      { label: 'Dotation pharmaceutique annuelle & remise des clés', status: 'UPCOMING', date: 'Février 2027' },
+    ],
+    beforeAfter: {
+      beforeSummary: '2 lits anciens, ruptures fréquentes de trousses de premiers secours et absence de défibrillateur.',
+      afterSummary: 'Infirmerie aux normes hospitalières scolaires : 6 lits médicalisés, DAE, oxygénothérapie et stock tampon continu.',
+    },
   },
 ];
 

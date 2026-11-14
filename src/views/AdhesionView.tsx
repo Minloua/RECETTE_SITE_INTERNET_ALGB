@@ -80,6 +80,7 @@ export const AdhesionView: React.FC = () => {
   const [bdrAnnuaire, setBdrAnnuaire] = useState<'Oui' | 'Non'>('Oui');
   const [partageContacts, setPartageContacts] = useState<'Oui' | 'Non'>('Oui');
   const [observations, setObservations] = useState('');
+  const [artciConsent, setArtciConsent] = useState(false);
 
   const currentCountry = GEO_DATA[pays];
   const villesList = currentCountry ? Object.keys(currentCountry.villes) : [];
@@ -196,6 +197,14 @@ export const AdhesionView: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!artciConsent) {
+      addToast(
+        'warning',
+        'Consentement ARTCI requis',
+        'Veuillez accepter la politique de confidentialité conforme à la loi n° 2013-450 avant de finaliser votre enrôlement.'
+      );
+      return;
+    }
     setIsSubmitting(true);
 
     const allCompetences = [...selectedCompetences];
@@ -1015,10 +1024,37 @@ export const AdhesionView: React.FC = () => {
                   />
                 </div>
 
-                <div className="p-3.5 bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 rounded-xl text-[11px] text-[#141413] dark:text-[#FEF8E6] flex items-start gap-2">
+                <label className="p-4 bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/50 rounded-xl text-xs text-[#141413] dark:text-[#FEF8E6] flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={artciConsent}
+                    onChange={(e) => setArtciConsent(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-[#16324F] rounded shrink-0 cursor-pointer"
+                  />
+                  <span className="leading-relaxed">
+                    <strong>Consentement explicite ARTCI (Loi n° 2013-450) * :</strong> J’autorise l’ALGB
+                    à traiter mes données personnelles aux fins de gestion de mon adhésion, de l’Annuaire et
+                    de ma carte officielle, conformément à la{' '}
+                    <button
+                      type="button"
+                      onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        setActiveTab('confidentialite');
+                      }}
+                      className="underline font-bold text-[#16324F] dark:text-[#F2B705] cursor-pointer"
+                    >
+                      Politique de confidentialité ARTCI
+                    </button>
+                    . Je peux exercer mes droits d’accès, d’export JSON et d’anonymisation à tout moment depuis mon Espace Membre.
+                  </span>
+                </label>
+
+                <div className="p-3.5 bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl text-[11px] text-[#4A4A48] dark:text-zinc-300 flex items-start gap-2">
                   <ShieldCheck className="w-4 h-4 text-[#16324F] dark:text-[#F2B705] shrink-0 mt-0.5" />
                   <span>
-                    En validant ce formulaire, vos données sont synchronisées de façon sécurisée avec l’infrastructure officielle de l’ALGB et vous recevez votre carte d’adhérent.
+                    En validant ce formulaire, vos données sont synchronisées de façon sécurisée avec l’infrastructure officielle de l’ALGB et vous recevez votre carte d’adhérent certifiée.
                   </span>
                 </div>
               </div>

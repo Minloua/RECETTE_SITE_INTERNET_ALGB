@@ -5,7 +5,7 @@ import {
   MONTHS_2026,
   PaymentMethod,
 } from '../data/mockData';
-import { parseMemberQrPayload } from '../utils/qrPayload';
+import { parseMemberQrPayload, QrVerificationResponse } from '../utils/qrPayload';
 import {
   canActiveSessionAccessMemberQr,
   PROFILE_ACCESS_MATRIX,
@@ -59,6 +59,7 @@ export const QrPaymentSyncModal: React.FC = () => {
     qrAuthSession,
     closeQrSyncModal,
     verifyQrAccess,
+    verifyQrAuthenticity,
     members,
     projects,
     settings,
@@ -85,6 +86,7 @@ export const QrPaymentSyncModal: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<AlumniMember | null>(null);
   const [scanInput, setScanInput] = useState('');
   const [scanError, setScanError] = useState<string | null>(null);
+  const [qrVerificationResult, setQrVerificationResult] = useState<QrVerificationResponse | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
 
   // Camera scanner state
@@ -217,9 +219,9 @@ export const QrPaymentSyncModal: React.FC = () => {
 
   if (!qrSyncModalOpen) return null;
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = verifyQrAccess({
+    const res = await verifyQrAccess({
       role: authRole,
       identifier: authIdentifier,
       accessCode: authCode,
@@ -303,12 +305,16 @@ export const QrPaymentSyncModal: React.FC = () => {
     }
   };
 
-  const handleManualScanSubmit = (e: React.FormEvent) => {
+  const handleManualScanSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const verification = await verifyQrAuthenticity(scanInput);
+    setQrVerificationResult(verification);
+
     const matched = parseMemberQrPayload(scanInput, members);
     if (!matched) {
       setScanError(
-        'Aucun adhérent reconnu pour ce QR code ou matricule. Vérifiez le format (ex: ALGB-2002-0001).'
+        verification.error ||
+          'Aucun adhérent reconnu pour ce QR code ou matricule. Vérifiez le format (ex: ALGB-2002-0001).'
       );
       return;
     }
@@ -421,7 +427,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                 </div>
               )}
 
-              <form onSubmit={handleAuthSubmit} className="space-y-4">
+              <form onSubmit={(e) => void handleAuthSubmit(e)} className="space-y-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-300 mb-1.5">
                     1. Profil habilité selon la matrice en vigueur
@@ -547,7 +553,7 @@ export const QrPaymentSyncModal: React.FC = () => {
               {showMatrixDetails && (
                 <div className="bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl p-4 space-y-2.5">
                   <div className="text-[10px] font-heading font-bold uppercase tracking-wider text-[#141413] dark:text-white">
-                    Référentiel des Accès Dédiés (Matrice en vigueur)
+                    Référentiel des Habilitations QR (Matrice en vigueur)
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-[11px] text-[#4A4A48] dark:text-zinc-300">
@@ -556,7 +562,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                           <th className="py-1.5 pr-2">Profil</th>
                           <th className="py-1.5 pr-2">Périmètre QR & Tables</th>
                           <th className="py-1.5 pr-2">Identifiant exemple</th>
-                          <th className="py-1.5 text-right">Code dédié</th>
+                          <th className="py-1.5 text-right">Authentification</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#141413]/10 dark:divide-white/10">
@@ -578,20 +584,8 @@ export const QrPaymentSyncModal: React.FC = () => {
                               <td className="py-2 pr-2 font-bold text-[#141413] dark:text-white">{rule.label}</td>
                               <td className="py-2 pr-2">{rule.scopeLabel}</td>
                               <td className="py-2 pr-2 font-mono text-[#4A4A48] dark:text-zinc-400">{sampleId}</td>
-                              <td className="py-2 text-right font-mono font-bold text-[#16324F] dark:text-[#F2B705]">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setAuthRole(rKey);
-                                    setAuthIdentifier(sampleId);
-                                    setAuthCode(rule.accessCode);
-                                    setAuthError(null);
-                                  }}
-                                  className="hover:underline cursor-pointer"
-                                  title="Utiliser ces identifiants dans le formulaire"
-                                >
-                                  {rule.accessCode}
-                                </button>
+                              <td className="py-2 text-right font-mono font-bold text-[#134E4A] dark:text-emerald-400">
+                                Credential serveur
                               </td>
                             </tr>
                           );
@@ -600,7 +594,7 @@ export const QrPaymentSyncModal: React.FC = () => {
                     </table>
                   </div>
                   <p className="text-[10px] text-[#4A4A48] dark:text-zinc-400">
-                    Un Membre Adhérent peut également utiliser son propre matricule comme code d’accès personnel pour sa propre carte.
+                    La vérification de votre identifiant et de votre code secret s’effectue de façon chiffrée côté serveur.
                   </p>
                 </div>
               )}
@@ -677,21 +671,43 @@ export const QrPaymentSyncModal: React.FC = () => {
                   </p>
                 )}
 
-                <form onSubmit={handleManualScanSubmit} className="flex flex-col sm:flex-row gap-2 pt-1">
+                <form onSubmit={(e) => void handleManualScanSubmit(e)} className="flex flex-col sm:flex-row gap-2 pt-1">
                   <input
                     type="text"
                     value={scanInput}
                     onChange={(e) => setScanInput(e.target.value)}
-                    placeholder="Coller le lien QR scanné ou saisir le matricule (ex: ALGB-2002-0001)"
+                    placeholder="Coller le lien QR scanné (avec signature ts/sig) ou saisir le matricule"
                     className="flex-1 bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 focus:border-[#F2B705] rounded-lg px-3.5 py-2 text-xs font-mono text-[#141413] dark:text-white focus:outline-none"
                   />
                   <button
                     type="submit"
                     className="px-4 py-2 bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] font-bold text-xs rounded-lg cursor-pointer shrink-0 transition-colors"
                   >
-                    Identifier la carte
+                    Vérifier &amp; Identifier
                   </button>
                 </form>
+
+                {qrVerificationResult && qrVerificationResult.ok && qrVerificationResult.member && (
+                  <div
+                    className={`p-3 rounded-lg border text-[11px] flex flex-wrap items-center justify-between gap-2 ${
+                      qrVerificationResult.authentic
+                        ? 'bg-[#F0FDF9] dark:bg-[#0f2422] border-[#134E4A]/35 text-[#134E4A] dark:text-emerald-300'
+                        : 'bg-[#FEF8E6] dark:bg-[#2a2719] border-[#F2B705]/50 text-[#141413] dark:text-[#FEF8E6]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 font-bold">
+                      <ShieldCheck className="w-4 h-4 shrink-0" />
+                      <span>
+                        {qrVerificationResult.authentic
+                          ? 'Signature QR Authentique (HMAC-SHA256 certifié)'
+                          : 'Carte reconnue (QR non signé cryptographiquement)'}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold">
+                      {qrVerificationResult.member.fullName} · {qrVerificationResult.member.isUpToDate ? 'À JOUR' : 'COTISATION DUE'}
+                    </span>
+                  </div>
+                )}
 
                 {scanError && (
                   <p className="text-[11px] text-[#C2410C] dark:text-orange-400 font-medium">{scanError}</p>
@@ -996,9 +1012,10 @@ export const QrPaymentSyncModal: React.FC = () => {
                 <label className="block text-[10px] uppercase tracking-wider font-bold text-[#4A4A48] dark:text-zinc-300">
                   Canal de règlement utilisé
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                   {(
                     [
+                      { id: 'WAVE', label: 'Wave CI', Icon: Smartphone },
                       { id: 'ORANGE_MONEY', label: 'Orange Money', Icon: Smartphone },
                       { id: 'MTN_MOMO', label: 'MTN MoMo', Icon: Smartphone },
                       { id: 'MOOV_MONEY', label: 'Moov Money', Icon: Smartphone },

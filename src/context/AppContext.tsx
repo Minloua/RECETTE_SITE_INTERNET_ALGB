@@ -32,18 +32,23 @@ import {
   INITIAL_JOB_APPLICATIONS,
 } from '../data/mockData';
 import { DEFAULT_GOOGLE_SCRIPT_URL } from '../data/enrollmentData';
-import { parseMemberQrPayload } from '../utils/qrPayload';
+import {
+  fetchSignedQrMetadata,
+  generateMemberQrDataUrl,
+  parseMemberQrPayload,
+  QrVerificationResponse,
+  verifyMemberQrAuthenticity,
+} from '../utils/qrPayload';
+import { resolveTabFromPath, TAB_TO_PATH } from '../utils/routes';
+import { applySeoForTab } from '../utils/seo';
 import {
   AccessCredential,
   ALWAYS_PUBLIC_AMICALE_TABS,
-  authenticateUserCredential,
-  authorizeQrPaymentAccess,
   canActiveSessionAccessMemberQr,
   CredentialAuthResult,
   DEFAULT_ROLE_MENU_PERMISSIONS,
   DEFAULT_VISITOR_ALLOWED_MENUS,
   generateAckToken,
-  INITIAL_ACCESS_CREDENTIALS,
   MENU_DEFINITIONS,
   PROFILE_ACCESS_MATRIX,
   QrAccessAuthResult,
@@ -102,7 +107,10 @@ export type NavigationTab =
   | 'adhesion'
   | 'espace-membre'
   | 'contact'
-  | 'admin';
+  | 'admin'
+  | 'mentions-legales'
+  | 'confidentialite'
+  | 'cgu';
 
 export interface ToastOptions {
   badge?: string;
@@ -275,8 +283,47 @@ interface AppContextType {
     identifier: string;
     accessCode: string;
     targetMember: AlumniMember | null;
-  }) => QrAccessAuthResult;
+  }) => Promise<QrAccessAuthResult>;
+  verifyQrAuthenticity: (rawInput: string) => Promise<QrVerificationResponse>;
   syncQrPaymentUpdate: (params: QrSyncParams) => QrSyncReport | null;
+  // UEMOA Payment Gateway & ARTCI Privacy
+  initiateUemoaPayment: (params: {
+    type: PaymentType;
+    amountFcfa: number;
+    method: PaymentMethod;
+    title: string;
+    description?: string;
+    memberId?: string;
+    memberName?: string;
+    projectId?: string;
+    monthYears?: string[];
+    phoneNumber?: string;
+    isAnonymous?: boolean;
+    frequency?: 'PONCTUEL' | 'MENSUEL';
+  }) => Promise<{
+    ok: boolean;
+    intent?: { id: string; reference: string; signature: string; provider: string; amountFcfa: number };
+    error?: string;
+  }>;
+  confirmUemoaPaymentWebhook: (
+    intentId: string,
+    signature: string
+  ) => Promise<{
+    ok: boolean;
+    transaction?: MemberTransaction;
+    contribution?: ProjectContribution;
+    error?: string;
+  }>;
+  updateMyPrivacy: (updates: {
+    showEmail?: boolean;
+    showPhone?: boolean;
+    allowMentorshipRequests?: boolean;
+    shareContactsConsent?: boolean;
+    bdrRegistered?: boolean;
+  }) => Promise<boolean>;
+  exportMyArtciData: () => Promise<boolean>;
+  anonymizeMyAccount: () => Promise<boolean>;
+  cacheOfflineMemberCard: (member: AlumniMember) => Promise<void>;
   // AI Assistant & Knowledge Base Enrichment
   aiChatOpen: boolean;
   setAiChatOpen: (open: boolean) => void;
@@ -300,8 +347,8 @@ interface AppContextType {
   authRedirectTab: NavigationTab | null;
   openAuthModal: (redirectTab?: NavigationTab | null) => void;
   closeAuthModal: () => void;
-  loginWithCredential: (identifier: string, secretCode: string) => CredentialAuthResult;
-  logoutSession: () => void;
+  loginWithCredential: (identifier: string, secretCode: string) => Promise<CredentialAuthResult>;
+  logoutSession: () => Promise<void>;
   createAccessCredential: (params: {
     identifier: string;
     secretCode: string;
@@ -312,14 +359,18 @@ interface AppContextType {
     allowedTabs?: NavigationTab[];
     notes?: string;
     skipAutoEmail?: boolean;
-  }) => AccessCredential | null;
+  }) => Promise<AccessCredential | null>;
   sendCredentialEmail: (
     credentialId: string,
     sourceTrigger?: 'MANUAL' | 'APPROVE_MEMBER' | 'ENROLLMENT' | 'RESEND',
-    overrideCred?: AccessCredential
+    overrideCred?: AccessCredential,
+    initialSecretCode?: string
   ) => Promise<{ ok: boolean; error?: string }>;
-  updateAccessCredential: (id: string, updates: Partial<AccessCredential>) => void;
-  deleteAccessCredential: (id: string) => void;
+  updateAccessCredential: (
+    id: string,
+    updates: Partial<AccessCredential> & { secretCode?: string }
+  ) => Promise<void>;
+  deleteAccessCredential: (id: string) => Promise<void>;
   updateVisitorAllowedMenus: (menus: NavigationTab[]) => void;
   updateRoleMenuPermissions: (role: Exclude<UserRole, 'VISITEUR'>, menus: NavigationTab[]) => void;
   canAccessTab: (tab: NavigationTab) => boolean;
@@ -336,6 +387,7 @@ interface AppContextType {
     projectId: string;
     donorName?: string;
     isAnonymous?: boolean;
+    method?: PaymentMethod;
   }) => ProjectContribution | null;
   newsletterSubscribers: string[];
   subscribeNewsletter: (email: string) => boolean;
@@ -414,8 +466,28 @@ const INITIAL_AI_KNOWLEDGE: AiKnowledgeEntry[] = [
   },
 ];
 
+export const OFFLINE_CARD_STORAGE_KEY = 'algb_offline_card_v1';
+
+async function syncServerSlice(slice: string, data: unknown): Promise<void> {
+  try {
+    await fetch('/api/state/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ slice, data }),
+    });
+  } catch {
+    // Offline fallback: localStorage retains updates cleanly
+  }
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeTab, setActiveTabState] = useState<NavigationTab>('accueil');
+  const [activeTab, setActiveTabState] = useState<NavigationTab>(() => {
+    if (typeof window !== 'undefined') {
+      return resolveTabFromPath(window.location.pathname);
+    }
+    return 'accueil';
+  });
   const [tabHistory, setTabHistory] = useState<NavigationTab[]>([]);
   const [selectedPromotionYear, setSelectedPromotionYear] = useState<number | null>(null);
 
@@ -431,14 +503,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  const [accessCredentials, setAccessCredentials] = useState<AccessCredential[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CREDENTIALS);
-      return saved ? JSON.parse(saved) : INITIAL_ACCESS_CREDENTIALS;
-    } catch {
-      return INITIAL_ACCESS_CREDENTIALS;
-    }
-  });
+  const [accessCredentials, setAccessCredentials] = useState<AccessCredential[]>([]);
 
   const [sendingCredentialIds, setSendingCredentialIds] = useState<string[]>([]);
 
@@ -487,23 +552,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return DEFAULT_ROLE_MENU_PERMISSIONS;
   });
 
-  const [activeCredentialId, setActiveCredentialId] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEYS.ACTIVE_CREDENTIAL_ID) || null;
-    } catch {
-      return null;
-    }
-  });
+  const [activeCredentialState, setActiveCredentialState] = useState<AccessCredential | null>(null);
+  const activeCredential = activeCredentialState && activeCredentialState.isActive ? activeCredentialState : null;
 
-  const activeCredential =
-    activeCredentialId
-      ? accessCredentials.find((c) => c.id === activeCredentialId && c.isActive) || null
-      : null;
-
-  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
-    if (activeCredential) return activeCredential.role;
-    return 'VISITEUR';
-  });
+  const [currentRole, setCurrentRole] = useState<UserRole>('VISITEUR');
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authRedirectTab, setAuthRedirectTab] = useState<NavigationTab | null>(null);
@@ -580,20 +632,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  // Current logged in user (null in public Visitor mode until authenticated by credential)
-  const [currentUser, setCurrentUser] = useState<AlumniMember | null>(() => {
-    if (!activeCredential) return null;
-    if (activeCredential.linkedMemberId) {
-      const linked = members.find((m) => m.id === activeCredential.linkedMemberId);
-      if (linked) return linked;
-    }
-    const savedId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
-    if (savedId) {
-      const found = members.find((m) => m.id === savedId);
-      if (found) return found;
-    }
-    return null;
-  });
+  // Current logged in user (null in public Visitor mode until authenticated by server HttpOnly session)
+  const [currentUser, setCurrentUser] = useState<AlumniMember | null>(null);
 
   const [contributionModalProject, setContributionModalProject] = useState<Project | null>(null);
   const [viewingCardMember, setViewingCardMember] = useState<AlumniMember | null>(null);
@@ -760,14 +800,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEYS.CREDENTIALS, JSON.stringify(accessCredentials));
-    } catch {
-      // ignore
-    }
-  }, [accessCredentials]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem(STORAGE_KEYS.VISITOR_MENUS, JSON.stringify(visitorAllowedMenus));
     } catch {
       // ignore
@@ -784,18 +816,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     try {
-      if (activeCredentialId) {
-        localStorage.setItem(STORAGE_KEYS.ACTIVE_CREDENTIAL_ID, activeCredentialId);
-      } else {
-        localStorage.removeItem(STORAGE_KEYS.ACTIVE_CREDENTIAL_ID);
-      }
-    } catch {
-      // ignore
-    }
-  }, [activeCredentialId]);
-
-  useEffect(() => {
-    try {
       if (currentUser) {
         localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
       } else {
@@ -806,7 +826,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [currentUser]);
 
-  // Keep session synchronized if active credential is suspended or modified
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.MENTORSHIP_REQUESTS, JSON.stringify(mentorshipRequests));
@@ -831,15 +850,110 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [newsletterSubscribers]);
 
+  // Dynamic SEO & Real URL Routing (History API)
   useEffect(() => {
-    if (activeCredentialId && !activeCredential) {
-      setActiveCredentialId(null);
-      setCurrentRole('VISITEUR');
-      setCurrentUser(null);
-    } else if (activeCredential && currentRole !== activeCredential.role) {
-      setCurrentRole(activeCredential.role);
+    applySeoForTab(activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      const resolved = resolveTabFromPath(window.location.pathname);
+      setActiveTabState(resolved);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Server Bootstrap (restores HttpOnly cookie session & authoritative state)
+  const refreshBootstrap = async () => {
+    try {
+      const res = await fetch('/api/bootstrap', { credentials: 'include' });
+      if (!res.ok) return;
+      const payload = (await res.json()) as {
+        ok?: boolean;
+        session?: {
+          credential: AccessCredential;
+          role: UserRole;
+          currentUser: AlumniMember | null;
+        } | null;
+        settings?: AssociationSettings;
+        visitorAllowedMenus?: NavigationTab[];
+        roleMenuPermissions?: Record<Exclude<UserRole, 'VISITEUR'>, NavigationTab[]>;
+        members?: AlumniMember[];
+        promotions?: Promotion[];
+        projects?: Project[];
+        jobOffers?: JobOffer[];
+        news?: NewsItem[];
+        events?: EventItem[];
+        transactions?: MemberTransaction[];
+        mentorshipRequests?: MentorshipRequestRecord[];
+        jobApplications?: JobApplicationRecord[];
+        photos?: GalleryPhoto[];
+        videos?: YouTubeVideo[];
+        aiKnowledgeEntries?: AiKnowledgeEntry[];
+        credentials?: AccessCredential[];
+      };
+
+      if (!payload.ok) return;
+      if (payload.settings) setSettings({ ...payload.settings, currency: 'FCFA' });
+      if (Array.isArray(payload.visitorAllowedMenus)) setVisitorAllowedMenus(payload.visitorAllowedMenus);
+      if (payload.roleMenuPermissions) setRoleMenuPermissions(payload.roleMenuPermissions);
+      if (Array.isArray(payload.members)) setMembers(payload.members);
+      if (Array.isArray(payload.promotions)) setPromotions(payload.promotions);
+      if (Array.isArray(payload.projects)) setProjects(payload.projects);
+      if (Array.isArray(payload.jobOffers)) setJobOffers(payload.jobOffers);
+      if (Array.isArray(payload.news)) setNews(payload.news);
+      if (Array.isArray(payload.events)) setEvents(payload.events);
+      if (Array.isArray(payload.transactions)) setTransactions(payload.transactions);
+      if (Array.isArray(payload.mentorshipRequests)) setMentorshipRequests(payload.mentorshipRequests);
+      if (Array.isArray(payload.jobApplications)) setJobApplications(payload.jobApplications);
+      if (Array.isArray(payload.photos)) setPhotos(payload.photos);
+      if (Array.isArray(payload.videos)) setVideos(payload.videos);
+      if (Array.isArray(payload.aiKnowledgeEntries)) setAiKnowledgeEntries(payload.aiKnowledgeEntries);
+      if (Array.isArray(payload.credentials)) setAccessCredentials(payload.credentials);
+
+      if (payload.session) {
+        setActiveCredentialState(payload.session.credential);
+        setCurrentRole(payload.session.role);
+        setCurrentUser(payload.session.currentUser);
+      } else {
+        setActiveCredentialState(null);
+        setCurrentRole('VISITEUR');
+        setCurrentUser(null);
+      }
+    } catch {
+      // Offline mode: retained from localStorage
     }
-  }, [activeCredentialId, activeCredential]);
+  };
+
+  useEffect(() => {
+    void refreshBootstrap();
+  }, []);
+
+  // Cache authenticated member's signed digital card & QR for offline presentation at events/AGs
+  const cacheOfflineMemberCard = async (member: AlumniMember) => {
+    try {
+      const sig = await fetchSignedQrMetadata(member);
+      const qrDataUrl = await generateMemberQrDataUrl(member, sig || undefined);
+      const payload = {
+        member,
+        qrDataUrl,
+        sig,
+        cachedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(OFFLINE_CARD_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore offline cache failure
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser && typeof navigator !== 'undefined' && navigator.onLine) {
+      void cacheOfflineMemberCard(currentUser);
+    }
+  }, [currentUser?.id, currentUser?.membershipStatus]);
 
   const addToast = (
     type: ToastMessage['type'],
@@ -876,6 +990,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return tab;
     });
+    if (typeof window !== 'undefined') {
+      const targetPath = TAB_TO_PATH[tab] || '/';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ tab }, '', targetPath);
+      }
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -893,11 +1013,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const targetTab = tabHistory[tabHistory.length - 1];
       setTabHistory((history) => history.slice(0, -1));
       setActiveTabState(targetTab);
+      if (typeof window !== 'undefined') {
+        const targetPath = TAB_TO_PATH[targetTab] || '/';
+        if (window.location.pathname !== targetPath) {
+          window.history.pushState({ tab: targetTab }, '', targetPath);
+        }
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     if (activeTab !== 'accueil') {
       setActiveTabState('accueil');
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        window.history.pushState({ tab: 'accueil' }, '', '/');
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -1049,40 +1178,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const ackCredId = params.get('ackCred');
     if (ackCredId) {
       const ackToken = params.get('token') || '';
-      const targetCred = accessCredentials.find((c) => c.id === ackCredId);
-      if (targetCred && (!targetCred.ackToken || !ackToken || targetCred.ackToken === ackToken)) {
-        const nowStamp = new Date().toLocaleString('fr-FR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        setAccessCredentials((prev) =>
-          prev.map((c) =>
-            c.id === targetCred.id
-              ? { ...c, acknowledgedAt: c.acknowledgedAt || nowStamp }
-              : c
-          )
-        );
-        addToast(
-          'success',
-          'Accusé de réception confirmé',
-          `Réception des accès confirmée pour ${targetCred.displayName} (${targetCred.identifier}). Vous pouvez désormais vous connecter.`,
-          {
-            badge: 'Confirmation ALGB',
-            durationMs: 9000,
-            actionLabel: 'Se connecter →',
-            onAction: () => openAuthModal('espace-membre'),
+      void (async () => {
+        try {
+          const res = await fetch('/api/auth/ack-credential', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ credentialId: ackCredId, token: ackToken }),
+          });
+          const data = (await res.json()) as {
+            ok?: boolean;
+            displayName?: string;
+            identifier?: string;
+            error?: string;
+          };
+          if (res.ok && data.ok) {
+            addToast(
+              'success',
+              'Accusé de réception confirmé',
+              `Réception des accès confirmée pour ${data.displayName} (${data.identifier}). Vous pouvez désormais vous connecter.`,
+              {
+                badge: 'Confirmation ALGB',
+                durationMs: 9000,
+                actionLabel: 'Se connecter →',
+                onAction: () => openAuthModal('espace-membre'),
+              }
+            );
+            void refreshBootstrap();
+          } else {
+            addToast(
+              'warning',
+              'Lien de confirmation expiré ou introuvable',
+              data.error || 'Ce lien d’accusé de réception ne correspond à aucun credential actif.'
+            );
           }
-        );
-      } else {
-        addToast(
-          'warning',
-          'Lien de confirmation expiré ou introuvable',
-          'Ce lien d’accusé de réception ne correspond à aucun credential actif sur cet appareil.'
-        );
-      }
+        } catch {
+          addToast('warning', 'Confirmation impossible', 'Serveur indisponible.');
+        }
+      })();
       try {
         window.history.replaceState({}, '', window.location.pathname);
       } catch {
@@ -1149,7 +1282,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       },
     };
 
-    setMembers((prev) => [newMember, ...prev]);
+    setMembers((prev) => {
+      const next = [newMember, ...prev];
+      void syncServerSlice('enrollMember', newMember);
+      return next;
+    });
 
     // Update promo total
     setPromotions((prev) =>
@@ -1168,11 +1305,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Administrator approval
   const approveMember = (memberId: string) => {
     const targetMember = members.find((m) => m.id === memberId);
-    setMembers((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, membershipStatus: 'A_JOUR' } : m))
-    );
+    setMembers((prev) => {
+      const next = prev.map((m) => (m.id === memberId ? { ...m, membershipStatus: 'A_JOUR' as const } : m));
+      void syncServerSlice('members', next);
+      return next;
+    });
 
-    let createdAutoCred: AccessCredential | null = null;
     const shouldAutoSend = settings.autoSendCredentialEmail !== false;
 
     if (targetMember) {
@@ -1182,8 +1320,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           c.identifier.toLowerCase() === targetMember.email.toLowerCase()
       );
       if (!alreadyHasCred) {
-        const autoCred: AccessCredential = {
-          id: `cred-${Date.now().toString().slice(-6)}`,
+        void createAccessCredential({
           identifier: targetMember.email || targetMember.membershipCardId,
           secretCode: targetMember.membershipCardId,
           displayName: `${targetMember.firstName} ${targetMember.lastName}`,
@@ -1191,15 +1328,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           linkedMemberId: targetMember.id,
           recipientEmail: targetMember.email || undefined,
           allowedTabs: roleMenuPermissions.MEMBRE,
-          isActive: true,
-          createdAt: new Date().toISOString().split('T')[0],
-          createdBy: activeCredential?.displayName || 'Administration ALGB',
-          ackToken: generateAckToken(),
-          emailStatus: shouldAutoSend && targetMember.email ? 'EN_COURS' : 'NON_ENVOYE',
           notes: 'Credential généré automatiquement lors de la validation d’adhésion.',
-        };
-        createdAutoCred = autoCred;
-        setAccessCredentials((prev) => [autoCred, ...prev]);
+          skipAutoEmail: !shouldAutoSend,
+        });
       }
     }
 
@@ -1208,10 +1339,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'Adhésion validée',
       'Le membre a été validé, sa carte officielle est active et son credential d’accès est prêt.'
     );
-
-    if (createdAutoCred && shouldAutoSend) {
-      void sendCredentialEmail(createdAutoCred.id, 'APPROVE_MEMBER', createdAutoCred);
-    }
   };
 
   const rejectMember = (memberId: string) => {
@@ -1329,24 +1456,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const shouldAutoSend = settings.autoSendCredentialEmail !== false;
-    const autoCred: AccessCredential = {
-      id: `cred-${Date.now().toString().slice(-6)}`,
-      identifier: newMember.email || matricule,
-      secretCode: matricule,
-      displayName: `${newMember.firstName} ${newMember.lastName}`,
-      role: 'MEMBRE',
-      linkedMemberId: newMember.id,
-      recipientEmail: newMember.email || undefined,
-      allowedTabs: roleMenuPermissions.MEMBRE,
-      isActive: true,
-      createdAt: new Date().toISOString().split('T')[0],
-      createdBy: 'Enrôlement en ligne ALGB',
-      ackToken: generateAckToken(),
-      emailStatus: shouldAutoSend && newMember.email ? 'EN_COURS' : 'NON_ENVOYE',
-      notes: `Identifiant : ${newMember.email || matricule} | Code initial : ${matricule}`,
-    };
-    setAccessCredentials((prev) => [autoCred, ...prev]);
-    setActiveCredentialId(autoCred.id);
+    let activatedCred: AccessCredential | null = null;
+    let initialSecret = matricule;
+
+    try {
+      const enrollRes = await fetch('/api/enrollments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ member: newMember }),
+      });
+      if (enrollRes.ok) {
+        const enrollData = (await enrollRes.json()) as {
+          ok?: boolean;
+          credential?: AccessCredential;
+          initialSecret?: string;
+        };
+        if (enrollData.ok && enrollData.credential) {
+          activatedCred = enrollData.credential;
+          initialSecret = enrollData.initialSecret || matricule;
+        }
+      }
+    } catch {
+      // Fallback local si hors-ligne
+    }
+
+    if (!activatedCred) {
+      activatedCred = {
+        id: `cred-${Date.now().toString().slice(-6)}`,
+        identifier: newMember.email || matricule,
+        hasSecret: true,
+        displayName: `${newMember.firstName} ${newMember.lastName}`,
+        role: 'MEMBRE',
+        linkedMemberId: newMember.id,
+        recipientEmail: newMember.email || undefined,
+        allowedTabs: roleMenuPermissions.MEMBRE,
+        isActive: true,
+        createdAt: new Date().toISOString().split('T')[0],
+        createdBy: 'Enrôlement en ligne ALGB',
+        ackToken: generateAckToken(),
+        emailStatus: shouldAutoSend && newMember.email ? 'EN_COURS' : 'NON_ENVOYE',
+        notes: `Enrôlement en ligne (${matricule})`,
+      };
+    }
+
+    setAccessCredentials((prev) => [activatedCred!, ...prev]);
+    setActiveCredentialState(activatedCred);
     setCurrentRole('MEMBRE');
     setCurrentUser(newMember);
     setViewingCardMember(newMember);
@@ -1354,12 +1509,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast(
       'success',
       'Enrôlement & Credential activés !',
-      `Matricule ${matricule} intégré à l'annuaire. Vos accès : ${autoCred.identifier} / Code : ${matricule}.`
+      `Matricule ${matricule} intégré à l'annuaire. Identifiant : ${activatedCred.identifier} (Code initial : votre matricule ${initialSecret}).`
     );
-
-    if (shouldAutoSend) {
-      void sendCredentialEmail(autoCred.id, 'ENROLLMENT', autoCred);
-    }
 
     return newMember;
   };
@@ -1484,7 +1635,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `job-${Date.now().toString().slice(-4)}`,
       postedDate: new Date().toISOString().split('T')[0],
     };
-    setJobOffers((prev) => [newOffer, ...prev]);
+    setJobOffers((prev) => {
+      const next = [newOffer, ...prev];
+      void syncServerSlice('jobOffers', next);
+      return next;
+    });
     addToast('success', 'Offre publiée', 'L’opportunité est désormais visible pour les membres à jour.');
   };
 
@@ -1495,7 +1650,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `news-${Date.now().toString().slice(-4)}`,
       date: new Date().toISOString().split('T')[0],
     };
-    setNews((prev) => [newItem, ...prev]);
+    setNews((prev) => {
+      const next = [newItem, ...prev];
+      void syncServerSlice('news', next);
+      return next;
+    });
 
     if (newsAlertsEnabled) {
       triggerNewsNotification(newItem);
@@ -1508,8 +1667,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Update member profile
   const updateMemberProfile = (memberId: string, updates: Partial<AlumniMember>) => {
-    setMembers((prev) =>
-      prev.map((m) => {
+    setMembers((prev) => {
+      const next = prev.map((m) => {
         if (m.id === memberId) {
           const updated = { ...m, ...updates };
           if (currentUser?.id === memberId) {
@@ -1518,8 +1677,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return updated;
         }
         return m;
-      })
-    );
+      });
+      void syncServerSlice('members', next);
+      return next;
+    });
     addToast('success', 'Profil actualisé', 'Vos modifications ont été enregistrées avec succès.');
   };
 
@@ -1586,7 +1747,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString().split('T')[0],
     };
 
-    setMentorshipRequests((prev) => [newReq, ...prev]);
+    setMentorshipRequests((prev) => {
+      const next = [newReq, ...prev];
+      void syncServerSlice('mentorshipRequests', next);
+      return next;
+    });
     addToast(
       'success',
       'Demande de mentorat transmise',
@@ -1599,9 +1764,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     requestId: string,
     status: MentorshipRequestRecord['status']
   ) => {
-    setMentorshipRequests((prev) =>
-      prev.map((req) => (req.id === requestId ? { ...req, status } : req))
-    );
+    setMentorshipRequests((prev) => {
+      const next = prev.map((req) => (req.id === requestId ? { ...req, status } : req));
+      void syncServerSlice('mentorshipRequests', next);
+      return next;
+    });
     addToast(
       'success',
       'Statut de mentorat mis à jour',
@@ -1709,7 +1876,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       appliedAt: new Date().toISOString().split('T')[0],
     };
 
-    setJobApplications((prev) => [newApp, ...prev]);
+    setJobApplications((prev) => {
+      const next = [newApp, ...prev];
+      void syncServerSlice('jobApplications', next);
+      return next;
+    });
     addToast(
       'success',
       'Candidature transmise',
@@ -1724,6 +1895,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     projectId: string;
     donorName?: string;
     isAnonymous?: boolean;
+    method?: PaymentMethod;
   }): ProjectContribution | null => {
     const targetProject = projects.find((p) => p.id === params.projectId) || projects[0];
     if (!targetProject || params.amountFcfa <= 0) return null;
@@ -1735,13 +1907,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const freqLabel = params.frequency === 'MENSUEL' ? 'Engagement mensuel' : 'Don ponctuel';
     const fcfaLabel = `${params.amountFcfa.toLocaleString('fr-FR')} FCFA`;
+    const usedMethod: PaymentMethod = params.method || 'WAVE';
+    const contribMethod: ProjectContribution['method'] =
+      usedMethod === 'ESPECES' ? 'VIREMENT' : usedMethod;
 
     const contribution = makeContribution(targetProject.id, {
       contributorName,
       promotionYear: currentUser?.promotionYear,
       amount: params.amountFcfa,
       currency: 'FCFA',
-      method: 'CARTE_BANCAIRE',
+      method: contribMethod,
       isAnonymous: !!params.isAnonymous,
       message: `${freqLabel} de ${fcfaLabel} via l'espace Mécénat ALGB.`,
     });
@@ -1750,7 +1925,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       processPayment({
         type: 'DON_PROJET',
         amount: params.amountFcfa,
-        method: 'CARTE_BANCAIRE',
+        method: usedMethod,
         title: `Mécénat : ${targetProject.title}`,
         description: `${freqLabel} · ${fcfaLabel}`,
         memberId: currentUser.id,
@@ -1771,7 +1946,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addToast('info', 'Déjà inscrit', `${clean} reçoit déjà la lettre mensuelle de l’ALGB.`);
       return true;
     }
-    setNewsletterSubscribers((prev) => [clean, ...prev]);
+    setNewsletterSubscribers((prev) => {
+      const next = [clean, ...prev];
+      void syncServerSlice('newsletter', next);
+      return next;
+    });
     addToast(
       'success',
       'Inscription confirmée',
@@ -1789,6 +1968,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch {
         // ignore
       }
+      void syncServerSlice('settings', updated);
       return updated;
     });
     addToast('success', 'Paramètres enregistrés', 'Les données ont été mises à jour avec succès.');
@@ -1802,6 +1982,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch {
         // ignore
       }
+      void syncServerSlice('promotions', updated);
       return updated;
     });
     addToast('success', 'Promotion actualisée', `Les données de la promotion ${year} ont été modifiées.`);
@@ -1815,6 +1996,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch {
         // ignore
       }
+      void syncServerSlice('projects', updated);
       return updated;
     });
     addToast('success', 'Projet mis à jour', 'Les données du projet ont été actualisées.');
@@ -1828,6 +2010,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch {
         // ignore
       }
+      void syncServerSlice('news', updated);
       return updated;
     });
     addToast('info', 'Communiqué supprimé', 'L’article a été retiré des publications.');
@@ -1841,6 +2024,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch {
         // ignore
       }
+      void syncServerSlice('news', updated);
       return updated;
     });
     addToast('success', 'Publication modifiée', 'Le communiqué a été mis à jour.');
@@ -1852,7 +2036,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...photo,
       id: `gal-${Date.now().toString().slice(-4)}`,
     };
-    setPhotos((prev) => [newPhoto, ...prev]);
+    setPhotos((prev) => {
+      const next = [newPhoto, ...prev];
+      void syncServerSlice('photos', next);
+      return next;
+    });
     addToast('success', 'Photographie ajoutée', 'La photo a été intégrée à la médiathèque.');
   };
 
@@ -1861,12 +2049,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...video,
       id: `yt-${Date.now().toString().slice(-4)}`,
     };
-    setVideos((prev) => [newVideo, ...prev]);
+    setVideos((prev) => {
+      const next = [newVideo, ...prev];
+      void syncServerSlice('videos', next);
+      return next;
+    });
     addToast('success', 'Vidéo YouTube ajoutée', 'La vidéo a été ajoutée à la chaîne ALGB et à la médiathèque.');
   };
 
   const deleteYouTubeVideo = (id: string) => {
-    setVideos((prev) => prev.filter((v) => v.id !== id));
+    setVideos((prev) => {
+      const next = prev.filter((v) => v.id !== id);
+      void syncServerSlice('videos', next);
+      return next;
+    });
     addToast('info', 'Vidéo supprimée', 'La vidéo a été retirée de la médiathèque.');
   };
 
@@ -1927,13 +2123,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes: params.notes,
     };
 
-    setTransactions((prev) => [newTx, ...prev]);
+    setTransactions((prev) => {
+      const next = [newTx, ...prev];
+      void syncServerSlice('transactions', next);
+      return next;
+    });
 
     // If Droit d'adhésion is payé, update membership status
     if (params.type === 'DROIT_ADHESION' && status === 'PAYE') {
-      setMembers((prev) =>
-        prev.map((m) => (m.id === memberId ? { ...m, membershipStatus: 'A_JOUR' } : m))
-      );
+      setMembers((prev) => {
+        const next = prev.map((m) => (m.id === memberId ? { ...m, membershipStatus: 'A_JOUR' as const } : m));
+        void syncServerSlice('members', next);
+        return next;
+      });
       if (currentUser?.id === memberId) {
         setCurrentUser((prev) => (prev ? { ...prev, membershipStatus: 'A_JOUR' } : prev));
       }
@@ -1959,8 +2161,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateTransactionStatus = (txId: string, status: PaymentStatus, validatorName?: string) => {
     let affectedTx: MemberTransaction | null = null;
-    setTransactions((prev) =>
-      prev.map((tx) => {
+    setTransactions((prev) => {
+      const next = prev.map((tx) => {
         if (tx.id === txId) {
           const updated = {
             ...tx,
@@ -1971,14 +2173,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return updated;
         }
         return tx;
-      })
-    );
+      });
+      void syncServerSlice('transactions', next);
+      return next;
+    });
 
     if (affectedTx && (affectedTx as MemberTransaction).type === 'DROIT_ADHESION' && status === 'PAYE') {
       const memId = (affectedTx as MemberTransaction).memberId;
-      setMembers((prev) =>
-        prev.map((m) => (m.id === memId ? { ...m, membershipStatus: 'A_JOUR' } : m))
-      );
+      setMembers((prev) => {
+        const next = prev.map((m) => (m.id === memId ? { ...m, membershipStatus: 'A_JOUR' as const } : m));
+        void syncServerSlice('members', next);
+        return next;
+      });
     }
 
     addToast(
@@ -2015,46 +2221,259 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setQrAuthSession(null);
   };
 
-  const verifyQrAccess = (params: {
+  const verifyQrAccess = async (params: {
     role: UserRole;
     identifier: string;
     accessCode: string;
     targetMember: AlumniMember | null;
-  }): QrAccessAuthResult => {
-    const result = authorizeQrPaymentAccess({
-      ...params,
-      members,
-      credentials: accessCredentials,
-    });
-
-    if (result.allowed) {
-      setCurrentRole(params.role);
-      const authMember = result.authenticatedMember || currentUser || members[0] || null;
-      if (authMember && (params.role === 'MEMBRE' || params.role === 'DELEGUE' || params.role === 'RESPONSABLE_COMM')) {
-        setCurrentUser(authMember);
-      } else if (params.targetMember && result.rule.scopeType === 'ALL_MEMBERS') {
-        if (!currentUser && authMember) setCurrentUser(authMember);
-      }
-      const displayName = authMember
-        ? `${authMember.firstName} ${authMember.lastName}`
-        : params.identifier.trim();
-
+  }): Promise<QrAccessAuthResult> => {
+    const rule = PROFILE_ACCESS_MATRIX[params.role] || PROFILE_ACCESS_MATRIX.VISITEUR;
+    if (UNRESTRICTED_ACCESS_OVERRIDE) {
+      const authMember = currentUser || members[0] || null;
       setQrAuthVerified(true);
       setQrAuthSession({
         role: params.role,
-        label: result.rule.label,
+        label: rule.label,
+        authenticatedName: authMember ? `${authMember.firstName} ${authMember.lastName}` : params.identifier,
+        scopeLabel: rule.scopeLabel,
+      });
+      return { allowed: true, authenticatedMember: authMember, rule };
+    }
+
+    try {
+      const res = await fetch('/api/auth/verify-qr-operator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          identifier: params.identifier,
+          accessCode: params.accessCode,
+          targetMemberId: params.targetMember?.id,
+        }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        credential?: AccessCredential;
+        authenticatedName?: string;
+        error?: string;
+      };
+
+      if (!res.ok || !data.ok || !data.credential) {
+        return {
+          allowed: false,
+          reason: data.error || 'Identifiant ou code d’autorisation QR invalide.',
+          rule,
+        };
+      }
+
+      const matchedRule = PROFILE_ACCESS_MATRIX[data.credential.role] || rule;
+      const linkedMember = data.credential.linkedMemberId
+        ? members.find((m) => m.id === data.credential!.linkedMemberId) || null
+        : null;
+
+      setActiveCredentialState(data.credential);
+      setCurrentRole(data.credential.role);
+      if (linkedMember) {
+        setCurrentUser(linkedMember);
+      }
+
+      const displayName = data.authenticatedName || data.credential.displayName;
+      setQrAuthVerified(true);
+      setQrAuthSession({
+        role: data.credential.role,
+        label: matchedRule.label,
         authenticatedName: displayName,
-        scopeLabel: result.rule.scopeLabel,
+        scopeLabel: matchedRule.scopeLabel,
       });
 
       addToast(
         'success',
-        `Accès déverrouillé : ${result.rule.label}`,
-        `Habilitation vérifiée (${result.rule.scopeLabel}).`
+        `Accès déverrouillé : ${matchedRule.label}`,
+        `Habilitation vérifiée (${matchedRule.scopeLabel}).`
       );
-    }
 
-    return result;
+      return {
+        allowed: true,
+        authenticatedMember: linkedMember,
+        rule: matchedRule,
+      };
+    } catch {
+      return {
+        allowed: false,
+        reason: 'Serveur de vérification indisponible.',
+        rule,
+      };
+    }
+  };
+
+  const verifyQrAuthenticity = async (rawInput: string): Promise<QrVerificationResponse> => {
+    return verifyMemberQrAuthenticity(rawInput);
+  };
+
+  // UEMOA Payment Gateway (Wave, Orange Money, MTN MoMo, Moov Money, CB, Virement)
+  const initiateUemoaPayment = async (params: {
+    type: PaymentType;
+    amountFcfa: number;
+    method: PaymentMethod;
+    title: string;
+    description?: string;
+    memberId?: string;
+    memberName?: string;
+    projectId?: string;
+    monthYears?: string[];
+    phoneNumber?: string;
+    isAnonymous?: boolean;
+    frequency?: 'PONCTUEL' | 'MENSUEL';
+  }) => {
+    try {
+      const res = await fetch('/api/payments/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(params),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        intent?: { id: string; reference: string; signature: string; provider: string; amountFcfa: number };
+        error?: string;
+      };
+      if (!res.ok || !data.ok || !data.intent) {
+        return { ok: false, error: data.error || 'Échec d’initialisation du paiement.' };
+      }
+      return { ok: true, intent: data.intent };
+    } catch {
+      return { ok: false, error: 'Passerelle de paiement temporairement inaccessible.' };
+    }
+  };
+
+  const confirmUemoaPaymentWebhook = async (intentId: string, signature: string) => {
+    try {
+      const res = await fetch('/api/payments/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          intentId,
+          signature,
+          event: 'PAYMENT_SUCCEEDED',
+        }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        transaction?: MemberTransaction;
+        contribution?: ProjectContribution;
+        error?: string;
+      };
+      if (!res.ok || !data.ok) {
+        return { ok: false, error: data.error || 'Confirmation webhook refusée.' };
+      }
+      await refreshBootstrap();
+      if (data.transaction) {
+        setViewingTransactionReceipt(data.transaction);
+        addToast(
+          'success',
+          'Paiement certifié par la passerelle ALGB',
+          `Règlement de ${data.transaction.amount.toLocaleString('fr-FR')} FCFA validé (${data.transaction.receiptNumber}).`
+        );
+      }
+      return {
+        ok: true,
+        transaction: data.transaction,
+        contribution: data.contribution,
+      };
+    } catch {
+      return { ok: false, error: 'Erreur réseau lors de la confirmation webhook.' };
+    }
+  };
+
+  // ARTCI Privacy Rights (Loi n° 2013-450)
+  const updateMyPrivacy = async (updates: {
+    showEmail?: boolean;
+    showPhone?: boolean;
+    allowMentorshipRequests?: boolean;
+    shareContactsConsent?: boolean;
+    bdrRegistered?: boolean;
+  }): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/members/me/privacy', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updates),
+      });
+      const data = (await res.json()) as { ok?: boolean; member?: AlumniMember; error?: string };
+      if (!res.ok || !data.ok || !data.member) {
+        addToast('warning', 'Mise à jour impossible', data.error || 'Action non autorisée.');
+        return false;
+      }
+      setCurrentUser(data.member);
+      setMembers((prev) => prev.map((m) => (m.id === data.member!.id ? data.member! : m)));
+      addToast(
+        'success',
+        'Préférences ARTCI enregistrées',
+        'Vos choix de visibilité et de consentement (Loi n° 2013-450) sont appliqués immédiatement.'
+      );
+      return true;
+    } catch {
+      addToast('error', 'Erreur réseau', 'Impossible d’enregistrer vos préférences.');
+      return false;
+    }
+  };
+
+  const exportMyArtciData = async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/members/me/export', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        addToast('warning', 'Export refusé', data.error || 'Veuillez vous connecter.');
+        return false;
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ALGB-Donnees-Personnelles-${currentUser?.membershipCardId || 'membre'}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      addToast(
+        'success',
+        'Export ARTCI téléchargé',
+        'L’ensemble de vos données personnelles et transactions a été exporté au format JSON.'
+      );
+      return true;
+    } catch {
+      addToast('error', 'Erreur réseau', 'Impossible de générer votre export JSON.');
+      return false;
+    }
+  };
+
+  const anonymizeMyAccount = async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/members/me/anonymize', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        addToast('warning', 'Action impossible', 'Votre compte ne peut pas être anonymisé automatiquement.');
+        return false;
+      }
+      setActiveCredentialState(null);
+      setCurrentRole('VISITEUR');
+      setCurrentUser(null);
+      localStorage.removeItem(OFFLINE_CARD_STORAGE_KEY);
+      setActiveTab('accueil');
+      await refreshBootstrap();
+      addToast(
+        'info',
+        'Compte anonymisé (Droit à l’oubli ARTCI)',
+        'Vos données personnelles ont été effacées et anonymisées conformément à la loi n° 2013-450.'
+      );
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const syncQrPaymentUpdate = (params: QrSyncParams): QrSyncReport | null => {
@@ -2528,75 +2947,86 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAuthRedirectTab(null);
   };
 
-  const loginWithCredential = (identifier: string, secretCode: string): CredentialAuthResult => {
-    const result = authenticateUserCredential({
-      identifier,
-      secretCode,
-      credentials: accessCredentials,
-      members,
-    });
+  const loginWithCredential = async (
+    identifier: string,
+    secretCode: string
+  ): Promise<CredentialAuthResult> => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ identifier, secretCode }),
+      });
 
-    if (!result.allowed || !result.credential) {
-      return result;
-    }
+      const data = (await res.json()) as {
+        ok?: boolean;
+        credential?: AccessCredential;
+        currentUser?: AlumniMember | null;
+        error?: string;
+      };
 
-    const cred = result.credential;
-    const nowStamp = new Date().toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    setAccessCredentials((prev) =>
-      prev.map((c) =>
-        c.id === cred.id
-          ? {
-              ...c,
-              lastLoginAt: nowStamp,
-              firstLoginAt: c.firstLoginAt || nowStamp,
-            }
-          : c
-      )
-    );
-
-    setActiveCredentialId(cred.id);
-    setCurrentRole(cred.role);
-    setCurrentUser(result.linkedMember ?? null);
-
-    addToast(
-      'success',
-      `Bienvenue, ${cred.displayName}`,
-      `Profil actif : ${PROFILE_ACCESS_MATRIX[cred.role].label}.`
-    );
-
-    const targetTab = authRedirectTab;
-    setAuthModalOpen(false);
-    setAuthRedirectTab(null);
-
-    if (targetTab) {
-      const normalized = targetTab === 'galerie' ? 'mediatheque' : targetTab;
-      if (
-        UNRESTRICTED_ACCESS_OVERRIDE ||
-        cred.allowedTabs.includes(targetTab) ||
-        cred.allowedTabs.includes(normalized)
-      ) {
-        setActiveTab(targetTab);
-      } else {
-        addToast(
-          'warning',
-          'Menu non attribué à ce profil',
-          `Votre credential (${PROFILE_ACCESS_MATRIX[cred.role].label}) n’inclut pas l’accès à cette section.`
-        );
+      if (!res.ok || !data.ok || !data.credential) {
+        return {
+          allowed: false,
+          reason: data.error || 'Identifiant ou code d’accès incorrect.',
+        };
       }
-    }
 
-    return result;
+      const cred = data.credential;
+      setActiveCredentialState(cred);
+      setCurrentRole(cred.role);
+      setCurrentUser(data.currentUser ?? null);
+      void refreshBootstrap();
+
+      addToast(
+        'success',
+        `Bienvenue, ${cred.displayName}`,
+        `Profil actif : ${PROFILE_ACCESS_MATRIX[cred.role].label}.`
+      );
+
+      const targetTab = authRedirectTab;
+      setAuthModalOpen(false);
+      setAuthRedirectTab(null);
+
+      if (targetTab) {
+        const normalized = targetTab === 'galerie' ? 'mediatheque' : targetTab;
+        if (
+          UNRESTRICTED_ACCESS_OVERRIDE ||
+          cred.allowedTabs.includes(targetTab) ||
+          cred.allowedTabs.includes(normalized)
+        ) {
+          setActiveTab(targetTab);
+        } else {
+          addToast(
+            'warning',
+            'Menu non attribué à ce profil',
+            `Votre credential (${PROFILE_ACCESS_MATRIX[cred.role].label}) n’inclut pas l’accès à cette section.`
+          );
+        }
+      }
+
+      return {
+        allowed: true,
+        credential: cred,
+        linkedMember: data.currentUser ?? null,
+      };
+    } catch {
+      return {
+        allowed: false,
+        reason: 'Serveur d’authentification indisponible. Vérifiez votre connexion.',
+      };
+    }
   };
 
-  const logoutSession = () => {
-    setActiveCredentialId(null);
+  const logoutSession = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch {
+      // ignore offline logout
+    }
+
+    setActiveCredentialState(null);
     setCurrentRole('VISITEUR');
     setCurrentUser(null);
 
@@ -2611,12 +3041,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setActiveTab('accueil');
     }
 
+    void refreshBootstrap();
     addToast(
       'info',
       'Session déconnectée',
-      UNRESTRICTED_ACCESS_OVERRIDE
-        ? 'Session déconnectée (accès libre temporaire maintenu sur tous les menus).'
-        : 'Vous naviguez désormais en mode Visiteur public (menus visiteurs sans credential).'
+      'Vous naviguez désormais en mode Visiteur public (menus visiteurs sans credential).'
     );
   };
 
@@ -2626,7 +3055,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const sendCredentialEmail = async (
     credentialId: string,
     sourceTrigger: 'MANUAL' | 'APPROVE_MEMBER' | 'ENROLLMENT' | 'RESEND' = 'RESEND',
-    overrideCred?: AccessCredential
+    overrideCred?: AccessCredential,
+    initialSecretCode?: string
   ): Promise<{ ok: boolean; error?: string }> => {
     const targetCred =
       overrideCred || accessCredentials.find((c) => c.id === credentialId);
@@ -2694,12 +3124,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const response = await fetch('/api/credentials/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           credentialId: targetCred.id,
           recipientEmail,
           recipientName: targetCred.displayName,
           identifier: targetCred.identifier,
-          secretCode: targetCred.secretCode,
+          secretCode: initialSecretCode || '',
           roleLabel: PROFILE_ACCESS_MATRIX[targetCred.role].label,
           allowedMenusLabels,
           senderEmail,
@@ -2797,7 +3228,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const createAccessCredential = (params: {
+  const createAccessCredential = async (params: {
     identifier: string;
     secretCode: string;
     displayName: string;
@@ -2807,7 +3238,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     allowedTabs?: NavigationTab[];
     notes?: string;
     skipAutoEmail?: boolean;
-  }): AccessCredential | null => {
+  }): Promise<AccessCredential | null> => {
     if (!canManageCredentials) {
       addToast(
         'error',
@@ -2826,18 +3257,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return null;
     }
 
-    const duplicate = accessCredentials.some(
-      (c) => c.identifier.trim().toLowerCase() === cleanId.toLowerCase()
-    );
-    if (duplicate) {
-      addToast(
-        'error',
-        'Identifiant déjà utilisé',
-        `Un credential existe déjà pour « ${cleanId} ». Choisissez un autre identifiant.`
-      );
-      return null;
-    }
-
     const tabs =
       params.allowedTabs && params.allowedTabs.length > 0
         ? params.allowedTabs
@@ -2852,62 +3271,86 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       members
     );
 
-    const shouldAutoSend =
-      !params.skipAutoEmail && settings.autoSendCredentialEmail !== false;
+    try {
+      const res = await fetch('/api/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          identifier: cleanId,
+          secretCode: cleanCode,
+          displayName: cleanName,
+          role: params.role,
+          linkedMemberId: params.linkedMemberId || undefined,
+          recipientEmail: resolvedRecipient || params.recipientEmail?.trim() || undefined,
+          allowedTabs: Array.from(new Set(['accueil', ...tabs])),
+          notes: params.notes?.trim() || undefined,
+        }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        credential?: AccessCredential;
+        error?: string;
+      };
+      if (!res.ok || !data.ok || !data.credential) {
+        addToast('error', 'Création refusée', data.error || 'Impossible de créer le credential.');
+        return null;
+      }
 
-    const newCred: AccessCredential = {
-      id: `cred-${Date.now().toString().slice(-6)}`,
-      identifier: cleanId,
-      secretCode: cleanCode,
-      displayName: cleanName,
-      role: params.role,
-      linkedMemberId: params.linkedMemberId || undefined,
-      recipientEmail: resolvedRecipient || params.recipientEmail?.trim() || undefined,
-      allowedTabs: Array.from(new Set(['accueil', ...tabs])),
-      isActive: true,
-      createdAt: new Date().toISOString().split('T')[0],
-      createdBy: activeCredential?.displayName || 'Administration ALGB',
-      ackToken: generateAckToken(),
-      emailStatus: shouldAutoSend && resolvedRecipient ? 'EN_COURS' : 'NON_ENVOYE',
-      notes: params.notes?.trim() || undefined,
-    };
+      const newCred = data.credential;
+      setAccessCredentials((prev) => [newCred, ...prev]);
+      addToast(
+        'success',
+        'Credential créé et haché sur serveur',
+        `Accès « ${newCred.identifier} » activé pour le profil ${PROFILE_ACCESS_MATRIX[newCred.role].label}.`
+      );
 
-    setAccessCredentials((prev) => [newCred, ...prev]);
-    addToast(
-      'success',
-      'Credential créé avec succès',
-      `Accès « ${newCred.identifier} » activé pour le profil ${PROFILE_ACCESS_MATRIX[newCred.role].label}.`
-    );
+      const shouldAutoSend = !params.skipAutoEmail && settings.autoSendCredentialEmail !== false;
+      if (shouldAutoSend && resolvedRecipient) {
+        void sendCredentialEmail(newCred.id, 'MANUAL', newCred, cleanCode);
+      }
 
-    if (shouldAutoSend) {
-      void sendCredentialEmail(newCred.id, 'MANUAL', newCred);
+      return newCred;
+    } catch {
+      addToast('error', 'Erreur réseau', 'Impossible de joindre le serveur.');
+      return null;
     }
-
-    return newCred;
   };
 
-  const updateAccessCredential = (id: string, updates: Partial<AccessCredential>) => {
+  const updateAccessCredential = async (
+    id: string,
+    updates: Partial<AccessCredential> & { secretCode?: string }
+  ): Promise<void> => {
     if (!canManageCredentials) return;
-    setAccessCredentials((prev) =>
-      prev.map((c) => {
-        if (c.id !== id) return c;
-        const next: AccessCredential = {
-          ...c,
-          ...updates,
-          isSeededDefault:
-            updates.secretCode !== undefined || updates.identifier !== undefined
-              ? false
-              : c.isSeededDefault,
-        };
-        return next;
-      })
-    );
-    addToast('success', 'Credential mis à jour', 'Les droits et paramètres d’accès ont été enregistrés.');
+    try {
+      const res = await fetch(`/api/credentials/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updates),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        credential?: AccessCredential;
+        error?: string;
+      };
+      if (!res.ok || !data.ok || !data.credential) {
+        addToast('warning', 'Mise à jour refusée', data.error || 'Échec de modification.');
+        return;
+      }
+      setAccessCredentials((prev) => prev.map((c) => (c.id === id ? data.credential! : c)));
+      if (activeCredential?.id === id) {
+        setActiveCredentialState(data.credential);
+      }
+      addToast('success', 'Credential mis à jour', 'Les droits et paramètres d’accès ont été enregistrés.');
+    } catch {
+      addToast('error', 'Erreur réseau', 'Impossible de joindre le serveur.');
+    }
   };
 
-  const deleteAccessCredential = (id: string) => {
+  const deleteAccessCredential = async (id: string): Promise<void> => {
     if (!canManageCredentials) return;
-    if (id === activeCredentialId) {
+    if (activeCredential && id === activeCredential.id) {
       addToast(
         'warning',
         'Action bloquée',
@@ -2915,8 +3358,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
       return;
     }
-    setAccessCredentials((prev) => prev.filter((c) => c.id !== id));
-    addToast('info', 'Credential supprimé', 'L’accès a été révoqué et retiré du registre.');
+    try {
+      const res = await fetch(`/api/credentials/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        addToast('warning', 'Suppression bloquée', data.error || 'Échec de suppression.');
+        return;
+      }
+      setAccessCredentials((prev) => prev.filter((c) => c.id !== id));
+      addToast('info', 'Credential supprimé', 'L’accès a été révoqué et retiré du registre.');
+    } catch {
+      addToast('error', 'Erreur réseau', 'Impossible de joindre le serveur.');
+    }
   };
 
   const updateVisitorAllowedMenus = (menus: NavigationTab[]) => {
@@ -2931,6 +3387,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sanitized.push('galerie');
     }
     setVisitorAllowedMenus(sanitized);
+    void syncServerSlice('visitorAllowedMenus', sanitized);
     addToast(
       'success',
       'Menus Visiteurs mis à jour',
@@ -2947,10 +3404,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (sanitized.includes('mediatheque') && !sanitized.includes('galerie')) {
       sanitized.push('galerie');
     }
-    setRoleMenuPermissions((prev) => ({
-      ...prev,
-      [role]: sanitized,
-    }));
+    setRoleMenuPermissions((prev) => {
+      const next = {
+        ...prev,
+        [role]: sanitized,
+      };
+      void syncServerSlice('roleMenuPermissions', next);
+      return next;
+    });
     addToast(
       'success',
       `Matrice ${PROFILE_ACCESS_MATRIX[role].label} mise à jour`,
@@ -2980,6 +3441,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Reset to initial
   const resetAllData = () => {
     localStorage.clear();
+    void syncServerSlice('resetDemo', true);
     setSettings(INITIAL_SETTINGS);
     setMembers(INITIAL_MEMBERS);
     setPromotions(INITIAL_PROMOTIONS);
@@ -2994,15 +3456,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPhotos(INITIAL_PHOTOS);
     setVideos(INITIAL_VIDEOS);
     setAiKnowledgeEntries(INITIAL_AI_KNOWLEDGE);
-    setAccessCredentials(INITIAL_ACCESS_CREDENTIALS);
+    setAccessCredentials([]);
     setSendingCredentialIds([]);
     setVisitorAllowedMenus(DEFAULT_VISITOR_ALLOWED_MENUS);
     setRoleMenuPermissions(DEFAULT_ROLE_MENU_PERMISSIONS);
-    setActiveCredentialId(null);
+    setActiveCredentialState(null);
     setCurrentUser(null);
     setCurrentRole('VISITEUR');
     setTabHistory([]);
     setActiveTabState('accueil');
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ tab: 'accueil' }, '', '/');
+    }
+    void refreshBootstrap();
     addToast('info', 'Réinitialisation terminée', 'Données et sessions réinitialisées (mode Visiteur public).');
   };
 
@@ -3076,7 +3542,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         openQrSyncModal,
         closeQrSyncModal,
         verifyQrAccess,
+        verifyQrAuthenticity,
         syncQrPaymentUpdate,
+        initiateUemoaPayment,
+        confirmUemoaPaymentWebhook,
+        updateMyPrivacy,
+        exportMyArtciData,
+        anonymizeMyAccount,
+        cacheOfflineMemberCard,
         aiChatOpen,
         setAiChatOpen,
         aiKnowledgeEntries,

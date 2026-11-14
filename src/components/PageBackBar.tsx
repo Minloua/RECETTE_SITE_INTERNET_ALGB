@@ -17,6 +17,9 @@ const TAB_LABELS: Record<NavigationTab, string> = {
   'espace-membre': 'Espace Membre',
   contact: 'Contact',
   admin: 'Administration',
+  'mentions-legales': 'Mentions légales',
+  confidentialite: 'Confidentialité & ARTCI',
+  cgu: 'CGU & Mécénat',
 };
 
 export const PageBackBar: React.FC = () => {

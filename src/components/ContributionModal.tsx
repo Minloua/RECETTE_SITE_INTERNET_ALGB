@@ -12,12 +12,19 @@ import {
 } from 'lucide-react';
 
 export const ContributionModal: React.FC = () => {
-  const { contributionModalProject, setContributionModalProject, makeContribution, currentUser } = useApp();
+  const {
+    contributionModalProject,
+    setContributionModalProject,
+    makeContribution,
+    initiateUemoaPayment,
+    confirmUemoaPaymentWebhook,
+    currentUser,
+  } = useApp();
 
   const [amount, setAmount] = useState<number>(50000);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [isCustom, setIsCustom] = useState(false);
-  const [method, setMethod] = useState<'ORANGE_MONEY' | 'MTN_MOMO' | 'MOOV_MONEY' | 'CARTE_BANCAIRE' | 'VIREMENT'>('ORANGE_MONEY');
+  const [method, setMethod] = useState<'WAVE' | 'ORANGE_MONEY' | 'MTN_MOMO' | 'MOOV_MONEY' | 'CARTE_BANCAIRE' | 'VIREMENT'>('WAVE');
   const [contributorName, setContributorName] = useState(
     currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : ''
   );
@@ -28,6 +35,12 @@ export const ContributionModal: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'FORM' | 'CONFIRM_OTP'>('FORM');
   const [otpCode, setOtpCode] = useState('7492');
+  const [pendingIntent, setPendingIntent] = useState<{
+    id: string;
+    reference: string;
+    signature: string;
+    provider: string;
+  } | null>(null);
 
   if (!contributionModalProject) return null;
 
@@ -48,30 +61,64 @@ export const ContributionModal: React.FC = () => {
     }
   };
 
-  const handleProceedToOtp = (e: React.FormEvent) => {
+  const handleProceedToOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') {
+    setIsProcessing(true);
+    const init = await initiateUemoaPayment({
+      type: 'DON_PROJET',
+      amountFcfa: amount,
+      method,
+      title: `Contribution Mécénat : ${contributionModalProject.title}`,
+      description: message.trim() || undefined,
+      memberId: currentUser?.id,
+      memberName: isAnonymous ? 'Ancien Élève Anonyme' : contributorName || 'Ancien Élève du LGB',
+      projectId: contributionModalProject.id,
+      phoneNumber: phoneNumber.trim() || undefined,
+      isAnonymous,
+    });
+    setIsProcessing(false);
+
+    if (init.ok && init.intent) {
+      setPendingIntent(init.intent);
+    } else {
+      setPendingIntent(null);
+    }
+
+    if (method === 'WAVE' || method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') {
       setStep('CONFIRM_OTP');
     } else {
-      executeContribution();
+      await executeContribution(init.ok && init.intent ? init.intent : null);
     }
   };
 
-  const executeContribution = () => {
+  const executeContribution = async (
+    overrideIntent?: { id: string; reference: string; signature: string; provider: string } | null
+  ) => {
     setIsProcessing(true);
-    setTimeout(() => {
-      makeContribution(contributionModalProject.id, {
-        contributorName: isAnonymous ? 'Ancien Élève Anonyme' : contributorName || 'Ancien Élève du LGB',
-        promotionYear: isAnonymous ? undefined : promotionYear,
-        amount: amount,
-        currency: 'FCFA',
-        method: method,
-        isAnonymous: isAnonymous,
-        message: message.trim() || undefined,
-      });
-      setIsProcessing(false);
-      setContributionModalProject(null);
-    }, 1200);
+    const activeIntent = overrideIntent !== undefined ? overrideIntent : pendingIntent;
+
+    if (activeIntent) {
+      const confirmed = await confirmUemoaPaymentWebhook(activeIntent.id, activeIntent.signature);
+      if (confirmed.ok) {
+        setIsProcessing(false);
+        setPendingIntent(null);
+        setContributionModalProject(null);
+        return;
+      }
+    }
+
+    makeContribution(contributionModalProject.id, {
+      contributorName: isAnonymous ? 'Ancien Élève Anonyme' : contributorName || 'Ancien Élève du LGB',
+      promotionYear: isAnonymous ? undefined : promotionYear,
+      amount: amount,
+      currency: 'FCFA',
+      method: method,
+      isAnonymous: isAnonymous,
+      message: message.trim() || undefined,
+    });
+    setIsProcessing(false);
+    setPendingIntent(null);
+    setContributionModalProject(null);
   };
 
   return (
@@ -104,7 +151,7 @@ export const ContributionModal: React.FC = () => {
         {/* Content */}
         <div className="p-6">
           {step === 'FORM' ? (
-            <form onSubmit={handleProceedToOtp} className="space-y-5">
+            <form onSubmit={(e) => void handleProceedToOtp(e)} className="space-y-5">
               {/* Amount Selection */}
               <div>
                 <label className="block text-xs font-bold text-[#141413] dark:text-zinc-300 uppercase tracking-wider mb-2">
@@ -144,6 +191,22 @@ export const ContributionModal: React.FC = () => {
                   Mode de règlement sécurisé
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setMethod('WAVE')}
+                    className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
+                      method === 'WAVE'
+                        ? 'border-[#1DC7FF] bg-sky-50 dark:bg-sky-500/15 text-[#141413] dark:text-white'
+                        : 'border-[#141413]/15 dark:border-white/15 bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
+                    }`}
+                  >
+                    <Smartphone className="w-4 h-4 text-[#00A3E0] shrink-0" />
+                    <div>
+                      <div className="font-bold text-[#141413] dark:text-white">Wave CI</div>
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">UEMOA · Instantané</div>
+                    </div>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setMethod('ORANGE_MONEY')}
@@ -261,7 +324,7 @@ export const ContributionModal: React.FC = () => {
               </div>
 
               {/* Mobile Phone for Mobile Money */}
-              {(method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') && (
+              {(method === 'WAVE' || method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') && (
                 <div>
                   <label className="block text-xs font-bold text-[#141413] dark:text-zinc-300 mb-1">
                     Numéro Mobile Money débité
@@ -367,12 +430,12 @@ export const ContributionModal: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={executeContribution}
+                  onClick={() => void executeContribution()}
                   disabled={isProcessing}
                   className="w-1/2 py-2.5 text-xs font-bold rounded-lg bg-[#F2B705] text-[#141413] hover:bg-[#dfa704] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   {isProcessing ? (
-                    <span>Traitement...</span>
+                    <span>Validation webhook...</span>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
@@ -381,6 +444,11 @@ export const ContributionModal: React.FC = () => {
                   )}
                 </button>
               </div>
+              {pendingIntent && (
+                <p className="text-[10px] font-mono text-[#4A4A48] dark:text-zinc-400">
+                  Passerelle {pendingIntent.provider} · Réf. {pendingIntent.reference}
+                </p>
+              )}
             </div>
           )}
         </div>

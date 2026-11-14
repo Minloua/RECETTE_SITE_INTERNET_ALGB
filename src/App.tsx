@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -21,22 +21,33 @@ import { QrPaymentSyncModal } from './components/QrPaymentSyncModal';
 import { AuthLoginModal } from './components/AuthLoginModal';
 import { FloatingAiAssistant } from './components/FloatingAiAssistant';
 import { ToastContainer } from './components/ToastContainer';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { Lock, KeyRound } from 'lucide-react';
 
-// Views
-import { HomeView } from './views/HomeView';
-import { AmicaleView } from './views/AmicaleView';
-import { HistoireView } from './views/HistoireView';
-import { PromotionsView } from './views/PromotionsView';
-import { ReseauView } from './views/ReseauView';
-import { MentoratView } from './views/MentoratView';
-import { ProjetsView } from './views/ProjetsView';
-import { ActualitesView } from './views/ActualitesView';
-import { GalerieView } from './views/GalerieView';
-import { AdhesionView } from './views/AdhesionView';
-import { EspaceMembreView } from './views/EspaceMembreView';
-import { AdminView } from './views/AdminView';
-import { ContactView } from './views/ContactView';
+// Code-split Views via React.lazy
+const HomeView = lazy(() => import('./views/HomeView').then((m) => ({ default: m.HomeView })));
+const AmicaleView = lazy(() => import('./views/AmicaleView').then((m) => ({ default: m.AmicaleView })));
+const HistoireView = lazy(() => import('./views/HistoireView').then((m) => ({ default: m.HistoireView })));
+const PromotionsView = lazy(() => import('./views/PromotionsView').then((m) => ({ default: m.PromotionsView })));
+const ReseauView = lazy(() => import('./views/ReseauView').then((m) => ({ default: m.ReseauView })));
+const MentoratView = lazy(() => import('./views/MentoratView').then((m) => ({ default: m.MentoratView })));
+const ProjetsView = lazy(() => import('./views/ProjetsView').then((m) => ({ default: m.ProjetsView })));
+const ActualitesView = lazy(() => import('./views/ActualitesView').then((m) => ({ default: m.ActualitesView })));
+const GalerieView = lazy(() => import('./views/GalerieView').then((m) => ({ default: m.GalerieView })));
+const AdhesionView = lazy(() => import('./views/AdhesionView').then((m) => ({ default: m.AdhesionView })));
+const EspaceMembreView = lazy(() => import('./views/EspaceMembreView').then((m) => ({ default: m.EspaceMembreView })));
+const AdminView = lazy(() => import('./views/AdminView').then((m) => ({ default: m.AdminView })));
+const ContactView = lazy(() => import('./views/ContactView').then((m) => ({ default: m.ContactView })));
+const LegalView = lazy(() => import('./views/LegalView').then((m) => ({ default: m.LegalView })));
+
+const ViewFallback: React.FC = () => (
+  <div className="min-h-[60vh] bg-[#F8F8F6] dark:bg-[#141413] flex flex-col items-center justify-center p-8 space-y-4">
+    <div className="w-10 h-10 rounded-full border-2 border-[#F2B705] border-t-transparent animate-spin" />
+    <span className="text-xs font-medium text-[#4A4A48] dark:text-zinc-400 tracking-wider uppercase">
+      Chargement du portail ALGB...
+    </span>
+  </div>
+);
 
 const MainContent: React.FC = () => {
   const { activeTab, canAccessTab, openAuthModal, setActiveTab } = useApp();
@@ -79,19 +90,24 @@ const MainContent: React.FC = () => {
 
   return (
     <main className="min-h-screen">
-      {activeTab === 'accueil' && <HomeView />}
-      {activeTab === 'amicale' && <AmicaleView />}
-      {activeTab === 'histoire' && <HistoireView />}
-      {activeTab === 'anciens' && <PromotionsView />}
-      {activeTab === 'reseau' && <ReseauView />}
-      {activeTab === 'mentorat' && <MentoratView />}
-      {activeTab === 'projets' && <ProjetsView />}
-      {activeTab === 'actualites' && <ActualitesView />}
-      {(activeTab === 'galerie' || activeTab === 'mediatheque') && <GalerieView />}
-      {activeTab === 'adhesion' && <AdhesionView />}
-      {activeTab === 'espace-membre' && <EspaceMembreView />}
-      {activeTab === 'admin' && <AdminView />}
-      {activeTab === 'contact' && <ContactView />}
+      <Suspense fallback={<ViewFallback />}>
+        {activeTab === 'accueil' && <HomeView />}
+        {activeTab === 'amicale' && <AmicaleView />}
+        {activeTab === 'histoire' && <HistoireView />}
+        {activeTab === 'anciens' && <PromotionsView />}
+        {activeTab === 'reseau' && <ReseauView />}
+        {activeTab === 'mentorat' && <MentoratView />}
+        {activeTab === 'projets' && <ProjetsView />}
+        {activeTab === 'actualites' && <ActualitesView />}
+        {(activeTab === 'galerie' || activeTab === 'mediatheque') && <GalerieView />}
+        {activeTab === 'adhesion' && <AdhesionView />}
+        {activeTab === 'espace-membre' && <EspaceMembreView />}
+        {activeTab === 'admin' && <AdminView />}
+        {activeTab === 'contact' && <ContactView />}
+        {(activeTab === 'mentions-legales' ||
+          activeTab === 'confidentialite' ||
+          activeTab === 'cgu') && <LegalView />}
+      </Suspense>
     </main>
   );
 };
@@ -123,6 +139,7 @@ export default function App() {
         <FloatingAiAssistant />
         <RoleSwitcherBar />
         <ToastContainer />
+        <OfflineIndicator />
       </div>
     </AppProvider>
   );

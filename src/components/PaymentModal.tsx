@@ -12,16 +12,31 @@ import {
 } from 'lucide-react';
 
 export const PaymentModal: React.FC = () => {
-  const { paymentModalConfig, closePaymentModal, processPayment, currentUser, getMemberFinancialSummary, settings } = useApp();
+  const {
+    paymentModalConfig,
+    closePaymentModal,
+    processPayment,
+    initiateUemoaPayment,
+    confirmUemoaPaymentWebhook,
+    currentUser,
+    getMemberFinancialSummary,
+    settings,
+  } = useApp();
 
   const [paymentType, setPaymentType] = useState<PaymentType>('COTISATION_MENSUELLE');
   const [selectedMonths, setSelectedMonths] = useState<string[]>(['2026-11']);
   const [customAmount, setCustomAmount] = useState<number>(settings.cotisationMensuelleAmount);
-  const [method, setMethod] = useState<PaymentMethod>('ORANGE_MONEY');
+  const [method, setMethod] = useState<PaymentMethod>('WAVE');
   const [phoneNumber, setPhoneNumber] = useState(currentUser?.phone || '+225 07 ');
   const [notes, setNotes] = useState('');
   const [step, setStep] = useState<'FORM' | 'OTP'>('FORM');
   const [otpCode, setOtpCode] = useState('8520');
+  const [pendingIntent, setPendingIntent] = useState<{
+    id: string;
+    reference: string;
+    signature: string;
+    provider: string;
+  } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Sync when config opens
@@ -79,53 +94,102 @@ export const PaymentModal: React.FC = () => {
     setCustomAmount(all.length * settings.cotisationMensuelleAmount);
   };
 
-  const handleProceed = (e: React.FormEvent) => {
+  const buildPaymentDetails = () => {
+    if (paymentType === 'DROIT_ADHESION') {
+      return {
+        title: 'Droits d’Adhésion Initiale Statutaire ALGB',
+        description: 'Règlement des droits d’adhésion pour validation de la carte d’adhérent.',
+      };
+    }
+    if (paymentType === 'COTISATION_MENSUELLE') {
+      const monthNames = selectedMonths
+        .map((k) => MONTHS_2026.find((m) => m.key === k)?.short || k)
+        .join(', ');
+      return {
+        title: `Cotisations Mensuelles (${selectedMonths.length} mois : ${monthNames})`,
+        description: `Paiement des cotisations pour ${selectedMonths.length} mois au tarif statutaire de ${settings.cotisationMensuelleAmount.toLocaleString('fr-FR')} FCFA / mois.`,
+      };
+    }
+    if (paymentType === 'DON_PROJET') {
+      return {
+        title: paymentModalConfig.title || 'Don Solidaire aux Chantiers du Lycée',
+        description: paymentModalConfig.description || 'Contribution volontaire pour les projets de rénovation du LGB.',
+      };
+    }
+    return {
+      title: paymentModalConfig.title || 'Contribution & Souscription Spéciale',
+      description: paymentModalConfig.description || 'Participation aux activités associatives et fraternelles.',
+    };
+  };
+
+  const handleProceed = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') {
+    const { title, description } = buildPaymentDetails();
+    setIsProcessing(true);
+
+    const init = await initiateUemoaPayment({
+      type: paymentType,
+      amountFcfa: customAmount,
+      method,
+      title,
+      description,
+      memberId: paymentModalConfig.targetMember?.id || currentUser?.id,
+      memberName: paymentModalConfig.targetMember
+        ? `${paymentModalConfig.targetMember.firstName} ${paymentModalConfig.targetMember.lastName}`
+        : currentUser
+        ? `${currentUser.firstName} ${currentUser.lastName}`
+        : undefined,
+      projectId: paymentModalConfig.projectId,
+      monthYears: paymentType === 'COTISATION_MENSUELLE' ? selectedMonths : undefined,
+      phoneNumber: phoneNumber.trim() || undefined,
+    });
+    setIsProcessing(false);
+
+    if (init.ok && init.intent) {
+      setPendingIntent(init.intent);
+    } else {
+      setPendingIntent(null);
+    }
+
+    if (method === 'WAVE' || method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') {
       setStep('OTP');
     } else {
-      executePayment();
+      await executePayment(init.ok && init.intent ? init.intent : null);
     }
   };
 
-  const executePayment = () => {
+  const executePayment = async (
+    overrideIntent?: { id: string; reference: string; signature: string; provider: string } | null
+  ) => {
     setIsProcessing(true);
-    setTimeout(() => {
-      let title = '';
-      let description = '';
+    const activeIntent = overrideIntent !== undefined ? overrideIntent : pendingIntent;
 
-      if (paymentType === 'DROIT_ADHESION') {
-        title = 'Droits d’Adhésion Initiale Statutaire ALGB';
-        description = 'Règlement des droits d’adhésion pour validation de la carte d’adhérent.';
-      } else if (paymentType === 'COTISATION_MENSUELLE') {
-        const monthNames = selectedMonths
-          .map((k) => MONTHS_2026.find((m) => m.key === k)?.short || k)
-          .join(', ');
-        title = `Cotisations Mensuelles (${selectedMonths.length} mois : ${monthNames})`;
-        description = `Paiement des cotisations pour ${selectedMonths.length} mois au tarif statutaire de 5 000 FCFA / mois.`;
-      } else if (paymentType === 'DON_PROJET') {
-        title = paymentModalConfig.title || 'Don Solidaire aux Chantiers du Lycée';
-        description = paymentModalConfig.description || 'Contribution volontaire pour les projets de rénovation du LGB.';
-      } else {
-        title = paymentModalConfig.title || 'Contribution & Souscription Spéciale';
-        description = paymentModalConfig.description || 'Participation aux activités associatives et fraternelles.';
+    if (activeIntent && method !== 'VIREMENT') {
+      const confirmed = await confirmUemoaPaymentWebhook(activeIntent.id, activeIntent.signature);
+      if (confirmed.ok) {
+        setIsProcessing(false);
+        setPendingIntent(null);
+        closePaymentModal();
+        return;
       }
+    }
 
-      processPayment({
-        type: paymentType,
-        amount: customAmount,
-        method: method,
-        monthYears: paymentType === 'COTISATION_MENSUELLE' ? selectedMonths : undefined,
-        title: title,
-        description: description,
-        notes: notes.trim() || undefined,
-        memberId: currentUser?.id,
-        status: method === 'VIREMENT' ? 'EN_ATTENTE' : 'PAYE',
-      });
+    const { title, description } = buildPaymentDetails();
+    processPayment({
+      type: paymentType,
+      amount: customAmount,
+      method: method,
+      monthYears: paymentType === 'COTISATION_MENSUELLE' ? selectedMonths : undefined,
+      title: title,
+      description: description,
+      notes: notes.trim() || undefined,
+      memberId: paymentModalConfig.targetMember?.id || currentUser?.id,
+      status: method === 'VIREMENT' ? 'EN_ATTENTE' : 'PAYE',
+    });
 
-      setIsProcessing(false);
-      closePaymentModal();
-    }, 1200);
+    setIsProcessing(false);
+    setPendingIntent(null);
+    closePaymentModal();
   };
 
   return (
@@ -161,7 +225,7 @@ export const PaymentModal: React.FC = () => {
         {/* Content */}
         <div className="p-6">
           {step === 'FORM' ? (
-            <form onSubmit={handleProceed} className="space-y-5 text-xs">
+            <form onSubmit={(e) => void handleProceed(e)} className="space-y-5 text-xs">
               {/* Type Switcher */}
               <div>
                 <label className="block text-[#4A4A48] dark:text-zinc-300 font-bold uppercase tracking-wider text-[10px] mb-1.5">
@@ -311,6 +375,22 @@ export const PaymentModal: React.FC = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
+                    onClick={() => setMethod('WAVE')}
+                    className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
+                      method === 'WAVE'
+                        ? 'border-[#1DC7FF] bg-sky-50 dark:bg-sky-500/15 text-[#141413] dark:text-white'
+                        : 'border-[#141413]/10 dark:border-white/10 bg-[#F8F8F6] dark:bg-[#141413] text-[#4A4A48] dark:text-zinc-300 hover:border-[#141413]/30 dark:hover:border-white/30'
+                    }`}
+                  >
+                    <Smartphone className="w-4 h-4 text-[#00A3E0] shrink-0" />
+                    <div>
+                      <div className="font-bold text-[#141413] dark:text-white">Wave CI</div>
+                      <div className="text-[10px] text-[#4A4A48] dark:text-zinc-400">1 % · Instantané</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setMethod('ORANGE_MONEY')}
                     className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-2 ${
                       method === 'ORANGE_MONEY'
@@ -408,6 +488,12 @@ export const PaymentModal: React.FC = () => {
 
                 {/* Method instructions */}
                 <div className="p-3 bg-[#F8F8F6] dark:bg-[#141413] border border-[#141413]/10 dark:border-white/10 rounded-xl text-[11px] space-y-1 mt-2.5">
+                  {method === 'WAVE' && (
+                    <div className="flex items-center justify-between text-[#141413] dark:text-zinc-300">
+                      <span className="text-[#4A4A48] dark:text-zinc-400">Lien Marchand Wave UEMOA :</span>
+                      <span className="font-mono font-bold text-[#0082c3] dark:text-sky-400">pay.wave.com/m/algb_ci</span>
+                    </div>
+                  )}
                   {method === 'ORANGE_MONEY' && (
                     <div className="flex items-center justify-between text-[#141413] dark:text-zinc-300">
                       <span className="text-[#4A4A48] dark:text-zinc-400">Compte Marchand Officiel ALGB :</span>
@@ -456,10 +542,10 @@ export const PaymentModal: React.FC = () => {
               </div>
 
               {/* Phone number */}
-              {(method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') && (
+              {(method === 'WAVE' || method === 'ORANGE_MONEY' || method === 'MTN_MOMO' || method === 'MOOV_MONEY') && (
                 <div>
                   <label className="block text-[#141413] dark:text-zinc-300 font-bold mb-1">
-                    Numéro de téléphone débité
+                    Numéro de téléphone débité ({method === 'WAVE' ? 'Wave' : 'Mobile Money'})
                   </label>
                   <input
                     type="tel"
@@ -539,13 +625,18 @@ export const PaymentModal: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={executePayment}
+                  onClick={() => void executePayment()}
                   disabled={isProcessing}
                   className="w-1/2 py-2.5 text-xs font-bold rounded-lg bg-[#F2B705] text-[#141413] hover:bg-[#dfa704] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
                 >
-                  {isProcessing ? 'Validation...' : 'Valider & Émettre Reçu'}
+                  {isProcessing ? 'Validation webhook...' : 'Valider & Émettre Reçu'}
                 </button>
               </div>
+              {pendingIntent && (
+                <p className="text-[10px] font-mono text-[#4A4A48] dark:text-zinc-400">
+                  Passerelle {pendingIntent.provider} · Réf. {pendingIntent.reference}
+                </p>
+              )}
             </div>
           )}
         </div>

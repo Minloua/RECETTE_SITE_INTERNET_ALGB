@@ -1,11 +1,36 @@
 import QRCode from 'qrcode';
 import { AlumniMember } from '../data/mockData';
 
-export const buildMemberQrUrl = (member: AlumniMember): string => {
+export interface SignedQrMetadata {
+  ts?: number;
+  sig?: string;
+}
+
+export interface QrVerificationResponse {
+  ok: boolean;
+  authentic: boolean;
+  legacyUnsigned?: boolean;
+  error?: string;
+  member?: {
+    id: string;
+    fullName: string;
+    promotionYear: number;
+    membershipCardId: string;
+    membershipStatus: string;
+    isUpToDate: boolean;
+    city: string;
+    country: string;
+  };
+}
+
+export const buildMemberQrUrl = (
+  member: AlumniMember,
+  signature?: SignedQrMetadata
+): string => {
   const origin =
     typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
-      : 'https://algb-bingerville.netlify.app';
+      : 'https://algb-bingerville.ci';
 
   const params = new URLSearchParams({
     qrPay: '1',
@@ -13,11 +38,49 @@ export const buildMemberQrUrl = (member: AlumniMember): string => {
     c: member.membershipCardId,
   });
 
+  if (signature?.ts && signature?.sig) {
+    params.set('ts', String(signature.ts));
+    params.set('sig', signature.sig);
+  }
+
   return `${origin}/?${params.toString()}`;
 };
 
-export const generateMemberQrDataUrl = async (member: AlumniMember): Promise<string> => {
-  const url = buildMemberQrUrl(member);
+export const fetchSignedQrMetadata = async (
+  member: AlumniMember
+): Promise<SignedQrMetadata | null> => {
+  try {
+    const res = await fetch('/api/qr/sign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        memberId: member.id,
+        cardId: member.membershipCardId,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok?: boolean; ts?: number; sig?: string };
+    if (data.ok && data.ts && data.sig) {
+      return { ts: data.ts, sig: data.sig };
+    }
+  } catch {
+    // Offline fallback: caller may use cached offline card signature
+  }
+  return null;
+};
+
+export const generateMemberQrDataUrl = async (
+  member: AlumniMember,
+  signature?: SignedQrMetadata
+): Promise<string> => {
+  let effectiveSig = signature;
+  if (!effectiveSig) {
+    const serverSig = await fetchSignedQrMetadata(member);
+    if (serverSig) effectiveSig = serverSig;
+  }
+
+  const url = buildMemberQrUrl(member, effectiveSig);
   return QRCode.toDataURL(url, {
     width: 320,
     margin: 1,
@@ -27,6 +90,49 @@ export const generateMemberQrDataUrl = async (member: AlumniMember): Promise<str
       light: '#FFFFFF',
     },
   });
+};
+
+export const extractQrSignatureParams = (
+  rawInput: string
+): { memberId?: string; cardId?: string; ts?: number; sig?: string } => {
+  const trimmed = rawInput.trim();
+  if (!trimmed) return {};
+  try {
+    const urlObj = trimmed.startsWith('http')
+      ? new URL(trimmed)
+      : new URL(trimmed.startsWith('?') ? `https://algb.local/${trimmed}` : `https://algb.local/?${trimmed}`);
+
+    const memberId = urlObj.searchParams.get('m') || urlObj.searchParams.get('memberId') || undefined;
+    const cardId = urlObj.searchParams.get('c') || urlObj.searchParams.get('cardId') || undefined;
+    const tsRaw = urlObj.searchParams.get('ts');
+    const sig = urlObj.searchParams.get('sig') || undefined;
+    const ts = tsRaw ? Number(tsRaw) : undefined;
+    return { memberId, cardId, ts: Number.isFinite(ts) ? ts : undefined, sig };
+  } catch {
+    return { cardId: trimmed };
+  }
+};
+
+export const verifyMemberQrAuthenticity = async (
+  rawInput: string
+): Promise<QrVerificationResponse> => {
+  const parsed = extractQrSignatureParams(rawInput);
+  try {
+    const res = await fetch('/api/qr/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(parsed),
+    });
+    const data = (await res.json()) as QrVerificationResponse;
+    return data;
+  } catch {
+    return {
+      ok: false,
+      authentic: false,
+      error: 'Impossible de joindre le serveur de vérification cryptographique.',
+    };
+  }
 };
 
 export const parseMemberQrPayload = (
