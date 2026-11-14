@@ -715,7 +715,7 @@ export const EspaceMembreView: React.FC = () => {
                             <td className="p-3 whitespace-nowrap">{tx.date}</td>
                             <td className="p-3 font-semibold text-[#141413] dark:text-white">{tx.title}</td>
                             <td className="p-3 font-mono font-semibold whitespace-nowrap">
-                              {tx.amount.toLocaleString('fr-FR')} F
+                              {tx.amount.toLocaleString('fr-FR')} {tx.currency || 'FCFA'}
                             </td>
                             <td className="p-3 whitespace-nowrap">
                               <span className="px-2 py-0.5 rounded bg-[#FEF8E6] text-[#141413] text-[10px] font-semibold">

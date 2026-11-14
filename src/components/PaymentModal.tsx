@@ -248,7 +248,7 @@ export const PaymentModal: React.FC = () => {
                         onClick={selectAllYear}
                         className="text-[#16324F] dark:text-[#F2B705] hover:underline font-bold cursor-pointer"
                       >
-                        Toute l'année ({(12 * settings.cotisationMensuelleAmount).toLocaleString('fr-FR')} F)
+                        Toute l'année ({(12 * settings.cotisationMensuelleAmount).toLocaleString('fr-FR')} {settings.currency})
                       </button>
                     </div>
                   </div>

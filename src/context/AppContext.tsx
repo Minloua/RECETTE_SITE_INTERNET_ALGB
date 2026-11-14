@@ -189,6 +189,10 @@ export interface AiKnowledgeEntry {
 interface AppContextType {
   activeTab: NavigationTab;
   setActiveTab: (tab: NavigationTab) => void;
+  tabHistory: NavigationTab[];
+  previousTab: NavigationTab | null;
+  canGoBack: boolean;
+  goBack: () => void;
   selectedPromotionYear: number | null;
   setSelectedPromotionYear: (year: number | null) => void;
   currentRole: UserRole;
@@ -327,7 +331,6 @@ interface AppContextType {
   becomeMentor: (params: { currentRole?: string; company?: string; bio?: string; availabilities?: string[] }) => void;
   applyToJobOffer: (params: { jobId: string; note: string }) => JobApplicationRecord | null;
   submitPatronageDonation: (params: {
-    amountEur?: number;
     amountFcfa: number;
     frequency: 'PONCTUEL' | 'MENSUEL';
     projectId: string;
@@ -413,14 +416,18 @@ const INITIAL_AI_KNOWLEDGE: AiKnowledgeEntry[] = [
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeTab, setActiveTabState] = useState<NavigationTab>('accueil');
+  const [tabHistory, setTabHistory] = useState<NavigationTab[]>([]);
   const [selectedPromotionYear, setSelectedPromotionYear] = useState<number | null>(null);
 
   const [settings, setSettings] = useState<AssociationSettings>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return saved ? { ...INITIAL_SETTINGS, ...JSON.parse(saved) } : INITIAL_SETTINGS;
+      if (saved) {
+        return { ...INITIAL_SETTINGS, ...JSON.parse(saved), currency: 'FCFA' };
+      }
+      return { ...INITIAL_SETTINGS, currency: 'FCFA' };
     } catch {
-      return INITIAL_SETTINGS;
+      return { ...INITIAL_SETTINGS, currency: 'FCFA' };
     }
   });
 
@@ -863,8 +870,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const setActiveTab = (tab: NavigationTab) => {
-    setActiveTabState(tab);
+    setActiveTabState((prevTab) => {
+      if (prevTab !== tab) {
+        setTabHistory((history) => [...history.slice(-29), prevTab]);
+      }
+      return tab;
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const previousTab: NavigationTab | null =
+    tabHistory.length > 0
+      ? tabHistory[tabHistory.length - 1]
+      : activeTab !== 'accueil'
+      ? 'accueil'
+      : null;
+
+  const canGoBack = tabHistory.length > 0 || activeTab !== 'accueil';
+
+  const goBack = () => {
+    if (tabHistory.length > 0) {
+      const targetTab = tabHistory[tabHistory.length - 1];
+      setTabHistory((history) => history.slice(0, -1));
+      setActiveTabState(targetTab);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (activeTab !== 'accueil') {
+      setActiveTabState('accueil');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    addToast(
+      'info',
+      'Page d’accueil active',
+      'Vous êtes actuellement sur la page d’accueil. Visitez une rubrique pour utiliser le retour arrière.'
+    );
   };
 
   const formatNewsAlertCategory = (category: NewsItem['category']): string => {
@@ -1673,7 +1719,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const submitPatronageDonation = (params: {
-    amountEur?: number;
     amountFcfa: number;
     frequency: 'PONCTUEL' | 'MENSUEL';
     projectId: string;
@@ -1689,16 +1734,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         (currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Mécène & Ami de l’ALGB');
 
     const freqLabel = params.frequency === 'MENSUEL' ? 'Engagement mensuel' : 'Don ponctuel';
-    const eurLabel = params.amountEur ? ` (~${params.amountEur} €)` : '';
+    const fcfaLabel = `${params.amountFcfa.toLocaleString('fr-FR')} FCFA`;
 
     const contribution = makeContribution(targetProject.id, {
       contributorName,
       promotionYear: currentUser?.promotionYear,
       amount: params.amountFcfa,
-      currency: settings.currency,
+      currency: 'FCFA',
       method: 'CARTE_BANCAIRE',
       isAnonymous: !!params.isAnonymous,
-      message: `${freqLabel}${eurLabel} via l'espace Mécénat ALGB.`,
+      message: `${freqLabel} de ${fcfaLabel} via l'espace Mécénat ALGB.`,
     });
 
     if (currentUser) {
@@ -1707,7 +1752,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         amount: params.amountFcfa,
         method: 'CARTE_BANCAIRE',
         title: `Mécénat : ${targetProject.title}`,
-        description: `${freqLabel}${eurLabel}`,
+        description: `${freqLabel} · ${fcfaLabel}`,
         memberId: currentUser.id,
         status: 'PAYE',
       });
@@ -1738,7 +1783,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Variable parameter management
   const updateSettings = (updates: Partial<AssociationSettings>) => {
     setSettings((prev) => {
-      const updated = { ...prev, ...updates };
+      const updated = { ...prev, ...updates, currency: 'FCFA' };
       try {
         localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
       } catch {
@@ -2956,7 +3001,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveCredentialId(null);
     setCurrentUser(null);
     setCurrentRole('VISITEUR');
-    setActiveTab('accueil');
+    setTabHistory([]);
+    setActiveTabState('accueil');
     addToast('info', 'Réinitialisation terminée', 'Données et sessions réinitialisées (mode Visiteur public).');
   };
 
@@ -2965,6 +3011,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         activeTab,
         setActiveTab,
+        tabHistory,
+        previousTab,
+        canGoBack,
+        goBack,
         selectedPromotionYear,
         setSelectedPromotionYear,
         currentRole,

@@ -595,7 +595,7 @@ export const CotisationsChartDashboard: React.FC<CotisationsChartDashboardProps>
                     <span>{item.name}</span>
                   </span>
                   <span className="font-mono font-semibold tabular-nums">
-                    {item.value} mois · {item.amount.toLocaleString('fr-FR')} F
+                    {item.value} mois · {item.amount.toLocaleString('fr-FR')} {currency}
                   </span>
                 </div>
               ))}

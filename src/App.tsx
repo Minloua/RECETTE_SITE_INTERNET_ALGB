@@ -7,6 +7,8 @@ import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { PageBackBar } from './components/PageBackBar';
+import { RightActionSidebar } from './components/RightActionSidebar';
 import { RoleSwitcherBar } from './components/RoleSwitcherBar';
 import { ContributionModal } from './components/ContributionModal';
 import { ReceiptModal } from './components/ReceiptModal';
@@ -99,8 +101,12 @@ export default function App() {
     <AppProvider>
       <div className="min-h-screen flex flex-col bg-[#F8F8F6] dark:bg-[#141413] text-[#141413] dark:text-[#F8F8F6] font-sans antialiased selection:bg-[#F2B705] selection:text-[#141413] transition-colors duration-150">
         <Header />
-        <div className="flex-1">
-          <MainContent />
+        <div className="flex-1 flex items-stretch">
+          <div className="flex-1 min-w-0 flex flex-col">
+            <PageBackBar />
+            <MainContent />
+          </div>
+          <RightActionSidebar />
         </div>
         <Footer />
 

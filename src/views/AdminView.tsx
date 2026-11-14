@@ -6,7 +6,6 @@ import {
   Users,
   CheckCircle,
   XCircle,
-  DollarSign,
   Download,
   PlusCircle,
   TrendingUp,
@@ -806,7 +805,7 @@ export const AdminView: React.FC = () => {
               <form onSubmit={handleSaveFinancialSettings} className="space-y-6 text-xs">
                 <div>
                   <h4 className="text-sm font-bold text-[#141413] dark:text-white mb-3 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-[#F2B705]" />
+                    <Banknote className="w-4 h-4 text-[#F2B705]" />
                     <span>1. Tarifs Statutaires des Droits et Cotisations</span>
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

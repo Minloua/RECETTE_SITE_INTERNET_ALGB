@@ -29,7 +29,7 @@ export const RoleSwitcherBar: React.FC = () => {
   const roleRule = PROFILE_ACCESS_MATRIX[currentRole];
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 no-print">
+    <div className="fixed bottom-4 right-4 z-50 no-print lg:hidden">
       <div className="relative">
         {isOpen && (
           <div className="absolute bottom-full right-0 mb-2 w-80 bg-white dark:bg-[#1e1e1c] border border-[#141413]/15 dark:border-white/15 rounded-xl shadow-2xl p-3.5 text-[#141413] dark:text-zinc-200 space-y-3">

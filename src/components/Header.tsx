@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApp, NavigationTab } from '../context/AppContext';
 import { PROFILE_ACCESS_MATRIX, UNRESTRICTED_ACCESS_OVERRIDE } from '../utils/accessMatrix';
 import {
@@ -7,7 +7,6 @@ import {
   UserCheck,
   Shield,
   HeartHandshake,
-  ChevronDown,
   Sun,
   Moon,
   LogIn,
@@ -29,48 +28,32 @@ export const Header: React.FC = () => {
   } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setMoreDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleNav = (tab: NavigationTab) => {
     setActiveTab(tab);
     setMobileMenuOpen(false);
-    setMoreDropdownOpen(false);
   };
 
-  // Navigation globale persistante : Accueil, Annuaire, Carrières, Mentorat, Événements, Mécénat
-  const allPrimaryNavItems: { tab: NavigationTab; label: string }[] = [
+  // Tous les menus alignés dans la barre du haut
+  const allNavItems: { tab: NavigationTab; label: string }[] = [
     { tab: 'accueil', label: 'Accueil' },
+    { tab: 'amicale', label: 'L’Amicale' },
+    { tab: 'histoire', label: 'Histoire' },
     { tab: 'anciens', label: 'Annuaire' },
     { tab: 'reseau', label: 'Carrières' },
     { tab: 'mentorat', label: 'Mentorat' },
     { tab: 'actualites', label: 'Événements' },
     { tab: 'projets', label: 'Mécénat' },
+    { tab: 'mediatheque', label: 'Médiathèque' },
+    { tab: 'adhesion', label: 'Adhésion' },
+    { tab: 'contact', label: 'Contact' },
   ];
-  const primaryNavItems = allPrimaryNavItems.filter((item) => canAccessTab(item.tab));
-
-  const allSecondaryNavItems: { tab: NavigationTab; label: string }[] = [
-    { tab: 'amicale', label: 'L’Amicale & Gouvernance' },
-    { tab: 'histoire', label: 'Histoire & Patrimoine' },
-    { tab: 'mediatheque', label: 'Médiathèque & ALGB TV' },
-    { tab: 'adhesion', label: 'Adhésion & Enrôlement' },
-    { tab: 'contact', label: 'Contact & Partenariats' },
-  ];
-  const secondaryNavItems = allSecondaryNavItems.filter((item) => canAccessTab(item.tab));
+  const visibleNavItems = allNavItems.filter((item) => canAccessTab(item.tab));
 
   const isAuthenticated = currentRole !== 'VISITEUR' && activeCredential !== null;
   const canSeeAdmin = (UNRESTRICTED_ACCESS_OVERRIDE || isAuthenticated) && canAccessTab('admin');
-  const canSeeMemberSpace = (UNRESTRICTED_ACCESS_OVERRIDE || isAuthenticated) && canAccessTab('espace-membre');
+  const canSeeMemberSpace =
+    (UNRESTRICTED_ACCESS_OVERRIDE || isAuthenticated) && canAccessTab('espace-membre');
 
   const sessionDisplayName = currentUser
     ? `${currentUser.firstName} ${currentUser.lastName}`
@@ -78,171 +61,81 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-[#141413] text-white border-b border-white/10 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-4">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[72px] flex items-center justify-between gap-4 lg:gap-6">
         {/* Zone 1: Brand mark */}
         <button
           type="button"
           onClick={() => handleNav('accueil')}
-          className="flex items-center gap-3 text-left shrink-0 group cursor-pointer"
+          className="flex items-center gap-2.5 text-left shrink-0 group cursor-pointer focus-visible:outline-2 focus-visible:outline-[#F2B705] rounded-lg"
         >
           <img
             src="/assets/aistudio/IMG-20180925-WA0019_301d84a7.jpg"
             alt="Logo officiel ALGB"
-            className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-[#F2B705]/60 shrink-0"
+            className="w-10 h-10 object-contain rounded-lg bg-white p-0.5 border border-[#F2B705]/60 shrink-0 transition-transform duration-200 group-hover:scale-105"
           />
-          <div className="flex flex-col">
-            <span className="text-base sm:text-lg font-bold tracking-tight text-white font-heading leading-tight group-hover:text-[#F2B705] transition-colors">
-              ALGB Alumni
-            </span>
-            <span className="text-[10px] uppercase tracking-[0.14em] text-zinc-400 font-medium whitespace-nowrap hidden xl:inline">
-              Lycée de Garçons de Bingerville
-            </span>
-          </div>
+          <span className="text-base sm:text-lg font-bold tracking-tight text-white font-heading leading-tight whitespace-nowrap group-hover:text-[#F2B705] transition-colors">
+            ALGB Alumni
+          </span>
         </button>
 
-        {/* Zone 2: Primary Navigation Links */}
+        {/* Zone 2: Tous les menus alignés sur une seule ligne, police bien visible et très animée */}
         <nav
           aria-label="Navigation principale"
-          className="hidden lg:flex items-center gap-6 text-[13px] font-medium text-white"
+          className="hidden lg:flex flex-1 items-center justify-center gap-1 xl:gap-1.5 overflow-x-auto scrollbar-none py-1"
         >
-          {primaryNavItems.map((item) => {
-            const isActive = activeTab === item.tab;
+          {visibleNavItems.map((item) => {
+            const isActive =
+              activeTab === item.tab ||
+              (item.tab === 'mediatheque' && activeTab === 'galerie');
             return (
               <button
                 key={item.tab}
                 type="button"
                 onClick={() => handleNav(item.tab)}
-                className={`relative py-2 whitespace-nowrap cursor-pointer transition-colors ${
-                  isActive ? 'text-[#F2B705] font-semibold' : 'text-white hover:text-[#F2B705]'
+                aria-current={isActive ? 'page' : undefined}
+                className={`group relative px-2.5 xl:px-3 py-2 rounded-lg text-[13.5px] xl:text-[14px] tracking-[0.015em] whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-[#F2B705] nav-menu-item ${
+                  isActive
+                    ? 'text-[#F2B705] font-bold bg-[#F2B705]/15 nav-menu-item-active'
+                    : 'text-white font-semibold hover:text-[#F2B705] hover:bg-white/10'
                 }`}
               >
-                {item.label}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F2B705] rounded-full" />
-                )}
+                <span className="relative z-10">{item.label}</span>
+
+                {/* Barre inférieure animée */}
+                <span
+                  aria-hidden="true"
+                  className={`nav-menu-underline absolute bottom-0.5 left-2 right-2 rounded-full ${
+                    isActive
+                      ? 'h-[3px] scale-x-100 opacity-100 nav-menu-underline-active'
+                      : 'h-[2.5px] bg-[#F2B705] scale-x-0 opacity-0 origin-center group-hover:scale-x-100 group-hover:opacity-100'
+                  }`}
+                />
               </button>
             );
           })}
-
-          {secondaryNavItems.length > 0 && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                type="button"
-                onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-                className="flex items-center gap-1 py-2 text-zinc-300 hover:text-white transition-colors whitespace-nowrap cursor-pointer font-medium"
-              >
-                <span>Institution</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-              {moreDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-60 bg-[#141413] border border-white/15 rounded-xl shadow-2xl py-2 z-50">
-                  {secondaryNavItems.map((item) => (
-                    <button
-                      key={item.tab}
-                      type="button"
-                      onClick={() => handleNav(item.tab)}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-medium transition-colors cursor-pointer ${
-                        activeTab === item.tab
-                          ? 'text-[#F2B705] bg-white/5 font-semibold'
-                          : 'text-zinc-200 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </nav>
 
-        {/* Zone 3: Actions ("Connexion" outline blanc + "Faire un don" Jaune Solaire + Theme toggle) */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        {/* Zone 3: Bouton Mode Sombre aligné dans la barre en haut + Menu Mobile */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre'}
             title={theme === 'dark' ? 'Passer au mode clair' : 'Passer au mode sombre'}
-            className="p-2 rounded-lg border border-white/20 text-zinc-200 hover:text-[#F2B705] hover:border-[#F2B705]/60 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/25 bg-white/5 text-white hover:text-[#F2B705] hover:border-[#F2B705] hover:bg-[#F2B705]/10 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer whitespace-nowrap focus-visible:outline-2 focus-visible:outline-[#F2B705]"
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-4 h-4 text-[#F2B705]" />
+                <span className="hidden xl:inline text-xs font-semibold">Mode clair</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 text-[#F2B705]" />
+                <span className="hidden xl:inline text-xs font-semibold">Mode sombre</span>
+              </>
+            )}
           </button>
-
-          {(isAuthenticated || UNRESTRICTED_ACCESS_OVERRIDE) ? (
-            <div className="hidden sm:flex items-center gap-2">
-              {canSeeMemberSpace && (
-                <button
-                  type="button"
-                  onClick={() => handleNav('espace-membre')}
-                  className={`px-3.5 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                    activeTab === 'espace-membre'
-                      ? 'bg-white text-[#141413] border-white'
-                      : 'border-white/60 text-white hover:bg-white hover:text-[#141413]'
-                  }`}
-                >
-                  <UserCheck className="w-3.5 h-3.5" />
-                  <span className="max-w-[120px] truncate">{sessionDisplayName || 'Espace Membre'}</span>
-                </button>
-              )}
-
-              {canSeeAdmin && (
-                <button
-                  type="button"
-                  onClick={() => handleNav('admin')}
-                  title={`Console Admin (${PROFILE_ACCESS_MATRIX[currentRole].label})`}
-                  className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                    activeTab === 'admin'
-                      ? 'bg-[#FEF8E6] text-[#141413] border-[#F2B705]'
-                      : 'border-white/30 text-zinc-200 hover:border-[#F2B705] hover:text-[#F2B705]'
-                  }`}
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  <span className="hidden xl:inline">Admin</span>
-                </button>
-              )}
-
-              {isAuthenticated ? (
-                <button
-                  type="button"
-                  onClick={logoutSession}
-                  title="Se déconnecter"
-                  aria-label="Se déconnecter"
-                  className="p-2 rounded-lg border border-white/25 text-zinc-300 hover:text-white hover:border-white transition-colors cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => openAuthModal()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border border-white/40 text-white hover:bg-white hover:text-[#141413] transition-colors cursor-pointer whitespace-nowrap"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>Connexion</span>
-                </button>
-              )}
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => openAuthModal()}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg border border-white text-white hover:bg-white hover:text-[#141413] transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Connexion</span>
-            </button>
-          )}
-
-          {canAccessTab('projets') && (
-            <button
-              type="button"
-              onClick={() => handleNav('projets')}
-              className="px-4 py-2 text-xs font-semibold text-[#141413] bg-[#F2B705] hover:bg-[#dfa704] rounded-lg transition-colors cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 shadow-xs"
-            >
-              <HeartHandshake className="w-3.5 h-3.5 text-[#141413]" />
-              <span>Faire un don</span>
-            </button>
-          )}
 
           {/* Mobile Burger Toggle */}
           <button
@@ -258,7 +151,7 @@ export const Header: React.FC = () => {
 
       {/* Responsive Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-white/10 bg-[#141413] px-4 pt-4 pb-6 space-y-4">
+        <div className="lg:hidden border-t border-white/10 bg-[#141413] px-4 pt-4 pb-6 space-y-4 max-h-[82vh] overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(isAuthenticated || UNRESTRICTED_ACCESS_OVERRIDE) ? (
               <>
@@ -269,7 +162,7 @@ export const Header: React.FC = () => {
                     className="w-full text-center py-2.5 px-3 text-xs font-semibold rounded-lg border border-white text-white hover:bg-white hover:text-[#141413] cursor-pointer flex items-center justify-center gap-2"
                   >
                     <UserCheck className="w-4 h-4" />
-                    <span>Espace Membre</span>
+                    <span>{sessionDisplayName || 'Espace Membre'}</span>
                   </button>
                 )}
                 {canSeeAdmin && (
@@ -289,10 +182,10 @@ export const Header: React.FC = () => {
                       setMobileMenuOpen(false);
                       openAuthModal();
                     }}
-                    className="w-full sm:col-span-2 text-center py-2.5 px-3 text-xs font-semibold rounded-lg border border-white/40 text-white hover:bg-white hover:text-[#141413] cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full text-center py-2.5 px-3 text-xs font-semibold rounded-lg border border-white/40 text-white hover:bg-white hover:text-[#141413] cursor-pointer flex items-center justify-center gap-2"
                   >
                     <LogIn className="w-4 h-4" />
-                    <span>Connexion Membre</span>
+                    <span>Connexion</span>
                   </button>
                 )}
               </>
@@ -306,63 +199,57 @@ export const Header: React.FC = () => {
                 className="w-full text-center py-2.5 px-3 text-xs font-semibold rounded-lg border border-white text-white hover:bg-white hover:text-[#141413] cursor-pointer flex items-center justify-center gap-2"
               >
                 <LogIn className="w-4 h-4" />
-                <span>Connexion Membre</span>
+                <span>Connexion</span>
+              </button>
+            )}
+
+            {canAccessTab('projets') && (
+              <button
+                type="button"
+                onClick={() => handleNav('projets')}
+                className="w-full text-center py-2.5 px-3 text-xs font-bold rounded-lg bg-[#F2B705] text-[#141413] cursor-pointer flex items-center justify-center gap-2"
+              >
+                <HeartHandshake className="w-4 h-4 text-[#141413]" />
+                <span>Faire un don</span>
               </button>
             )}
           </div>
 
-          <div className="space-y-1">
-            {primaryNavItems.map((item) => (
-              <button
-                key={item.tab}
-                type="button"
-                onClick={() => handleNav(item.tab)}
-                className={`w-full text-left px-3 py-2.5 text-sm rounded-lg transition-colors cursor-pointer ${
-                  activeTab === item.tab
-                    ? 'bg-[#F2B705] text-[#141413] font-semibold'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-
-            {secondaryNavItems.length > 0 && (
-              <div className="pt-2 mt-2 border-t border-white/10 space-y-1">
-                <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
-                  Institution & Archives
-                </div>
-                {secondaryNavItems.map((item) => (
-                  <button
-                    key={item.tab}
-                    type="button"
-                    onClick={() => handleNav(item.tab)}
-                    className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer ${
-                      activeTab === item.tab
-                        ? 'text-[#F2B705] bg-white/10 font-semibold'
-                        : 'text-zinc-300 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {isAuthenticated && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  logoutSession();
-                }}
-                className="w-full text-left px-3 py-2.5 text-xs rounded-lg text-red-300 hover:bg-red-950/50 font-semibold flex items-center gap-2 mt-2 cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Se déconnecter ({PROFILE_ACCESS_MATRIX[currentRole].label})</span>
-              </button>
-            )}
+          <div className="grid grid-cols-2 gap-1.5">
+            {visibleNavItems.map((item) => {
+              const isActive =
+                activeTab === item.tab ||
+                (item.tab === 'mediatheque' && activeTab === 'galerie');
+              return (
+                <button
+                  key={item.tab}
+                  type="button"
+                  onClick={() => handleNav(item.tab)}
+                  className={`text-left px-3 py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-[#F2B705] text-[#141413] font-bold'
+                      : 'text-white hover:bg-white/10 hover:text-[#F2B705]'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
+
+          {isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                logoutSession();
+              }}
+              className="w-full text-left px-3 py-2.5 text-xs rounded-lg text-red-300 hover:bg-red-950/50 font-semibold flex items-center gap-2 cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Se déconnecter ({PROFILE_ACCESS_MATRIX[currentRole].label})</span>
+            </button>
+          )}
         </div>
       )}
     </header>

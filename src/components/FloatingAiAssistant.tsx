@@ -383,9 +383,9 @@ export const FloatingAiAssistant: React.FC = () => {
 
   return (
     <>
-      {/* Floating Chat Launcher in Bottom-Right Corner (stacked cleanly above RoleSwitcherBar) */}
+      {/* Floating Chat Launcher in Bottom-Right Corner on mobile/tablet (desktop uses RightActionSidebar) */}
       {!aiChatOpen && (
-        <div className="fixed bottom-16 right-4 z-40 no-print">
+        <div className="fixed bottom-16 right-4 z-40 no-print lg:hidden">
           <button
             type="button"
             onClick={() => setAiChatOpen(true)}

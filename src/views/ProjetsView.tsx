@@ -9,8 +9,6 @@ import {
   X,
 } from 'lucide-react';
 
-const EUR_TO_FCFA = 656;
-
 export const ProjetsView: React.FC = () => {
   const {
     projects,
@@ -20,8 +18,8 @@ export const ProjetsView: React.FC = () => {
     currentUser,
   } = useApp();
 
-  const [selectedPresetEur, setSelectedPresetEur] = useState<50 | 100 | 250 | 'LIBRE'>(100);
-  const [customEur, setCustomEur] = useState<string>('150');
+  const [selectedPresetFcfa, setSelectedPresetFcfa] = useState<25000 | 50000 | 100000 | 'LIBRE'>(50000);
+  const [customFcfa, setCustomFcfa] = useState<string>('75000');
   const [frequency, setFrequency] = useState<'PONCTUEL' | 'MENSUEL'>('PONCTUEL');
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || '');
   const [donorName, setDonorName] = useState<string>(
@@ -48,9 +46,8 @@ export const ProjetsView: React.FC = () => {
     itemsDescription: '',
   });
 
-  const activeEur =
-    selectedPresetEur === 'LIBRE' ? Math.max(5, Number(customEur) || 0) : selectedPresetEur;
-  const activeFcfa = Math.round(activeEur * EUR_TO_FCFA);
+  const activeFcfa =
+    selectedPresetFcfa === 'LIBRE' ? Math.max(1000, Number(customFcfa) || 0) : selectedPresetFcfa;
 
   const totalGoal = projects.reduce((sum, p) => sum + p.budgetGoal, 0);
   const totalRaised = projects.reduce((sum, p) => sum + p.budgetRaised, 0);
@@ -63,7 +60,6 @@ export const ProjetsView: React.FC = () => {
     e.preventDefault();
     if (!selectedProject || activeFcfa <= 0) return;
     submitPatronageDonation({
-      amountEur: activeEur,
       amountFcfa: activeFcfa,
       frequency,
       projectId: selectedProject.id,
@@ -163,47 +159,48 @@ export const ProjetsView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Choix du montant : 50€, 100€, 250€, Libre */}
+                {/* Choix du montant en FCFA : 25 000, 50 000, 100 000, Libre */}
                 <div className="space-y-2.5">
                   <label className="block text-xs font-semibold text-[#141413]">
-                    Choisissez votre montant
+                    Choisissez votre montant (FCFA)
                   </label>
-                  <div className="grid grid-cols-4 gap-2.5">
-                    {([50, 100, 250, 'LIBRE'] as const).map((amt) => {
-                      const active = selectedPresetEur === amt;
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {([25000, 50000, 100000, 'LIBRE'] as const).map((amt) => {
+                      const active = selectedPresetFcfa === amt;
                       return (
                         <button
                           key={String(amt)}
                           type="button"
-                          onClick={() => setSelectedPresetEur(amt)}
-                          className={`py-3 px-2 rounded-lg text-xs sm:text-sm font-semibold border transition-colors cursor-pointer ${
+                          onClick={() => setSelectedPresetFcfa(amt)}
+                          className={`py-3 px-2 rounded-lg text-xs font-semibold border transition-colors cursor-pointer whitespace-nowrap tabular-nums ${
                             active
                               ? 'bg-[#134E4A] text-white border-[#134E4A]'
                               : 'bg-[#F8F8F6] text-[#141413] border-black/15 hover:border-[#134E4A]'
                           }`}
                         >
-                          {amt === 'LIBRE' ? 'Libre' : `${amt} €`}
+                          {amt === 'LIBRE' ? 'Libre' : `${amt.toLocaleString('fr-FR')} FCFA`}
                         </button>
                       );
                     })}
                   </div>
 
-                  {selectedPresetEur === 'LIBRE' && (
+                  {selectedPresetFcfa === 'LIBRE' && (
                     <div className="pt-1">
                       <input
                         type="number"
-                        min={5}
+                        min={1000}
+                        step={500}
                         required
-                        value={customEur}
-                        onChange={(e) => setCustomEur(e.target.value)}
-                        placeholder="Montant personnalisé en €"
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#F8F8F6] border border-black/15 focus:border-[#134E4A] text-xs text-[#141413] focus:outline-none"
+                        value={customFcfa}
+                        onChange={(e) => setCustomFcfa(e.target.value)}
+                        placeholder="Montant personnalisé en FCFA"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#F8F8F6] border border-black/15 focus:border-[#134E4A] text-xs text-[#141413] focus:outline-none font-mono"
                       />
                     </div>
                   )}
 
                   <div className="text-[11px] text-[#4A4A48] flex items-center justify-between">
-                    <span>Équivalence en zone UEMOA :</span>
+                    <span>Devise officielle (Zone UEMOA) :</span>
                     <strong className="text-[#141413] tabular-nums">
                       {activeFcfa.toLocaleString('fr-FR')} FCFA
                     </strong>
@@ -280,7 +277,8 @@ export const ProjetsView: React.FC = () => {
                 >
                   <HeartHandshake className="w-4 h-4 text-[#141413]" />
                   <span>
-                    Valider mon don de {activeEur} € ({frequency === 'MENSUEL' ? 'par mois' : 'ponctuel'})
+                    Valider mon don de {activeFcfa.toLocaleString('fr-FR')} FCFA (
+                    {frequency === 'MENSUEL' ? 'par mois' : 'ponctuel'})
                   </span>
                 </button>
               </form>
@@ -395,7 +393,7 @@ export const ProjetsView: React.FC = () => {
                         />
                       </div>
                       <div className="text-[11px] text-[#4A4A48] dark:text-zinc-400 flex items-center justify-between">
-                        <span>Objectif : {proj.budgetGoal.toLocaleString('fr-FR')} F</span>
+                        <span>Objectif : {proj.budgetGoal.toLocaleString('fr-FR')} FCFA</span>
                         <span>{proj.contributorsCount} donateurs</span>
                       </div>
                     </div>
