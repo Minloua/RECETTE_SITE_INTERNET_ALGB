@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { AlumniMember, INITIAL_MENTORSHIP_TESTIMONIALS } from '../data/mockData';
+import { UNRESTRICTED_ACCESS_OVERRIDE } from '../utils/accessMatrix';
 import {
   Users,
   Award,
@@ -186,21 +187,21 @@ export const MentoratView: React.FC = () => {
             </div>
 
             <div className="pt-4 border-t border-black/10 dark:border-white/10 flex flex-wrap items-center gap-3">
-              {currentUser ? (
+              {currentUser || UNRESTRICTED_ACCESS_OVERRIDE ? (
                 <button
                   type="button"
                   onClick={() => {
                     setMentorForm({
-                      currentRole: currentUser.currentRole,
-                      company: currentUser.company,
-                      bio: currentUser.bio,
-                      availabilities: currentUser.availabilities || ['Mentorat', 'Coaching'],
+                      currentRole: currentUser?.currentRole || '',
+                      company: currentUser?.company || '',
+                      bio: currentUser?.bio || '',
+                      availabilities: currentUser?.availabilities || ['Mentorat', 'Coaching'],
                     });
                     setMentorFormOpen(true);
                   }}
                   className="px-5 py-3 rounded-lg bg-[#F2B705] hover:bg-[#dfa704] text-[#141413] text-xs font-semibold cursor-pointer transition-colors"
                 >
-                  {currentUser.isMentor ? 'Mettre à jour mon profil Mentor' : 'Activer mon profil Mentor'}
+                  {currentUser?.isMentor ? 'Mettre à jour mon profil Mentor' : 'Activer mon profil Mentor'}
                 </button>
               ) : (
                 <button

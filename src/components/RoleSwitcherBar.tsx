@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { PROFILE_ACCESS_MATRIX } from '../utils/accessMatrix';
+import { PROFILE_ACCESS_MATRIX, UNRESTRICTED_ACCESS_OVERRIDE } from '../utils/accessMatrix';
 import {
   Shield,
   User,
@@ -135,8 +135,50 @@ export const RoleSwitcherBar: React.FC = () => {
             ) : (
               <div className="space-y-3 text-xs">
                 <p className="text-[11px] text-[#4A4A48] dark:text-zinc-400 leading-relaxed">
-                  Vous naviguez en <strong className="text-[#141413] dark:text-white">Visiteur public</strong> : toutes les informations présentant l’Amicale et ses activités sont ouvertes librement sans credential. Pour l’Espace Membre, Carrières au cœur du réseau ou le Collège des Parrains, connectez-vous avec votre credential.
+                  {UNRESTRICTED_ACCESS_OVERRIDE ? (
+                    <>
+                      <strong className="text-[#134E4A] dark:text-emerald-400">
+                        Accès libre temporaire activé :
+                      </strong>{' '}
+                      tous les menus et fonctionnalités (Espace Membre, Administration, Carrières, Collège des Parrains) sont ouverts à tous les profils sans restriction.
+                    </>
+                  ) : (
+                    <>
+                      Vous naviguez en{' '}
+                      <strong className="text-[#141413] dark:text-white">Visiteur public</strong> : toutes les informations présentant l’Amicale et ses activités sont ouvertes librement sans credential. Pour l’Espace Membre, Carrières au cœur du réseau ou le Collège des Parrains, connectez-vous avec votre credential.
+                    </>
+                  )}
                 </p>
+                {UNRESTRICTED_ACCESS_OVERRIDE && (
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {canAccessTab('espace-membre') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          setActiveTab('espace-membre');
+                        }}
+                        className="w-full py-2 px-3 rounded-lg bg-[#F8F8F6] dark:bg-[#141413] hover:bg-[#FEF8E6] dark:hover:bg-white/10 text-[#141413] dark:text-white font-semibold text-left flex items-center gap-2 cursor-pointer"
+                      >
+                        <User className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
+                        <span>Ouvrir l’Espace Membre</span>
+                      </button>
+                    )}
+                    {canAccessTab('admin') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          setActiveTab('admin');
+                        }}
+                        className="w-full py-2 px-3 rounded-lg bg-[#FEF8E6] dark:bg-[#2a2719] border border-[#F2B705]/40 hover:bg-[#F2B705]/25 text-[#141413] dark:text-[#FEF8E6] font-semibold text-left flex items-center gap-2 cursor-pointer"
+                      >
+                        <Shield className="w-3.5 h-3.5 text-[#141413] dark:text-[#F2B705]" />
+                        <span>Console Administration & Credentials</span>
+                      </button>
+                    )}
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -166,6 +208,8 @@ export const RoleSwitcherBar: React.FC = () => {
           <span className="font-semibold">
             {isAuthenticated
               ? `${roleRule.label}`
+              : UNRESTRICTED_ACCESS_OVERRIDE
+              ? 'Accès libre · Tous menus'
               : 'Visiteur public · Connexion'}
           </span>
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />

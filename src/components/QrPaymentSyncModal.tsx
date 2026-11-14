@@ -9,6 +9,7 @@ import { parseMemberQrPayload } from '../utils/qrPayload';
 import {
   canActiveSessionAccessMemberQr,
   PROFILE_ACCESS_MATRIX,
+  UNRESTRICTED_ACCESS_OVERRIDE,
 } from '../utils/accessMatrix';
 import {
   AlertTriangle,
@@ -355,6 +356,7 @@ export const QrPaymentSyncModal: React.FC = () => {
   };
 
   const canAccessAdmin =
+    UNRESTRICTED_ACCESS_OVERRIDE ||
     currentRole === 'ADMIN' ||
     currentRole === 'SUPER_ADMIN' ||
     currentRole === 'RESPONSABLE_FINANCE';

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp, NavigationTab } from '../context/AppContext';
-import { PROFILE_ACCESS_MATRIX } from '../utils/accessMatrix';
+import { PROFILE_ACCESS_MATRIX, UNRESTRICTED_ACCESS_OVERRIDE } from '../utils/accessMatrix';
 import {
   Menu,
   X,
@@ -69,8 +69,8 @@ export const Header: React.FC = () => {
   const secondaryNavItems = allSecondaryNavItems.filter((item) => canAccessTab(item.tab));
 
   const isAuthenticated = currentRole !== 'VISITEUR' && activeCredential !== null;
-  const canSeeAdmin = isAuthenticated && canAccessTab('admin');
-  const canSeeMemberSpace = isAuthenticated && canAccessTab('espace-membre');
+  const canSeeAdmin = (UNRESTRICTED_ACCESS_OVERRIDE || isAuthenticated) && canAccessTab('admin');
+  const canSeeMemberSpace = (UNRESTRICTED_ACCESS_OVERRIDE || isAuthenticated) && canAccessTab('espace-membre');
 
   const sessionDisplayName = currentUser
     ? `${currentUser.firstName} ${currentUser.lastName}`
@@ -168,7 +168,7 @@ export const Header: React.FC = () => {
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          {isAuthenticated ? (
+          {(isAuthenticated || UNRESTRICTED_ACCESS_OVERRIDE) ? (
             <div className="hidden sm:flex items-center gap-2">
               {canSeeMemberSpace && (
                 <button
@@ -201,15 +201,26 @@ export const Header: React.FC = () => {
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={logoutSession}
-                title="Se déconnecter"
-                aria-label="Se déconnecter"
-                className="p-2 rounded-lg border border-white/25 text-zinc-300 hover:text-white hover:border-white transition-colors cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  onClick={logoutSession}
+                  title="Se déconnecter"
+                  aria-label="Se déconnecter"
+                  className="p-2 rounded-lg border border-white/25 text-zinc-300 hover:text-white hover:border-white transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openAuthModal()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border border-white/40 text-white hover:bg-white hover:text-[#141413] transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Connexion</span>
+                </button>
+              )}
             </div>
           ) : (
             <button
@@ -249,7 +260,7 @@ export const Header: React.FC = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-white/10 bg-[#141413] px-4 pt-4 pb-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {isAuthenticated ? (
+            {(isAuthenticated || UNRESTRICTED_ACCESS_OVERRIDE) ? (
               <>
                 {canSeeMemberSpace && (
                   <button
@@ -269,6 +280,19 @@ export const Header: React.FC = () => {
                   >
                     <Shield className="w-4 h-4" />
                     <span>Administration</span>
+                  </button>
+                )}
+                {!isAuthenticated && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openAuthModal();
+                    }}
+                    className="w-full sm:col-span-2 text-center py-2.5 px-3 text-xs font-semibold rounded-lg border border-white/40 text-white hover:bg-white hover:text-[#141413] cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Connexion Membre</span>
                   </button>
                 )}
               </>

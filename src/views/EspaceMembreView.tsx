@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { MONTHS_2026 } from '../data/mockData';
 import { CotisationsChartDashboard } from '../components/CotisationsChartDashboard';
+import { UNRESTRICTED_ACCESS_OVERRIDE } from '../utils/accessMatrix';
 import {
   User,
   CreditCard,
@@ -25,6 +26,7 @@ type MemberSidebarSection = 'OVERVIEW' | 'COTISATIONS' | 'MENTORAT_CANDIDATURES'
 
 export const EspaceMembreView: React.FC = () => {
   const {
+    members,
     currentUser,
     currentRole,
     activeCredential,
@@ -51,62 +53,76 @@ export const EspaceMembreView: React.FC = () => {
 
   const [section, setSection] = useState<MemberSidebarSection>('OVERVIEW');
   const [aiProfileNote, setAiProfileNote] = useState('');
+  const [previewMemberId, setPreviewMemberId] = useState<string>('');
+
+  const activeMember = useMemo(
+    () =>
+      currentUser ||
+      (UNRESTRICTED_ACCESS_OVERRIDE
+        ? members.find((m) => m.id === previewMemberId) || members[0] || null
+        : null),
+    [currentUser, members, previewMemberId]
+  );
 
   const [profileForm, setProfileForm] = useState({
-    firstName: currentUser?.firstName || '',
-    lastName: currentUser?.lastName || '',
-    profession: currentUser?.profession || '',
-    currentRole: currentUser?.currentRole || '',
-    company: currentUser?.company || '',
-    sector: currentUser?.sector || '',
-    city: currentUser?.city || '',
-    country: currentUser?.country || '',
-    phone: currentUser?.phone || '',
-    email: currentUser?.email || '',
-    bio: currentUser?.bio || '',
-    isMentor: currentUser?.isMentor ?? false,
-    showEmail: currentUser?.privacy.showEmail ?? true,
-    showPhone: currentUser?.privacy.showPhone ?? false,
-    allowMentorshipRequests: currentUser?.privacy.allowMentorshipRequests ?? true,
+    firstName: activeMember?.firstName || '',
+    lastName: activeMember?.lastName || '',
+    profession: activeMember?.profession || '',
+    currentRole: activeMember?.currentRole || '',
+    company: activeMember?.company || '',
+    sector: activeMember?.sector || '',
+    city: activeMember?.city || '',
+    country: activeMember?.country || '',
+    phone: activeMember?.phone || '',
+    email: activeMember?.email || '',
+    bio: activeMember?.bio || '',
+    isMentor: activeMember?.isMentor ?? false,
+    showEmail: activeMember?.privacy.showEmail ?? true,
+    showPhone: activeMember?.privacy.showPhone ?? false,
+    allowMentorshipRequests: activeMember?.privacy.allowMentorshipRequests ?? true,
   });
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!activeMember) return;
     setProfileForm({
-      firstName: currentUser.firstName || '',
-      lastName: currentUser.lastName || '',
-      profession: currentUser.profession || '',
-      currentRole: currentUser.currentRole || '',
-      company: currentUser.company || '',
-      sector: currentUser.sector || '',
-      city: currentUser.city || '',
-      country: currentUser.country || '',
-      phone: currentUser.phone || '',
-      email: currentUser.email || '',
-      bio: currentUser.bio || '',
-      isMentor: currentUser.isMentor ?? false,
-      showEmail: currentUser.privacy.showEmail ?? true,
-      showPhone: currentUser.privacy.showPhone ?? false,
-      allowMentorshipRequests: currentUser.privacy.allowMentorshipRequests ?? true,
+      firstName: activeMember.firstName || '',
+      lastName: activeMember.lastName || '',
+      profession: activeMember.profession || '',
+      currentRole: activeMember.currentRole || '',
+      company: activeMember.company || '',
+      sector: activeMember.sector || '',
+      city: activeMember.city || '',
+      country: activeMember.country || '',
+      phone: activeMember.phone || '',
+      email: activeMember.email || '',
+      bio: activeMember.bio || '',
+      isMentor: activeMember.isMentor ?? false,
+      showEmail: activeMember.privacy.showEmail ?? true,
+      showPhone: activeMember.privacy.showPhone ?? false,
+      allowMentorshipRequests: activeMember.privacy.allowMentorshipRequests ?? true,
     });
-  }, [currentUser]);
+  }, [activeMember]);
 
   const receivedMentorship = useMemo(() => {
-    if (!currentUser) return [];
+    if (!activeMember) return [];
     return mentorshipRequests.filter(
-      (r) => r.mentorId === currentUser.id || currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN'
+      (r) =>
+        UNRESTRICTED_ACCESS_OVERRIDE ||
+        r.mentorId === activeMember.id ||
+        currentRole === 'ADMIN' ||
+        currentRole === 'SUPER_ADMIN'
     );
-  }, [mentorshipRequests, currentUser, currentRole]);
+  }, [mentorshipRequests, activeMember, currentRole]);
 
   const trackedApplications = useMemo(() => {
-    if (!currentUser) return [];
+    if (!activeMember) return [];
     const mine = jobApplications.filter(
-      (a) => a.applicantId === currentUser.id || a.applicantId === 'mem-guest'
+      (a) => a.applicantId === activeMember.id || a.applicantId === 'mem-guest'
     );
     return mine.length > 0 ? mine : jobApplications;
-  }, [jobApplications, currentUser]);
+  }, [jobApplications, activeMember]);
 
-  if (currentRole === 'VISITEUR' || !activeCredential) {
+  if (!UNRESTRICTED_ACCESS_OVERRIDE && (currentRole === 'VISITEUR' || !activeCredential)) {
     return (
       <div className="bg-[#F8F8F6] dark:bg-[#141413] min-h-screen py-20 px-4 transition-colors">
         <div className="max-w-xl mx-auto bg-white dark:bg-[#1e1e1c] rounded-xl p-8 text-center shadow-editorial border border-black/5 dark:border-white/10 space-y-5">
@@ -141,7 +157,7 @@ export const EspaceMembreView: React.FC = () => {
     );
   }
 
-  if (!currentUser) {
+  if (!activeMember) {
     return (
       <div className="bg-[#F8F8F6] dark:bg-[#141413] min-h-screen py-20 px-4 transition-colors">
         <div className="max-w-xl mx-auto bg-white dark:bg-[#1e1e1c] rounded-xl p-8 text-center shadow-editorial border border-black/5 dark:border-white/10 space-y-5">
@@ -149,10 +165,10 @@ export const EspaceMembreView: React.FC = () => {
             <UserCheck className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-heading font-bold text-[#141413] dark:text-white">
-            Compte fonctionnel : {activeCredential.displayName}
+            Compte fonctionnel : {activeCredential?.displayName || 'Profil ALGB'}
           </h2>
           <p className="text-xs sm:text-sm text-[#4A4A48] dark:text-zinc-300">
-            Ce credential ({activeCredential.identifier}) est dédié à la gestion institutionnelle.
+            Ce credential ({activeCredential?.identifier || 'Accès libre'}) est dédié à la gestion institutionnelle.
             Les encarts « Trouver un Mentor », « Collège des Parrains » et « Carrières au cœur du réseau » nécessitent une fiche membre rattachée à jour de sa cotisation.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -178,13 +194,13 @@ export const EspaceMembreView: React.FC = () => {
     );
   }
 
-  const financialSummary = getMemberFinancialSummary(currentUser.id);
+  const financialSummary = getMemberFinancialSummary(activeMember.id);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMemberProfile(currentUser.id, {
-      firstName: profileForm.firstName.trim() || currentUser.firstName,
-      lastName: profileForm.lastName.trim() || currentUser.lastName,
+    updateMemberProfile(activeMember.id, {
+      firstName: profileForm.firstName.trim() || activeMember.firstName,
+      lastName: profileForm.lastName.trim() || activeMember.lastName,
       profession: profileForm.profession.trim(),
       currentRole: profileForm.currentRole.trim(),
       company: profileForm.company.trim(),
@@ -225,31 +241,50 @@ export const EspaceMembreView: React.FC = () => {
           <aside className="lg:col-span-3 bg-[#141413] text-white rounded-xl p-6 space-y-6 lg:sticky lg:top-24 shadow-editorial">
             <div className="flex items-center gap-3.5 pb-5 border-b border-white/10">
               <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#F2B705] bg-white/10 flex items-center justify-center font-heading font-bold text-lg text-[#F2B705] shrink-0">
-                {currentUser.avatarUrl ? (
+                {activeMember.avatarUrl ? (
                   <img
-                    src={currentUser.avatarUrl}
-                    alt={currentUser.firstName}
+                    src={activeMember.avatarUrl}
+                    alt={activeMember.firstName}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <>
-                    {currentUser.firstName[0]}
-                    {currentUser.lastName[0]}
+                    {activeMember.firstName[0]}
+                    {activeMember.lastName[0]}
                   </>
                 )}
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] uppercase tracking-wider text-[#F2B705] font-semibold block">
-                  Promo {currentUser.promotionYear}
+                  Promo {activeMember.promotionYear}
                 </span>
                 <h2 className="text-base font-heading font-bold text-white truncate">
-                  {currentUser.firstName} {currentUser.lastName}
+                  {activeMember.firstName} {activeMember.lastName}
                 </h2>
                 <span className="text-[11px] font-mono text-zinc-400 block truncate">
-                  {currentUser.membershipCardId}
+                  {activeMember.membershipCardId}
                 </span>
               </div>
             </div>
+
+            {!currentUser && UNRESTRICTED_ACCESS_OVERRIDE && (
+              <div className="space-y-1.5 text-xs">
+                <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
+                  Profil consulté (Accès libre)
+                </label>
+                <select
+                  value={activeMember.id}
+                  onChange={(e) => setPreviewMemberId(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:border-[#F2B705]"
+                >
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id} className="text-[#141413] bg-white">
+                      {m.firstName} {m.lastName} (Promo {m.promotionYear})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <nav className="space-y-1.5" aria-label="Menu Espace Membre">
               {sidebarItems.map((item) => {
@@ -275,7 +310,7 @@ export const EspaceMembreView: React.FC = () => {
             <div className="pt-4 border-t border-white/10 space-y-2 text-xs">
               <button
                 type="button"
-                onClick={() => setViewingCardMember(currentUser)}
+                onClick={() => setViewingCardMember(activeMember)}
                 className="w-full py-2.5 px-3 rounded-lg border border-white/25 text-white hover:bg-white hover:text-[#141413] transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -283,7 +318,7 @@ export const EspaceMembreView: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => openQrSyncModal(currentUser)}
+                onClick={() => openQrSyncModal(activeMember)}
                 className="w-full py-2.5 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-[#F2B705] transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <QrCode className="w-3.5 h-3.5" />
@@ -303,7 +338,7 @@ export const EspaceMembreView: React.FC = () => {
                       Tableau de bord personnel
                     </span>
                     <h1 className="text-2xl sm:text-3xl font-heading font-bold text-[#141413] dark:text-white mt-0.5">
-                      Bienvenue, {currentUser.firstName}
+                      Bienvenue, {activeMember.firstName}
                     </h1>
                   </div>
                   <button
@@ -379,7 +414,7 @@ export const EspaceMembreView: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setViewingQuitusMember(currentUser)}
+                        onClick={() => setViewingQuitusMember(activeMember)}
                         className="px-4 py-2.5 rounded-lg bg-[#134E4A] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                       >
                         <Award className="w-4 h-4" />

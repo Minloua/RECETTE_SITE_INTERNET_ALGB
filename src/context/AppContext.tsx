@@ -48,6 +48,7 @@ import {
   PROFILE_ACCESS_MATRIX,
   QrAccessAuthResult,
   resolveCredentialRecipientEmail,
+  UNRESTRICTED_ACCESS_OVERRIDE,
 } from '../utils/accessMatrix';
 
 export interface EnrollmentPayload {
@@ -627,6 +628,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const canEnrichAi =
+    UNRESTRICTED_ACCESS_OVERRIDE ||
     currentRole === 'ADMIN' ||
     currentRole === 'SUPER_ADMIN' ||
     currentRole === 'RESPONSABLE_COMM';
@@ -1394,7 +1396,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Post job offer
   const postJobOffer = (offer: Omit<JobOffer, 'id' | 'postedDate'>) => {
-    if (currentRole === 'VISITEUR' || !activeCredential) {
+    if (!UNRESTRICTED_ACCESS_OVERRIDE && (currentRole === 'VISITEUR' || !activeCredential)) {
       addToast(
         'warning',
         'Accès réservé aux membres à jour',
@@ -1408,7 +1410,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    if (!currentUser || !isCurrentMemberUpToDate) {
+    if (!UNRESTRICTED_ACCESS_OVERRIDE && (!currentUser || !isCurrentMemberUpToDate)) {
       addToast(
         'warning',
         'Cotisation non à jour',
@@ -1480,7 +1482,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     mentorId: string;
     objective: string;
   }): MentorshipRequestRecord | null => {
-    if (currentRole === 'VISITEUR' || !activeCredential) {
+    if (!UNRESTRICTED_ACCESS_OVERRIDE && (currentRole === 'VISITEUR' || !activeCredential)) {
       addToast(
         'warning',
         'Accès réservé aux membres à jour',
@@ -1494,7 +1496,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return null;
     }
 
-    if (!currentUser || !isCurrentMemberUpToDate) {
+    if (!UNRESTRICTED_ACCESS_OVERRIDE && (!currentUser || !isCurrentMemberUpToDate)) {
       addToast(
         'warning',
         'Cotisation non à jour',
@@ -1520,16 +1522,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const mentor = members.find((m) => m.id === params.mentorId);
     if (!mentor) return null;
 
-    const menteeName = `${currentUser.firstName} ${currentUser.lastName}`;
+    const effectiveUser = currentUser || (UNRESTRICTED_ACCESS_OVERRIDE ? members[0] || null : null);
+    const menteeName = effectiveUser
+      ? `${effectiveUser.firstName} ${effectiveUser.lastName}`
+      : activeCredential?.displayName || 'Membre / Visiteur ALGB';
 
     const newReq: MentorshipRequestRecord = {
       id: `mreq-${Date.now().toString().slice(-5)}`,
       mentorId: mentor.id,
       mentorName: `${mentor.firstName} ${mentor.lastName}`,
       mentorRole: mentor.currentRole,
-      menteeId: currentUser?.id || 'mem-guest',
+      menteeId: effectiveUser?.id || 'mem-guest',
       menteeName,
-      menteePromo: currentUser?.promotionYear || 2024,
+      menteePromo: effectiveUser?.promotionYear || 2024,
       objective: params.objective.trim(),
       status: 'EN_ATTENTE',
       createdAt: new Date().toISOString().split('T')[0],
@@ -1568,17 +1573,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     bio?: string;
     availabilities?: string[];
   }) => {
-    if (currentUser) {
-      updateMemberProfile(currentUser.id, {
+    const targetMember = currentUser || (UNRESTRICTED_ACCESS_OVERRIDE ? members[0] || null : null);
+    if (targetMember) {
+      updateMemberProfile(targetMember.id, {
         isMentor: true,
-        currentRole: params.currentRole?.trim() || currentUser.currentRole,
-        company: params.company?.trim() || currentUser.company,
-        bio: params.bio?.trim() || currentUser.bio,
+        currentRole: params.currentRole?.trim() || targetMember.currentRole,
+        company: params.company?.trim() || targetMember.company,
+        bio: params.bio?.trim() || targetMember.bio,
         availabilities:
           params.availabilities && params.availabilities.length > 0
             ? params.availabilities
-            : Array.from(new Set([...(currentUser.availabilities || []), 'Mentorat'])),
-        privacy: { ...currentUser.privacy, allowMentorshipRequests: true },
+            : Array.from(new Set([...(targetMember.availabilities || []), 'Mentorat'])),
+        privacy: { ...targetMember.privacy, allowMentorshipRequests: true },
       });
       addToast(
         'success',
@@ -1599,7 +1605,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     jobId: string;
     note: string;
   }): JobApplicationRecord | null => {
-    if (currentRole === 'VISITEUR' || !activeCredential) {
+    if (!UNRESTRICTED_ACCESS_OVERRIDE && (currentRole === 'VISITEUR' || !activeCredential)) {
       addToast(
         'warning',
         'Accès réservé aux membres à jour',
@@ -1613,7 +1619,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return null;
     }
 
-    if (!currentUser || !isCurrentMemberUpToDate) {
+    if (!UNRESTRICTED_ACCESS_OVERRIDE && (!currentUser || !isCurrentMemberUpToDate)) {
       addToast(
         'warning',
         'Cotisation non à jour',
@@ -1639,7 +1645,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const job = jobOffers.find((j) => j.id === params.jobId);
     if (!job) return null;
 
-    const applicantName = `${currentUser.firstName} ${currentUser.lastName}`;
+    const effectiveUser = currentUser || (UNRESTRICTED_ACCESS_OVERRIDE ? members[0] || null : null);
+    const applicantName = effectiveUser
+      ? `${effectiveUser.firstName} ${effectiveUser.lastName}`
+      : activeCredential?.displayName || 'Candidat ALGB';
 
     const newApp: JobApplicationRecord = {
       id: `japp-${Date.now().toString().slice(-5)}`,
@@ -1647,7 +1656,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       jobTitle: job.title,
       company: job.company,
       contractType: job.type,
-      applicantId: currentUser?.id || 'mem-guest',
+      applicantId: effectiveUser?.id || 'mem-guest',
       applicantName,
       note: params.note.trim(),
       status: 'TRANSMISE',
@@ -1936,8 +1945,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const openQrSyncModal = (member?: AlumniMember | null) => {
     setLastQrSyncReport(null);
-    setQrAuthVerified(false);
-    setQrAuthSession(null);
+    if (UNRESTRICTED_ACCESS_OVERRIDE) {
+      setQrAuthVerified(true);
+      setQrAuthSession({
+        role: currentRole,
+        label: 'Accès libre temporaire',
+        authenticatedName: currentUser
+          ? `${currentUser.firstName} ${currentUser.lastName}`
+          : activeCredential?.displayName || 'Tous profils (Accès ouvert)',
+        scopeLabel: 'Toutes les cartes & tables de paiement',
+      });
+    } else {
+      setQrAuthVerified(false);
+      setQrAuthSession(null);
+    }
     setQrTargetMember(member ?? null);
     setQrSyncModalOpen(true);
   };
@@ -1995,7 +2016,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const targetMember = members.find((m) => m.id === params.memberId) || currentUser;
     if (!targetMember) return null;
 
-    if (!qrAuthVerified || !canActiveSessionAccessMemberQr(currentRole, currentUser, targetMember)) {
+    if (
+      !UNRESTRICTED_ACCESS_OVERRIDE &&
+      (!qrAuthVerified || !canActiveSessionAccessMemberQr(currentRole, currentUser, targetMember))
+    ) {
       addToast(
         'error',
         'Accès non autorisé',
@@ -2287,13 +2311,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ? getMemberFinancialSummary(currentUser.id)
     : null;
 
-  const isCurrentMemberUpToDate = Boolean(
-    currentRole !== 'VISITEUR' &&
-      activeCredential &&
-      currentUser &&
-      currentUser.membershipStatus === 'A_JOUR' &&
-      currentMemberFinancialSummary?.statusFinancial === 'A_JOUR'
-  );
+  const isCurrentMemberUpToDate =
+    UNRESTRICTED_ACCESS_OVERRIDE ||
+    Boolean(
+      currentRole !== 'VISITEUR' &&
+        activeCredential &&
+        currentUser &&
+        currentUser.membershipStatus === 'A_JOUR' &&
+        currentMemberFinancialSummary?.statusFinancial === 'A_JOUR'
+    );
 
   const addAiKnowledgeEntry = (params: {
     title: string;
@@ -2506,7 +2532,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (targetTab) {
       const normalized = targetTab === 'galerie' ? 'mediatheque' : targetTab;
-      if (cred.allowedTabs.includes(targetTab) || cred.allowedTabs.includes(normalized)) {
+      if (
+        UNRESTRICTED_ACCESS_OVERRIDE ||
+        cred.allowedTabs.includes(targetTab) ||
+        cred.allowedTabs.includes(normalized)
+      ) {
         setActiveTab(targetTab);
       } else {
         addToast(
@@ -2527,6 +2557,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const normalizedActive = activeTab === 'galerie' ? 'mediatheque' : activeTab;
     const canKeepActive =
+      UNRESTRICTED_ACCESS_OVERRIDE ||
       ALWAYS_PUBLIC_AMICALE_TABS.includes(activeTab) ||
       ALWAYS_PUBLIC_AMICALE_TABS.includes(normalizedActive) ||
       visitorAllowedMenus.includes(activeTab) ||
@@ -2538,11 +2569,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addToast(
       'info',
       'Session déconnectée',
-      'Vous naviguez désormais en mode Visiteur public (menus visiteurs sans credential).'
+      UNRESTRICTED_ACCESS_OVERRIDE
+        ? 'Session déconnectée (accès libre temporaire maintenu sur tous les menus).'
+        : 'Vous naviguez désormais en mode Visiteur public (menus visiteurs sans credential).'
     );
   };
 
-  const canManageCredentials = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
+  const canManageCredentials =
+    UNRESTRICTED_ACCESS_OVERRIDE || currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
 
   const sendCredentialEmail = async (
     credentialId: string,
@@ -2880,6 +2914,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const canAccessTab = (tab: NavigationTab): boolean => {
+    if (UNRESTRICTED_ACCESS_OVERRIDE) return true;
     const normalized: NavigationTab = tab === 'galerie' ? 'mediatheque' : tab;
     if (currentRole === 'VISITEUR' || !activeCredential) {
       if (normalized === 'admin' || normalized === 'espace-membre') return false;

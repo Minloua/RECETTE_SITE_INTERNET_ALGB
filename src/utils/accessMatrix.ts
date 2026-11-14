@@ -1,6 +1,14 @@
 import { AlumniMember } from '../data/mockData';
 import type { NavigationTab, UserRole } from '../context/AppContext';
 
+/**
+ * TEMPORARY OPEN-ACCESS OVERRIDE
+ * When true, all menus, member features, mentorship, careers, and administration
+ * consoles are accessible to all profiles (including VISITEUR) without restriction.
+ * Set back to false on "GO" to restore all profile and cotisation restrictions.
+ */
+export const UNRESTRICTED_ACCESS_OVERRIDE = true;
+
 export interface ProfileAccessRule {
   role: UserRole;
   label: string;
@@ -694,6 +702,7 @@ export const canActiveSessionAccessMemberQr = (
   currentUser: AlumniMember | null,
   targetMember: AlumniMember | null
 ): boolean => {
+  if (UNRESTRICTED_ACCESS_OVERRIDE) return true;
   const rule = PROFILE_ACCESS_MATRIX[role];
   if (!rule || rule.scopeType === 'NONE') return false;
   if (rule.scopeType === 'ALL_MEMBERS') return true;
