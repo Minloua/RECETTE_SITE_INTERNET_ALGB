@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {
   INITIAL_EVENTS,
@@ -132,7 +133,12 @@ export interface AlgbDatabaseState {
   auditLogs: AuditLogEntry[];
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const IS_SERVERLESS = Boolean(
+  process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT
+);
+const DATA_DIR = IS_SERVERLESS
+  ? path.join(os.tmpdir(), 'algb-data')
+  : path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'algb-db.json');
 
 const ALL_PUBLIC_TABS = [

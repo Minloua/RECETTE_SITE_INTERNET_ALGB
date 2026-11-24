@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import type { NextFunction, Request, Response } from 'express';
 
@@ -26,12 +27,26 @@ export interface RequestWithSession extends Request {
   algbSession?: SessionPayload | null;
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const IS_SERVERLESS = Boolean(
+  process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT
+);
+const DATA_DIR = IS_SERVERLESS
+  ? path.join(os.tmpdir(), 'algb-data')
+  : path.resolve(process.cwd(), 'data');
 const SECRET_FILE = path.join(DATA_DIR, '.algb-session-secret');
 
 function loadOrCreateSecret(): string {
   const fromEnv = process.env.SESSION_SECRET?.trim();
   if (fromEnv && fromEnv.length >= 24) return fromEnv;
+
+  if (IS_SERVERLESS) {
+    const siteSeed =
+      process.env.SITE_ID || process.env.URL || process.env.DEPLOY_PRIME_URL || 'algb-web-ci';
+    return crypto
+      .createHash('sha256')
+      .update(`${siteSeed}:algb-serverless-session-2026`)
+      .digest('hex');
+  }
 
   try {
     if (!fs.existsSync(DATA_DIR)) {

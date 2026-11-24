@@ -1506,9 +1506,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (enrollRes.ok) {
         const enrollData = (await enrollRes.json()) as {
           ok?: boolean;
+          sessionToken?: string;
           credential?: AccessCredential;
           initialSecret?: string;
         };
+        if (enrollData.sessionToken) {
+          setStoredSessionToken(enrollData.sessionToken);
+        }
         if (enrollData.ok && enrollData.credential) {
           activatedCred = enrollData.credential;
           initialSecret = enrollData.initialSecret || matricule;

@@ -46,13 +46,29 @@ export const buildMemberQrUrl = (
   return `${origin}/?${params.toString()}`;
 };
 
+const getQrRequestHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  try {
+    const token =
+      typeof window !== 'undefined'
+        ? window.sessionStorage.getItem('algb_session_token_fallback_v1')
+        : null;
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  } catch {
+    // Ignore storage access errors
+  }
+  return headers;
+};
+
 export const fetchSignedQrMetadata = async (
   member: AlumniMember
 ): Promise<SignedQrMetadata | null> => {
   try {
     const res = await fetch('/api/qr/sign', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getQrRequestHeaders(),
       credentials: 'include',
       body: JSON.stringify({
         memberId: member.id,
@@ -120,7 +136,7 @@ export const verifyMemberQrAuthenticity = async (
   try {
     const res = await fetch('/api/qr/verify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getQrRequestHeaders(),
       credentials: 'include',
       body: JSON.stringify(parsed),
     });

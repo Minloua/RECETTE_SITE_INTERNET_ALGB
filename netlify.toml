@@ -16,8 +16,8 @@
   force = true
 
 [[redirects]]
-  from = "/api/credentials/send-email"
-  to = "/.netlify/functions/send-credential-email"
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
   status = 200
   force = true
 
