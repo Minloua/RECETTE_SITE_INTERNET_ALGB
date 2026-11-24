@@ -3,7 +3,6 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createServer as createViteServer } from 'vite';
 import { handleAssistantChat, type AssistantRequestBody } from './server/assistantService.ts';
 import {
   handleSendCredentialEmail,
@@ -23,17 +22,16 @@ import {
   createRateLimiter,
   createSessionToken,
   hashSecret,
-  RequestWithSession,
   requireAuth,
   requireRole,
   securityHeaders,
-  ServerUserRole,
   setSessionCookie,
   signQrPayload,
   verifyPaymentSignature,
   verifyQrPayloadSignature,
   verifySecret,
 } from './server/security.ts';
+import type { RequestWithSession, ServerUserRole } from './server/security.ts';
 import { createPaymentIntent, settlePaymentIntent } from './server/paymentGateway.ts';
 import type {
   AlumniMember,
@@ -69,6 +67,7 @@ function computeMemberUpToDate(memberId: string, db: ReturnType<typeof getDb>): 
 
 async function startServer() {
   const app = express();
+  app.set('trust proxy', 1);
   const port = Number(process.env.PORT) || 3000;
 
   // Ensure persistent DB is initialized at boot
@@ -76,6 +75,9 @@ async function startServer() {
 
   app.use(securityHeaders);
   app.use(express.json({ limit: '1mb' }));
+  app.get('/api/health', (_req: Request, res: Response) => {
+    res.json({ ok: true, status: 'ready', ts: Date.now() });
+  });
   app.use(attachSession);
 
   // Rate limiters
@@ -191,7 +193,7 @@ async function startServer() {
     }
     const cred = db.credentials.find((c) => c.id === session.credentialId && c.isActive);
     if (!cred) {
-      clearSessionCookie(res);
+      clearSessionCookie(res, req);
       res.json({ ok: true, authenticated: false, session: null });
       return;
     }
@@ -270,7 +272,7 @@ async function startServer() {
       role: matched.role,
       linkedMemberId: matched.linkedMemberId,
     });
-    setSessionCookie(res, token);
+    setSessionCookie(res, token, req);
 
     const currentUser = matched.linkedMemberId
       ? db.members.find((m) => m.id === matched.linkedMemberId) || null
@@ -278,6 +280,7 @@ async function startServer() {
 
     res.json({
       ok: true,
+      sessionToken: token,
       credential: sanitizeCredential(matched),
       currentUser,
     });
@@ -294,7 +297,7 @@ async function startServer() {
       });
       persistDb(db);
     }
-    clearSessionCookie(res);
+    clearSessionCookie(res, req);
     res.json({ ok: true });
   });
 
@@ -1023,7 +1026,7 @@ async function startServer() {
       target: session.linkedMemberId,
     });
     persistDb(db);
-    clearSessionCookie(res);
+    clearSessionCookie(res, req);
 
     res.json({ ok: true });
   });
@@ -1158,6 +1161,22 @@ async function startServer() {
     res.json({ ok: true });
   });
 
+  app.use(
+    '/deliverables_video',
+    express.static(path.resolve(__dirname, 'deliverables_video'), {
+      acceptRanges: true,
+      maxAge: '1h',
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.zip')) {
+          res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${path.basename(filePath)}"`
+          );
+        }
+      },
+    })
+  );
+
   if (process.env.NODE_ENV === 'production') {
     const distPath = path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));
@@ -1165,6 +1184,7 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   } else {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: {
         middlewareMode: true,

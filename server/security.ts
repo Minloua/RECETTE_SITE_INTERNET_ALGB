@@ -156,35 +156,62 @@ export function parseCookies(cookieHeader: string | undefined): Record<string, s
   return cookies;
 }
 
-export function setSessionCookie(res: Response, token: string): void {
-  const isProd = process.env.NODE_ENV === 'production';
+function isHttpsRequest(req?: Request): boolean {
+  if (!req) {
+    return process.env.NODE_ENV === 'production';
+  }
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  const protoStr = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || '';
+  return (
+    req.secure ||
+    protoStr.toLowerCase().includes('https') ||
+    process.env.NODE_ENV === 'production'
+  );
+}
+
+export function setSessionCookie(res: Response, token: string, req?: Request): void {
+  const isHttps = isHttpsRequest(req);
   const attrs = [
     `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}`,
     'Path=/',
     'HttpOnly',
-    'SameSite=Lax',
+    isHttps ? 'SameSite=None' : 'SameSite=Lax',
     `Max-Age=${SESSION_TTL_SECONDS}`,
   ];
-  if (isProd) {
+  if (isHttps) {
     attrs.push('Secure');
+    attrs.push('Partitioned');
   }
   res.setHeader('Set-Cookie', attrs.join('; '));
 }
 
-export function clearSessionCookie(res: Response): void {
+export function clearSessionCookie(res: Response, req?: Request): void {
+  const isHttps = isHttpsRequest(req);
   const attrs = [
     `${SESSION_COOKIE_NAME}=`,
     'Path=/',
     'HttpOnly',
-    'SameSite=Lax',
+    isHttps ? 'SameSite=None' : 'SameSite=Lax',
     'Max-Age=0',
   ];
+  if (isHttps) {
+    attrs.push('Secure');
+    attrs.push('Partitioned');
+  }
   res.setHeader('Set-Cookie', attrs.join('; '));
 }
 
 export function attachSession(req: Request, _res: Response, next: NextFunction): void {
   const cookies = parseCookies(req.headers.cookie);
-  const token = cookies[SESSION_COOKIE_NAME];
+  let token = cookies[SESSION_COOKIE_NAME];
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')) {
+      token = authHeader.slice(7).trim();
+    } else if (typeof req.headers['x-algb-session'] === 'string') {
+      token = req.headers['x-algb-session'].trim();
+    }
+  }
   (req as RequestWithSession).algbSession = verifySessionToken(token);
   next();
 }

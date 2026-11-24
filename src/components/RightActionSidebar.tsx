@@ -215,8 +215,9 @@ export const RightActionSidebar: React.FC = () => {
           </section>
         )}
 
-        {/* 4. UTILITAIRES : ASSISTANT ALGB & RÉINITIALISATION */}
+        {/* 4. UTILITAIRES : ASSISTANT & RÉINITIALISATION */}
         <div className="pt-3 border-t border-[#141413]/10 dark:border-white/10 space-y-2">
+
           <button
             type="button"
             onClick={() => setAiChatOpen(true)}

@@ -1,9 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  AlumniMember,
-  AssociationSettings,
-  EventItem,
   INITIAL_EVENTS,
   INITIAL_JOB_APPLICATIONS,
   INITIAL_JOB_OFFERS,
@@ -16,6 +13,11 @@ import {
   INITIAL_SETTINGS,
   INITIAL_TRANSACTIONS,
   INITIAL_VIDEOS,
+} from '../src/data/mockData.ts';
+import type {
+  AlumniMember,
+  AssociationSettings,
+  EventItem,
   GalleryPhoto,
   JobApplicationRecord,
   JobOffer,
@@ -27,7 +29,8 @@ import {
   Promotion,
   YouTubeVideo,
 } from '../src/data/mockData.ts';
-import { hashSecret, ServerUserRole } from './security.ts';
+import { hashSecret } from './security.ts';
+import type { ServerUserRole } from './security.ts';
 
 export type CredentialEmailStatus = 'NON_ENVOYE' | 'EN_COURS' | 'ENVOYE' | 'ECHEC';
 

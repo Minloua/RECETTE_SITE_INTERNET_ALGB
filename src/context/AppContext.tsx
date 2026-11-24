@@ -467,12 +467,45 @@ const INITIAL_AI_KNOWLEDGE: AiKnowledgeEntry[] = [
 ];
 
 export const OFFLINE_CARD_STORAGE_KEY = 'algb_offline_card_v1';
+const SESSION_TOKEN_STORAGE_KEY = 'algb_session_token_fallback_v1';
+
+function getStoredSessionToken(): string | null {
+  try {
+    return typeof window !== 'undefined'
+      ? window.sessionStorage.getItem(SESSION_TOKEN_STORAGE_KEY)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function setStoredSessionToken(token: string | null): void {
+  try {
+    if (typeof window === 'undefined') return;
+    if (token) {
+      window.sessionStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+    } else {
+      window.sessionStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // ignore storage restriction
+  }
+}
+
+function getAuthHeaders(extra?: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = { ...(extra || {}) };
+  const token = getStoredSessionToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 async function syncServerSlice(slice: string, data: unknown): Promise<void> {
   try {
     await fetch('/api/state/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       credentials: 'include',
       body: JSON.stringify({ slice, data }),
     });
@@ -869,7 +902,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Server Bootstrap (restores HttpOnly cookie session & authoritative state)
   const refreshBootstrap = async () => {
     try {
-      const res = await fetch('/api/bootstrap', { credentials: 'include' });
+      const res = await fetch('/api/bootstrap', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
       if (!res.ok) return;
       const payload = (await res.json()) as {
         ok?: boolean;
@@ -919,6 +955,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCurrentRole(payload.session.role);
         setCurrentUser(payload.session.currentUser);
       } else {
+        setStoredSessionToken(null);
         setActiveCredentialState(null);
         setCurrentRole('VISITEUR');
         setCurrentUser(null);
@@ -2243,7 +2280,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await fetch('/api/auth/verify-qr-operator', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify({
           identifier: params.identifier,
@@ -2328,7 +2365,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await fetch('/api/payments/initiate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify(params),
       });
@@ -2350,7 +2387,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await fetch('/api/payments/webhook', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify({
           intentId,
@@ -2397,7 +2434,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await fetch('/api/members/me/privacy', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify(updates),
       });
@@ -2422,7 +2459,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const exportMyArtciData = async (): Promise<boolean> => {
     try {
-      const res = await fetch('/api/members/me/export', { credentials: 'include' });
+      const res = await fetch('/api/members/me/export', {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
       const data = await res.json();
       if (!res.ok || !data.ok) {
         addToast('warning', 'Export refusé', data.error || 'Veuillez vous connecter.');
@@ -2453,12 +2493,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await fetch('/api/members/me/anonymize', {
         method: 'POST',
+        headers: getAuthHeaders(),
         credentials: 'include',
       });
       if (!res.ok) {
         addToast('warning', 'Action impossible', 'Votre compte ne peut pas être anonymisé automatiquement.');
         return false;
       }
+      setStoredSessionToken(null);
       setActiveCredentialState(null);
       setCurrentRole('VISITEUR');
       setCurrentUser(null);
@@ -2951,81 +2993,149 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     identifier: string,
     secretCode: string
   ): Promise<CredentialAuthResult> => {
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ identifier, secretCode }),
-      });
+    const maxAttempts = 3;
 
-      const data = (await res.json()) as {
-        ok?: boolean;
-        credential?: AccessCredential;
-        currentUser?: AlumniMember | null;
-        error?: string;
-      };
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ identifier, secretCode }),
+        });
 
-      if (!res.ok || !data.ok || !data.credential) {
+        if (res.url && res.url.includes('__cookie_check')) {
+          return {
+            allowed: false,
+            reason:
+              'La session sécurisée de prévisualisation a expiré. Veuillez recharger la page (F5) puis vous reconnecter.',
+          };
+        }
+
+        const rawBody = await res.text();
+        const trimmed = rawBody.trim();
+        const looksLikeHtml =
+          trimmed.startsWith('<!') || trimmed.startsWith('<html') || trimmed.startsWith('<HTML');
+
+        if ((res.status === 502 || res.status === 503 || res.status === 504) && attempt < maxAttempts - 1) {
+          await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+          await fetch('/api/health', { credentials: 'include' }).catch(() => undefined);
+          continue;
+        }
+
+        if (looksLikeHtml) {
+          if (attempt < maxAttempts - 1) {
+            await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+            continue;
+          }
+          return {
+            allowed: false,
+            reason:
+              res.status === 502 || res.status === 503 || res.status === 504
+                ? `Le serveur ALGB est en cours de redémarrage (HTTP ${res.status}). Patientez quelques secondes puis réessayez.`
+                : `Le serveur API (/api/auth/login) a renvoyé une page HTML au lieu de JSON (HTTP ${res.status}). Rechargez la page (F5) et réessayez.`,
+          };
+        }
+
+        let data: {
+          ok?: boolean;
+          sessionToken?: string;
+          credential?: AccessCredential;
+          currentUser?: AlumniMember | null;
+          error?: string;
+        } = {};
+        try {
+          data = rawBody ? (JSON.parse(rawBody) as typeof data) : {};
+        } catch {
+          return {
+            allowed: false,
+            reason: `Réponse inattendue du serveur d’authentification (HTTP ${res.status}).`,
+          };
+        }
+
+        if (!res.ok || !data.ok || !data.credential) {
+          return {
+            allowed: false,
+            reason: data.error || 'Identifiant ou code d’accès incorrect.',
+          };
+        }
+
+        if (data.sessionToken) {
+          setStoredSessionToken(data.sessionToken);
+        }
+
+        const cred = data.credential;
+        setActiveCredentialState(cred);
+        setCurrentRole(cred.role);
+        setCurrentUser(data.currentUser ?? null);
+        void refreshBootstrap();
+
+        addToast(
+          'success',
+          `Bienvenue, ${cred.displayName}`,
+          `Profil actif : ${PROFILE_ACCESS_MATRIX[cred.role].label}.`
+        );
+
+        const targetTab = authRedirectTab;
+        setAuthModalOpen(false);
+        setAuthRedirectTab(null);
+
+        if (targetTab) {
+          const normalized = targetTab === 'galerie' ? 'mediatheque' : targetTab;
+          if (
+            UNRESTRICTED_ACCESS_OVERRIDE ||
+            cred.allowedTabs.includes(targetTab) ||
+            cred.allowedTabs.includes(normalized)
+          ) {
+            setActiveTab(targetTab);
+          } else {
+            addToast(
+              'warning',
+              'Menu non attribué à ce profil',
+              `Votre credential (${PROFILE_ACCESS_MATRIX[cred.role].label}) n’inclut pas l’accès à cette section.`
+            );
+          }
+        }
+
+        return {
+          allowed: true,
+          credential: cred,
+          linkedMember: data.currentUser ?? null,
+        };
+      } catch {
+        if (attempt < maxAttempts - 1) {
+          await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+          await fetch('/api/health', { credentials: 'include' }).catch(() => undefined);
+          continue;
+        }
+        const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
         return {
           allowed: false,
-          reason: data.error || 'Identifiant ou code d’accès incorrect.',
+          reason: isOffline
+            ? 'Votre appareil semble hors ligne. Vérifiez votre connexion Internet puis réessayez.'
+            : 'Serveur d’authentification temporairement inaccessible. Rechargez la page (F5) et réessayez.',
         };
       }
-
-      const cred = data.credential;
-      setActiveCredentialState(cred);
-      setCurrentRole(cred.role);
-      setCurrentUser(data.currentUser ?? null);
-      void refreshBootstrap();
-
-      addToast(
-        'success',
-        `Bienvenue, ${cred.displayName}`,
-        `Profil actif : ${PROFILE_ACCESS_MATRIX[cred.role].label}.`
-      );
-
-      const targetTab = authRedirectTab;
-      setAuthModalOpen(false);
-      setAuthRedirectTab(null);
-
-      if (targetTab) {
-        const normalized = targetTab === 'galerie' ? 'mediatheque' : targetTab;
-        if (
-          UNRESTRICTED_ACCESS_OVERRIDE ||
-          cred.allowedTabs.includes(targetTab) ||
-          cred.allowedTabs.includes(normalized)
-        ) {
-          setActiveTab(targetTab);
-        } else {
-          addToast(
-            'warning',
-            'Menu non attribué à ce profil',
-            `Votre credential (${PROFILE_ACCESS_MATRIX[cred.role].label}) n’inclut pas l’accès à cette section.`
-          );
-        }
-      }
-
-      return {
-        allowed: true,
-        credential: cred,
-        linkedMember: data.currentUser ?? null,
-      };
-    } catch {
-      return {
-        allowed: false,
-        reason: 'Serveur d’authentification indisponible. Vérifiez votre connexion.',
-      };
     }
+
+    return {
+      allowed: false,
+      reason: 'Serveur d’authentification indisponible. Vérifiez votre connexion.',
+    };
   };
 
   const logoutSession = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
     } catch {
       // ignore offline logout
     }
 
+    setStoredSessionToken(null);
     setActiveCredentialState(null);
     setCurrentRole('VISITEUR');
     setCurrentUser(null);
@@ -3123,7 +3233,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const response = await fetch('/api/credentials/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify({
           credentialId: targetCred.id,
@@ -3274,7 +3384,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await fetch('/api/credentials', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify({
           identifier: cleanId,
@@ -3325,7 +3435,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await fetch(`/api/credentials/${encodeURIComponent(id)}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify(updates),
       });
@@ -3361,6 +3471,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await fetch(`/api/credentials/${encodeURIComponent(id)}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
         credentials: 'include',
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };

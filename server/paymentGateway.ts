@@ -1,5 +1,5 @@
-import { PaymentIntentRecord, AlgbDatabaseState } from './database.ts';
-import { PaymentMethod, PaymentType } from '../src/data/mockData.ts';
+import type { PaymentIntentRecord, AlgbDatabaseState } from './database.ts';
+import type { PaymentMethod, PaymentType } from '../src/data/mockData.ts';
 import { signPaymentPayload } from './security.ts';
 
 export interface InitiatePaymentInput {
